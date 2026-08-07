@@ -1,0 +1,152 @@
+/* Aarvex logo mark preloader — lime A on deep green-black */
+.ax-boot-loader {
+  position: fixed; inset: 0; z-index: 99999;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(10, 16, 12, .55);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  transition: opacity .4s ease, visibility .4s ease;
+}
+.ax-boot-loader.is-done {
+  opacity: 0; visibility: hidden; pointer-events: none;
+}
+.ax-boot-loader-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 18px;
+  background: transparent;
+}
+.ax-boot-loader-text {
+  margin: 0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 13px; font-weight: 600; letter-spacing: .04em;
+  color: rgba(255, 255, 255, .88);
+  text-shadow: 0 1px 8px rgba(0,0,0,.35);
+}
+html:not([data-theme="dark"]) .ax-boot-loader {
+  background: rgba(244, 247, 245, .62);
+}
+html:not([data-theme="dark"]) .ax-boot-loader-text {
+  color: rgba(20, 48, 38, .78);
+  text-shadow: none;
+}
+
+/* Host blur while a section is loading */
+.ax-loading-host {
+  position: relative !important;
+  min-height: 160px;
+}
+.ax-loading-host > *:not(.ax-inline-loader-overlay) {
+  filter: blur(5px);
+  opacity: .55;
+  pointer-events: none;
+  user-select: none;
+  transition: filter .25s ease, opacity .25s ease;
+}
+.ax-inline-loader-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(12, 18, 14, .28);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+html:not([data-theme="dark"]) .ax-inline-loader-overlay {
+  background: rgba(255, 255, 255, .28);
+}
+
+.ax-inline-loader {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; padding: 28px 16px; min-height: 140px; text-align: center;
+  background: transparent !important;
+}
+.ax-inline-loader-text {
+  font-size: 13px; font-weight: 600; color: #fff;
+  text-shadow: 0 1px 6px rgba(0,0,0,.35);
+}
+html:not([data-theme="dark"]) .ax-inline-loader-text {
+  color: rgba(20, 48, 38, .8);
+  text-shadow: none;
+}
+html[data-theme="dark"] .ax-inline-loader-text { color: rgba(243, 243, 238, .9); }
+
+/* ── Logo mark animation ─────────────────────────────────────────── */
+.ax-logo-loader {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin: 0 auto;
+  background: transparent !important;
+}
+.ax-logo-loader-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 28%;
+  border: 2px solid rgba(212, 237, 107, .18);
+  border-top-color: #D4ED6B;
+  animation: axLogoSpin .9s cubic-bezier(.4, 0, .2, 1) infinite;
+  pointer-events: none;
+}
+.ax-logo-loader-mark {
+  width: 62%;
+  height: 62%;
+  border-radius: 22%;
+  background: #0A0A0A;
+  display: grid;
+  place-items: center;
+  box-shadow:
+    0 0 0 1px rgba(212, 237, 107, .12),
+    0 10px 28px rgba(0, 0, 0, .35),
+    0 0 24px rgba(212, 237, 107, .18);
+  animation: axLogoPulse 1.6s ease-in-out infinite;
+  overflow: hidden;
+}
+.ax-logo-loader-mark svg {
+  width: 72%;
+  height: 72%;
+  display: block;
+}
+.ax-logo-loader-mark .ax-a-fill {
+  fill: #D4ED6B;
+}
+.ax-logo-loader-glow {
+  position: absolute;
+  inset: 18%;
+  border-radius: 28%;
+  background: radial-gradient(circle, rgba(212, 237, 107, .22) 0%, transparent 70%);
+  animation: axLogoGlow 1.6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+.ax-logo-loader-mark { position: relative; z-index: 1; }
+
+@keyframes axLogoSpin {
+  to { transform: rotate(360deg); }
+}
+@keyframes axLogoPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+@keyframes axLogoGlow {
+  0%, 100% { opacity: .55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+html:not([data-theme="dark"]) .ax-logo-loader-ring {
+  border-color: rgba(46, 107, 65, .16);
+  border-top-color: #B8D94A;
+}
+html:not([data-theme="dark"]) .ax-logo-loader-mark {
+  background: #0D1712;
+  box-shadow:
+    0 0 0 1px rgba(212, 237, 107, .2),
+    0 8px 22px rgba(13, 23, 18, .18),
+    0 0 20px rgba(212, 237, 107, .2);
+}
+
+/* Legacy class hooks (kept so old markup still works) */
+.ax-lottie-wrap { display: none !important; }
+.ax-loader-fallback { display: none !important; }

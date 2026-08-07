@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" id="ax-background">
+  <!-- Black rounded-square background for adaptive icon -->
+  <rect width="512" height="512" rx="112" ry="112" fill="#000000"/>
+</svg>

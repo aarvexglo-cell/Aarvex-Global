@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <title>Story Editor Pro</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="story-editor-new.css">
+</head>
+
+<body>
+    <!-- Story Editor Container -->
+    <div class="story-editor" id="storyEditor">
+        <!-- Top Bar -->
+        <div class="story-topbar">
+            <button class="story-btn-icon" id="btnClose" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h1 class="story-title">Edit story</h1>
+            <button class="story-btn-next" id="btnNext">
+                Next <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="story-tabs" id="storyTabs">
+            <button class="story-tab active" data-tab="adjust">
+                <i class="fa-solid fa-crop-simple"></i>
+                <span>Adjust</span>
+            </button>
+            <button class="story-tab" data-tab="filters">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>Filters</span>
+            </button>
+            <button class="story-tab" data-tab="draw">
+                <i class="fa-solid fa-pen"></i>
+                <span>Draw</span>
+            </button>
+            <button class="story-tab" data-tab="text">
+                <i class="fa-solid fa-font"></i>
+                <span>Text</span>
+            </button>
+            <button class="story-tab" data-tab="stickers">
+                <i class="fa-regular fa-face-smile"></i>
+                <span>Stickers</span>
+            </button>
+            <button class="story-tab" data-tab="shapes">
+                <i class="fa-solid fa-shapes"></i>
+                <span>Shapes</span>
+            </button>
+            <button class="story-tab" data-tab="music">
+                <i class="fa-solid fa-music"></i>
+                <span>Music</span>
+            </button>
+        </div>
+
+        <!-- Canvas Area -->
+        <div class="story-canvas-container" id="canvasContainer">
+            <canvas id="storyCanvas"></canvas>
+
+            <!-- Transform Controls (for text, emoji, shapes) -->
+            <div class="transform-controls" id="transformControls" style="display: none;">
+                <div class="transform-box" id="transformBox">
+                    <div class="transform-handle corner top-left"></div>
+                    <div class="transform-handle corner top-right"></div>
+                    <div class="transform-handle corner bottom-left"></div>
+                    <div class="transform-handle corner bottom-right"></div>
+                    <div class="transform-handle rotate-handle">
+                        <i class="fa-solid fa-rotate"></i>
+                    </div>
+                    <button class="transform-delete" id="deleteSelected">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Crop Overlay (Manual Crop) -->
+            <div class="crop-overlay" id="cropOverlay" style="display: none;">
+                <div class="crop-box" id="cropBox">
+                    <div class="crop-handle corner top-left"></div>
+                    <div class="crop-handle corner top-right"></div>
+                    <div class="crop-handle corner bottom-left"></div>
+                    <div class="crop-handle corner bottom-right"></div>
+                    <div class="crop-handle edge top"></div>
+                    <div class="crop-handle edge bottom"></div>
+                    <div class="crop-handle edge left"></div>
+                    <div class="crop-handle edge right"></div>
+                </div>
+                <div class="crop-actions">
+                    <button class="crop-btn-cancel" id="cropCancel">Cancel</button>
+                    <button class="crop-btn-done" id="cropDone">Done</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content Panels -->
+        <div class="story-content" id="storyContent">
+            <!-- Adjust Tab -->
+            <div class="content-panel active" data-panel="adjust">
+                <div class="adjust-controls">
+                    <button class="adjust-btn" id="btnRotate">
+                        <i class="fa-solid fa-rotate"></i>
+                        <span>Rotate</span>
+                    </button>
+                    <button class="adjust-btn" id="btnCrop916">
+                        <i class="fa-solid fa-crop"></i>
+                        <span>Crop 9:16</span>
+                    </button>
+                    <button class="adjust-btn" id="btnManualCrop">
+                        <i class="fa-solid fa-crop-simple"></i>
+                        <span>Manual Crop</span>
+                    </button>
+                    <button class="adjust-btn" id="btnUndo" disabled>
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Undo</span>
+                    </button>
+                </div>
+                <p class="adjust-hint">Rotate turns the photo 90°, crop frames it for stories</p>
+            </div>
+
+            <!-- Filters Tab -->
+            <div class="content-panel" data-panel="filters">
+                <div class="filters-scroll" id="filtersScroll">
+                    <!-- Filters will be generated by JS -->
+                </div>
+            </div>
+
+            <!-- Draw Tab -->
+            <div class="content-panel" data-panel="draw">
+                <div class="draw-controls">
+                    <div class="draw-colors" id="drawColors">
+                        <button class="color-btn active" data-color="#FFFFFF" style="background: #FFFFFF;"></button>
+                        <button class="color-btn" data-color="#000000" style="background: #000000;"></button>
+                        <button class="color-btn" data-color="#FF0000" style="background: #FF0000;"></button>
+                        <button class="color-btn" data-color="#00FF00" style="background: #00FF00;"></button>
+                        <button class="color-btn" data-color="#0000FF" style="background: #0000FF;"></button>
+                        <button class="color-btn" data-color="#FFFF00" style="background: #FFFF00;"></button>
+                        <button class="color-btn" data-color="#FF00FF" style="background: #FF00FF;"></button>
+                        <button class="color-btn" data-color="#00FFFF" style="background: #00FFFF;"></button>
+                    </div>
+                    <div class="draw-tools">
+                        <button class="tool-btn active" data-tool="pen"><i class="fa-solid fa-pen"></i></button>
+                        <button class="tool-btn" data-tool="marker"><i class="fa-solid fa-marker"></i></button>
+                        <button class="tool-btn" data-tool="eraser"><i class="fa-solid fa-eraser"></i></button>
+                    </div>
+                    <input type="range" class="brush-size" id="brushSize" min="2" max="50" value="5">
+                </div>
+            </div>
+
+            <!-- Text Tab -->
+            <div class="content-panel" data-panel="text">
+                <div class="text-controls">
+                    <button class="text-add-btn" id="btnAddText">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Tap canvas to add text</span>
+                    </button>
+
+                    <!-- Text Editing Toolbar (shows when text selected) -->
+                    <div class="text-toolbar" id="textToolbar" style="display: none;">
+                        <div class="text-font-picker">
+                            <select id="fontFamily" class="font-select">
+                                <option value="Inter">Inter</option>
+                                <option value="Poppins">Poppins</option>
+                                <option value="'Noto Sans Devanagari'">Marathi (Noto)</option>
+                                <option value="Arial">Arial</option>
+                                <option value="'Courier New'">Courier</option>
+                                <option value="Georgia">Georgia</option>
+                                <option value="'Times New Roman'">Times</option>
+                                <option value="Verdana">Verdana</option>
+                            </select>
+                        </div>
+                        <div class="text-colors" id="textColors">
+                            <button class="color-btn active" data-color="#FFFFFF" style="background: #FFFFFF;"></button>
+                            <button class="color-btn" data-color="#000000" style="background: #000000;"></button>
+                            <button class="color-btn" data-color="#FF0000" style="background: #FF0000;"></button>
+                            <button class="color-btn" data-color="#00FF00" style="background: #00FF00;"></button>
+                            <button class="color-btn" data-color="#0000FF" style="background: #0000FF;"></button>
+                            <button class="color-btn" data-color="#FFFF00" style="background: #FFFF00;"></button>
+                        </div>
+                        <div class="text-size-control">
+                            <button class="size-btn" id="textSizeDown"><i class="fa-solid fa-minus"></i></button>
+                            <span id="textSizeDisplay">32</span>
+                            <button class="size-btn" id="textSizeUp"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stickers/Emoji Tab -->
+            <div class="content-panel" data-panel="stickers">
+                <div class="emoji-grid" id="emojiGrid">
+                    <!-- Emojis will be generated by JS -->
+                </div>
+            </div>
+
+            <!-- Shapes Tab -->
+            <div class="content-panel" data-panel="shapes">
+                <div class="shapes-grid" id="shapesGrid">
+                    <button class="shape-btn" data-shape="rectangle">
+                        <i class="fa-regular fa-square"></i>
+                        <span>Rectangle</span>
+                    </button>
+                    <button class="shape-btn" data-shape="circle">
+                        <i class="fa-regular fa-circle"></i>
+                        <span>Circle</span>
+                    </button>
+                    <button class="shape-btn" data-shape="line">
+                        <i class="fa-solid fa-minus"></i>
+                        <span>Line</span>
+                    </button>
+                    <button class="shape-btn" data-shape="arrow">
+                        <i class="fa-solid fa-arrow-right"></i>
+                        <span>Arrow</span>
+                    </button>
+                    <button class="shape-btn" data-shape="star">
+                        <i class="fa-solid fa-star"></i>
+                        <span>Star</span>
+                    </button>
+                    <button class="shape-btn" data-shape="heart">
+                        <i class="fa-solid fa-heart"></i>
+                        <span>Heart</span>
+                    </button>
+                </div>
+
+                <!-- Shape Color Picker (shows when shape selected) -->
+                <div class="shape-colors" id="shapeColors" style="display: none;">
+                    <button class="color-btn active" data-color="#FFFFFF" style="background: #FFFFFF;"></button>
+                    <button class="color-btn" data-color="#000000" style="background: #000000;"></button>
+                    <button class="color-btn" data-color="#FF0000" style="background: #FF0000;"></button>
+                    <button class="color-btn" data-color="#00FF00" style="background: #00FF00;"></button>
+                    <button class="color-btn" data-color="#0000FF" style="background: #0000FF;"></button>
+                    <button class="color-btn" data-color="#FFFF00" style="background: #FFFF00;"></button>
+                    <button class="color-btn" data-color="#FF00FF" style="background: #FF00FF;"></button>
+                </div>
+            </div>
+
+            <!-- Music Tab -->
+            <div class="content-panel" data-panel="music">
+                <div class="music-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="musicSearch" placeholder="Search songs...">
+                </div>
+
+                <div class="music-section">
+                    <h3>Trending Now</h3>
+                    <div class="music-list" id="trendingMusic">
+                        <!-- Music items will be generated by JS -->
+                    </div>
+                </div>
+
+                <div class="music-section">
+                    <h3>Search Results</h3>
+                    <div class="music-list" id="searchResults" style="display: none;">
+                        <!-- Search results will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="story-editor-new.js"></script>
+</body>
+
+</html>

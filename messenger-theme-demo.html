@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aarvex Messenger - Exact Theme Demo</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="ax-messenger.css">
+  <link rel="stylesheet" href="ax-messenger-pro.css">
+  <link rel="stylesheet" href="ax-messenger-exact-theme.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0a0f0c;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- DEMO: Chats List Screen -->
+  <div class="ax-chat-overlay" id="demoOverlay">
+    <div class="ax-chat-sheet ax-msg-hub">
+
+      <!-- Top Bar -->
+      <div class="ax-chat-topbar">
+        <button class="ax-chat-back"><i class="fa-solid fa-chevron-down"></i></button>
+        <b>Messages</b>
+        <button class="ax-chat-newbtn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="ax-msg-hub-tabs">
+        <button class="ax-msg-hub-tab active">
+          <i class="fa-solid fa-comment-dots"></i>
+        </button>
+        <button class="ax-msg-hub-tab" onclick="switchTab(1)">
+          <i class="fa-solid fa-phone"></i>
+        </button>
+        <button class="ax-msg-hub-tab" onclick="switchTab(2)">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+      </div>
+
+      <!-- Content Area -->
+      <div id="axMsgHubBody">
+
+        <!-- Search -->
+        <div class="ax-inbox-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Search or start new chat">
+        </div>
+
+        <!-- Filters -->
+        <div class="ax-msg-filters">
+          <button class="ax-msg-chip active">All</button>
+          <button class="ax-msg-chip">Unread</button>
+          <button class="ax-msg-chip">Favourites</button>
+        </div>
+
+        <!-- Inbox List -->
+        <div class="ax-inbox-list">
+
+          <!-- Chat Row 1 -->
+          <button class="ax-inbox-row" onclick="openChatDemo()">
+            <span class="ax-signal-ring live">
+              <span class="ax-signal-ph">NL</span>
+            </span>
+            <div class="ax-inbox-text">
+              <b>Parag Lakhadive</b>
+              <span>Order confirm ho gaya</span>
+            </div>
+            <div class="ax-inbox-meta">
+              <span class="ax-inbox-ts">Jul 29</span>
+              <span class="ax-inbox-badge">2</span>
+            </div>
+          </button>
+
+          <!-- Chat Row 2 -->
+          <button class="ax-inbox-row">
+            <span class="ax-signal-ring">
+              <span class="ax-signal-ph">P</span>
+            </span>
+            <div class="ax-inbox-text">
+              <b>parag</b>
+              <span>Theek hai, kal bnej dunga</span>
+            </div>
+            <div class="ax-inbox-meta">
+              <span class="ax-inbox-ts">Jul 29</span>
+            </div>
+          </button>
+
+          <!-- Chat Row 3 -->
+          <button class="ax-inbox-row">
+            <span class="ax-signal-ring">
+              <span class="ax-signal-ph">A</span>
+            </span>
+            <div class="ax-inbox-text">
+              <b>Aarvex user</b>
+              <span>Jaise ki ismein bahut se chije...</span>
+            </div>
+            <div class="ax-inbox-meta">
+              <span class="ax-inbox-ts">Jul 29</span>
+            </div>
+          </button>
+
+          <!-- Chat Row 4 -->
+          <button class="ax-inbox-row">
+            <span class="ax-signal-ring live">
+              <span class="ax-signal-ph">P</span>
+            </span>
+            <div class="ax-inbox-text">
+              <b>parag fastway</b>
+              <span><i class="fa-solid fa-microphone"></i> Voice message</span>
+            </div>
+            <div class="ax-inbox-meta">
+              <span class="ax-inbox-ts">Jul 29</span>
+              <span class="ax-inbox-badge">1</span>
+            </div>
+          </button>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden: Chat Screen Demo -->
+  <div class="ax-chat-overlay" id="chatScreen" style="display:none;">
+    <div class="ax-chat-sheet">
+
+      <!-- Chat Header -->
+      <div class="ax-chat-topbar">
+        <button class="ax-chat-back" onclick="closeChatDemo()">
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <button class="ax-chat-peer">
+          <span class="ax-signal-ring">
+            <span class="ax-signal-ph">P</span>
+          </span>
+          <b>parag fastway</b>
+        </button>
+        <div class="ax-chat-call">
+          <button class="ax-chat-callbtn">
+            <i class="fa-solid fa-phone"></i>
+          </button>
+          <button class="ax-chat-callbtn">
+            <i class="fa-solid fa-video"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages Area -->
+      <div class="ax-chat-messages">
+
+        <!-- Day Separator -->
+        <div class="ax-chat-daysep">
+          <span>Today</span>
+        </div>
+
+        <!-- Received Message -->
+        <div class="ax-chat-in">
+          <div class="ax-chat-bubble theirs">
+            <span class="ax-chat-txt">Hi</span>
+            <span class="ax-chat-time">3:56 PM</span>
+          </div>
+        </div>
+
+        <!-- Sent Messages -->
+        <div class="ax-chat-out">
+          <div class="ax-chat-bubble mine">
+            <span class="ax-chat-txt">hi</span>
+            <span class="ax-chat-time">3:57 PM</span>
+          </div>
+        </div>
+
+        <div class="ax-chat-out">
+          <div class="ax-chat-bubble mine">
+            <span class="ax-chat-txt">HI</span>
+            <span class="ax-chat-time">3:57 PM</span>
+          </div>
+        </div>
+
+        <!-- Voice Message Example -->
+        <div class="ax-chat-out">
+          <div class="ax-chat-bubble mine">
+            <audio controls>
+              <source src="" type="audio/webm">
+            </audio>
+            <span class="ax-chat-time">0:14</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Composer -->
+      <div class="ax-chat-composer">
+        <button class="ax-chat-attach-btn">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+        <button class="ax-chat-attach-btn">
+          <i class="fa-regular fa-face-smile"></i>
+        </button>
+        <input type="text" id="axChatInput" placeholder="Message…">
+        <button class="ax-chat-send-btn">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Demo Functions
+    function switchTab(index) {
+      // Remove active from all tabs
+      document.querySelectorAll('.ax-msg-hub-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+
+      // Add active to clicked tab
+      document.querySelectorAll('.ax-msg-hub-tab')[index].classList.add('active');
+
+      const body = document.getElementById('axMsgHubBody');
+
+      if (index === 1) {
+        // Calls Tab
+        body.innerHTML = `
+      <div class="ax-msg-filters">
+        <button class="ax-msg-chip active">All</button>
+        <button class="ax-msg-chip">Missed</button>
+      </div>
+      <div class="ax-msg-calls-list">
+        <button class="ax-call-row">
+          <span class="ax-signal-ring">
+            <span class="ax-signal-ph">P</span>
+          </span>
+          <div class="ax-inbox-text">
+            <b>parag fastway</b>
+            <span class="ax-call-sub ax-call-out">
+              <i class="fa-solid fa-arrow-up"></i> Outgoing · 03:53 PM
+            </span>
+          </div>
+          <button class="ax-call-again">
+            <i class="fa-solid fa-phone"></i>
+          </button>
+        </button>
+      </div>
+    `;
+      } else if (index === 2) {
+        // Settings Tab
+        body.innerHTML = `
+      <div class="ax-msg-settings">
+        <div class="ax-msg-set-section">ACCOUNT</div>
+        <div class="ax-msg-set-row">
+          <div>
+            <div>Username</div>
+            <small>Searchable @handle — change every 30 days</small>
+          </div>
+          <i class="fa-solid fa-chevron-right"></i>
+        </div>
+        <div class="ax-msg-set-row">
+          <div>
+            <div>Linked Google account</div>
+            <small>Managed in portal profile</small>
+          </div>
+          <i class="fa-solid fa-chevron-right"></i>
+        </div>
+        
+        <div class="ax-msg-set-section">PRIVACY</div>
+        <div class="ax-msg-set-row">
+          <div>
+            <div>Read receipts</div>
+            <small>Others see when you've read</small>
+          </div>
+          <span class="ax-msg-switch on">
+            <span class="ax-msg-switch-knob"></span>
+          </span>
+        </div>
+        <div class="ax-msg-set-row">
+          <div>
+            <div>Last seen</div>
+            <small>Show your last active time</small>
+          </div>
+          <i class="fa-solid fa-chevron-right"></i>
+        </div>
+        <div class="ax-msg-set-row">
+          <div>
+            <div>Profile visibility</div>
+            <small>Control what buyers see</small>
+          </div>
+          <i class="fa-solid fa-chevron-right"></i>
+        </div>
+      </div>
+    `;
+      }
+    }
+
+    function openChatDemo() {
+      document.getElementById('demoOverlay').style.display = 'none';
+      document.getElementById('chatScreen').style.display = 'flex';
+    }
+
+    function closeChatDemo() {
+      document.getElementById('chatScreen').style.display = 'none';
+      document.getElementById('demoOverlay').style.display = 'flex';
+    }
+  </script>
+
+</body>
+
+</html>

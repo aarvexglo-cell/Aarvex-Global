@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Edit Story - Modern Story Editor</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="story-editor-new.css">
+</head>
+
+<body>
+
+  <!-- Main Editor Container -->
+  <div class="story-editor-container">
+
+    <!-- Header -->
+    <header class="story-header">
+      <button class="btn-close" id="btnClose">
+        <i class="fas fa-times"></i>
+      </button>
+      <h1 class="story-title">Edit story</h1>
+      <div class="story-format-toggle">
+        <button class="format-btn active" data-format="9:16">Story 9:16</button>
+        <button class="format-btn" data-format="4:5">Feed 4:5</button>
+      </div>
+      <button class="btn-next" id="btnNext">
+        Next <i class="fas fa-arrow-right"></i>
+      </button>
+    </header>
+
+    <!-- Tools Navigation -->
+    <nav class="story-tools-nav">
+      <button class="tool-btn active" data-tool="adjust">
+        <i class="fas fa-crop"></i>
+        <span>Adjust</span>
+      </button>
+      <button class="tool-btn" data-tool="filters">
+        <i class="fas fa-magic"></i>
+        <span>Filters</span>
+      </button>
+      <button class="tool-btn" data-tool="draw">
+        <i class="fas fa-pen"></i>
+        <span>Draw</span>
+      </button>
+      <button class="tool-btn" data-tool="text">
+        <i class="fas fa-font"></i>
+        <span>Text</span>
+      </button>
+      <button class="tool-btn" data-tool="stickers">
+        <i class="fas fa-smile"></i>
+        <span>Stickers</span>
+      </button>
+      <button class="tool-btn" data-tool="shapes">
+        <i class="fas fa-shapes"></i>
+        <span>Shapes</span>
+      </button>
+    </nav>
+
+    <!-- Canvas Area -->
+    <div class="story-canvas-wrapper">
+      <div class="story-canvas" id="storyCanvas">
+
+        <!-- Image Container -->
+        <div class="canvas-image-container" id="imageContainer">
+          <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&h=889" alt="Story"
+            id="storyImage" class="story-image">
+
+          <!-- Canvas Overlays -->
+          <canvas id="drawCanvas" class="draw-canvas"></canvas>
+          <div id="textLayers" class="text-layers"></div>
+          <div id="stickerLayers" class="sticker-layers"></div>
+          <div id="shapeLayers" class="shape-layers"></div>
+        </div>
+
+        <!-- Action Buttons on Canvas -->
+        <div class="canvas-actions">
+          <button class="canvas-btn" id="btnUndo" title="Undo">
+            <i class="fas fa-undo"></i>
+          </button>
+          <button class="canvas-btn" id="btnRedo" title="Redo">
+            <i class="fas fa-redo"></i>
+          </button>
+          <button class="canvas-btn" id="btnChangeImage" title="Change Image">
+            <i class="fas fa-image"></i>
+          </button>
+        </div>
+
+        <!-- Hold to View Original -->
+        <div class="hold-hint" id="holdHint">Hold image = original dekho</div>
+
+      </div>
+    </div>
+
+    <!-- Tool Panels -->
+    <div class="tool-panels">
+
+      <!-- ADJUST PANEL -->
+      <div class="tool-panel active" id="panelAdjust">
+
+        <!-- Adjust Actions -->
+        <div class="adjust-actions">
+          <button class="adjust-btn" data-action="rotate">
+            <i class="fas fa-rotate-right"></i>
+            <span>Rotate 90°</span>
+          </button>
+          <button class="adjust-btn" data-action="flip">
+            <i class="fas fa-arrows-left-right"></i>
+            <span>Flip</span>
+          </button>
+          <button class="adjust-btn" data-action="crop">
+            <i class="fas fa-crop"></i>
+            <span>Manual Crop</span>
+          </button>
+          <button class="adjust-btn" data-action="reset">
+            <i class="fas fa-refresh"></i>
+            <span>Reset</span>
+          </button>
+        </div>
+
+        <!-- Aspect Ratio Presets -->
+        <div class="aspect-ratios">
+          <button class="ratio-btn active" data-ratio="9:16">9:16 Story</button>
+          <button class="ratio-btn" data-ratio="4:5">4:5 Feed</button>
+          <button class="ratio-btn" data-ratio="1:1">1:1 Square</button>
+          <button class="ratio-btn" data-ratio="16:9">16:9 Wide</button>
+        </div>
+
+        <p class="tool-hint">Manual Crop mein charon side ke handles drag karke apne hisaab se cut karo</p>
+      </div>
+
+      <!-- FILTERS PANEL -->
+      <div class="tool-panel" id="panelFilters">
+        <div class="filter-grid">
+          <button class="filter-item active" data-filter="none">
+            <div class="filter-preview">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&h=150" alt="Original">
+            </div>
+            <span>Original</span>
+          </button>
+          <button class="filter-item" data-filter="pop">
+            <div class="filter-preview filter-pop">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&h=150" alt="Pop">
+            </div>
+            <span>Pop</span>
+          </button>
+          <button class="filter-item" data-filter="bw">
+            <div class="filter-preview filter-bw">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&h=150" alt="B&W">
+            </div>
+            <span>B&W</span>
+          </button>
+          <button class="filter-item" data-filter="cool">
+            <div class="filter-preview filter-cool">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&h=150" alt="Cool">
+            </div>
+            <span>Cool</span>
+          </button>
+          <button class="filter-item" data-filter="chrome">
+            <div class="filter-preview filter-chrome">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&h=150" alt="Chrome">
+            </div>
+            <span>Chrome</span>
+          </button>
+          <button class="filter-item" data-filter="film">
+            <div class="filter-preview filter-film">
+              <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=100&h=150" alt="Film">
+            </div>
+            <span>Film</span>
+          </button>
+        </div>
+        <p class="tool-hint">Filter pe tap = canvas pe live apply · image ko hold karo = original</p>
+      </div>
+
+      <!-- DRAW PANEL -->
+      <div class="tool-panel" id="panelDraw">
+
+        <!-- Color Palette -->
+        <div class="color-palette">
+          <button class="color-btn active" data-color="#ffffff" style="background: #ffffff;"></button>
+          <button class="color-btn" data-color="#000000" style="background: #000000;"></button>
+          <button class="color-btn" data-color="#10b981" style="background: #10b981;"></button>
+          <button class="color-btn" data-color="#f59e0b" style="background: #f59e0b;"></button>
+          <button class="color-btn" data-color="#ec4899" style="background: #ec4899;"></button>
+          <button class="color-btn" data-color="#ef4444" style="background: #ef4444;"></button>
+          <button class="color-btn" data-color="#f97316" style="background: #f97316;"></button>
+          <button class="color-btn" data-color="#eab308" style="background: #eab308;"></button>
+          <button class="color-btn" data-color="#22c55e" style="background: #22c55e;"></button>
+          <button class="color-btn" data-color="#3b82f6" style="background: #3b82f6;"></button>
+          <button class="color-btn" data-color="#6366f1" style="background: #6366f1;"></button>
+          <button class="color-btn" data-color="#a855f7" style="background: #a855f7;"></button>
+        </div>
+
+        <!-- Draw Tools -->
+        <div class="draw-tools">
+          <button class="draw-tool-btn active" data-tool="pen">
+            <i class="fas fa-pen"></i>
+            <span>Pen</span>
+          </button>
+          <button class="draw-tool-btn" data-tool="marker">
+            <i class="fas fa-highlighter"></i>
+            <span>Marker</span>
+          </button>
+          <button class="draw-tool-btn" data-tool="neon">
+            <i class="fas fa-wand-magic-sparkles"></i>
+            <span>Neon</span>
+          </button>
+          <button class="draw-tool-btn" data-tool="eraser">
+            <i class="fas fa-eraser"></i>
+            <span>Eraser</span>
+          </button>
+        </div>
+
+        <!-- Brush Size -->
+        <div class="brush-size-control">
+          <i class="fas fa-pen" style="font-size: 12px;"></i>
+          <input type="range" id="brushSize" min="2" max="50" value="5" class="brush-slider">
+          <i class="fas fa-pen" style="font-size: 20px;"></i>
+        </div>
+
+        <!-- Clear Drawing -->
+        <button class="btn-clear-draw" id="btnClearDraw">
+          <i class="fas fa-trash"></i> Clear drawing
+        </button>
+      </div>
+
+      <!-- TEXT PANEL -->
+      <div class="tool-panel" id="panelText">
+
+        <!-- Add Text Button -->
+        <button class="btn-add-text" id="btnAddText">
+          <i class="fas fa-plus"></i> Tap to add text on canvas
+        </button>
+
+        <!-- Font Selection -->
+        <div class="font-selection">
+          <button class="font-btn active" data-font="Poppins">Poppins</button>
+          <button class="font-btn" data-font="Inter">Inter</button>
+          <button class="font-btn" data-font="Fraunces">Fraunces</button>
+          <button class="font-btn" data-font="Space Grotesk">Space Gro</button>
+        </div>
+
+        <!-- Color Palette for Text -->
+        <div class="color-palette">
+          <button class="color-btn active" data-color="#ffffff" style="background: #ffffff;"></button>
+          <button class="color-btn" data-color="#000000" style="background: #000000;"></button>
+          <button class="color-btn" data-color="#10b981" style="background: #10b981;"></button>
+          <button class="color-btn" data-color="#f59e0b" style="background: #f59e0b;"></button>
+          <button class="color-btn" data-color="#ec4899" style="background: #ec4899;"></button>
+          <button class="color-btn" data-color="#ef4444" style="background: #ef4444;"></button>
+          <button class="color-btn" data-color="#f97316" style="background: #f97316;"></button>
+          <button class="color-btn" data-color="#eab308" style="background: #eab308;"></button>
+          <button class="color-btn" data-color="#22c55e" style="background: #22c55e;"></button>
+          <button class="color-btn" data-color="#3b82f6" style="background: #3b82f6;"></button>
+          <button class="color-btn" data-color="#6366f1" style="background: #6366f1;"></button>
+          <button class="color-btn" data-color="#a855f7" style="background: #a855f7;"></button>
+        </div>
+
+        <!-- Text Controls -->
+        <div class="text-controls">
+          <button class="text-control-btn" id="btnDecreaseFontSize">
+            <i class="fas fa-minus"></i>
+          </button>
+          <span class="font-size-display" id="fontSizeDisplay">32</span>
+          <button class="text-control-btn" id="btnIncreaseFontSize">
+            <i class="fas fa-plus"></i>
+          </button>
+          <button class="text-control-btn" id="btnTextAlign">
+            <i class="fas fa-align-left"></i>
+          </button>
+          <button class="text-control-btn" id="btnTextBackground">
+            <i class="fas fa-fill"></i>
+          </button>
+          <button class="text-control-btn" id="btnTextBold">
+            <i class="fas fa-bold"></i>
+          </button>
+        </div>
+
+        <p class="tool-hint">Text canvas pe seedha likho · drag/rotate/scale handles se adjust karo</p>
+      </div>
+
+      <!-- STICKERS PANEL -->
+      <div class="tool-panel" id="panelStickers">
+
+        <!-- Sticker Categories -->
+        <div class="sticker-categories">
+          <button class="sticker-cat-btn active" data-category="smileys">Smileys</button>
+          <button class="sticker-cat-btn" data-category="hands">Hands</button>
+          <button class="sticker-cat-btn" data-category="love">Love</button>
+          <button class="sticker-cat-btn" data-category="nature">Nature</button>
+          <button class="sticker-cat-btn" data-category="misc">Misc</button>
+        </div>
+
+        <!-- Sticker Grid -->
+        <div class="sticker-grid" id="stickerGrid">
+          <!-- Smileys -->
+          <button class="sticker-item" data-emoji="😀">😀</button>
+          <button class="sticker-item" data-emoji="😂">😂</button>
+          <button class="sticker-item" data-emoji="😍">😍</button>
+          <button class="sticker-item" data-emoji="🤩">🤩</button>
+          <button class="sticker-item" data-emoji="😊">😊</button>
+          <button class="sticker-item" data-emoji="😎">😎</button>
+          <button class="sticker-item" data-emoji="😭">😭</button>
+          <button class="sticker-item" data-emoji="🥺">🥺</button>
+          <button class="sticker-item" data-emoji="😤">😤</button>
+          <button class="sticker-item" data-emoji="😇">😇</button>
+          <button class="sticker-item" data-emoji="🤔">🤔</button>
+          <button class="sticker-item" data-emoji="😴">😴</button>
+          <button class="sticker-item" data-emoji="🤯">🤯</button>
+          <button class="sticker-item" data-emoji="😱">😱</button>
+          <button class="sticker-item" data-emoji="🥳">🥳</button>
+          <button class="sticker-item" data-emoji="😈">😈</button>
+          <button class="sticker-item" data-emoji="🤡">🤡</button>
+          <button class="sticker-item" data-emoji="🥶">🥶</button>
+        </div>
+
+        <p class="tool-hint">Tap sticker to add on canvas · drag to position · pinch to resize</p>
+      </div>
+
+      <!-- SHAPES PANEL -->
+      <div class="tool-panel" id="panelShapes">
+
+        <!-- Shape Grid -->
+        <div class="shape-grid">
+          <button class="shape-btn" data-shape="square">
+            <svg viewBox="0 0 100 100">
+              <rect x="10" y="10" width="80" height="80" fill="none" stroke="currentColor" stroke-width="4" />
+            </svg>
+          </button>
+          <button class="shape-btn" data-shape="circle">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="4" />
+            </svg>
+          </button>
+          <button class="shape-btn" data-shape="triangle">
+            <svg viewBox="0 0 100 100">
+              <polygon points="50,10 90,90 10,90" fill="none" stroke="currentColor" stroke-width="4" />
+            </svg>
+          </button>
+          <button class="shape-btn" data-shape="line">
+            <svg viewBox="0 0 100 100">
+              <line x1="10" y1="90" x2="90" y2="10" stroke="currentColor" stroke-width="4" />
+            </svg>
+          </button>
+          <button class="shape-btn" data-shape="arrow">
+            <svg viewBox="0 0 100 100">
+              <path d="M10,50 L70,50 L70,30 L90,50 L70,70 L70,50" fill="none" stroke="currentColor" stroke-width="4" />
+            </svg>
+          </button>
+          <button class="shape-btn" data-shape="star">
+            <svg viewBox="0 0 100 100">
+              <polygon points="50,10 61,38 90,38 68,55 78,83 50,65 22,83 32,55 10,38 39,38" fill="none"
+                stroke="currentColor" stroke-width="3" />
+            </svg>
+          </button>
+          <button class="shape-btn" data-shape="heart">
+            <svg viewBox="0 0 100 100">
+              <path
+                d="M50,85 C50,85 15,60 15,40 C15,25 25,15 35,15 C42,15 48,20 50,25 C52,20 58,15 65,15 C75,15 85,25 85,40 C85,60 50,85 50,85 Z"
+                fill="none" stroke="currentColor" stroke-width="3" />
+            </svg>
+          </button>
+          <button class="shape-btn" data-shape="hexagon">
+            <svg viewBox="0 0 100 100">
+              <polygon points="50,10 85,30 85,70 50,90 15,70 15,30" fill="none" stroke="currentColor"
+                stroke-width="4" />
+            </svg>
+          </button>
+          <button class="shape-btn" data-shape="speech">
+            <svg viewBox="0 0 100 100">
+              <path d="M10,20 L90,20 L90,70 L60,70 L50,85 L50,70 L10,70 Z" fill="none" stroke="currentColor"
+                stroke-width="4" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Shape Controls -->
+        <div class="shape-controls">
+          <button class="shape-control-btn" id="btnShapeColor">
+            <i class="fas fa-palette"></i>
+          </button>
+          <button class="shape-control-btn" id="btnShapeFill">
+            <i class="fas fa-fill-drip"></i>
+            <span>Fill: <span id="fillStatus">On</span></span>
+          </button>
+        </div>
+
+        <p class="tool-hint">Shape select karo · canvas pe tap karke add karo · drag/resize karo</p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Music Panel (Hidden) -->
+  <div class="music-panel" id="musicPanel" style="display: none;">
+    <div class="music-header">
+      <button class="btn-close-music"><i class="fas fa-times"></i></button>
+      <h3>Add Music</h3>
+    </div>
+    <div class="music-section">
+      <h4>Trending Now</h4>
+      <div class="music-list">
+        <button class="music-item">
+          <i class="fas fa-music"></i>
+          <div class="music-info">
+            <span class="music-title">Summer Vibes</span>
+            <span class="music-artist">DJ Tropical</span>
+          </div>
+          <i class="fas fa-play"></i>
+        </button>
+        <button class="music-item">
+          <i class="fas fa-music"></i>
+          <div class="music-info">
+            <span class="music-title">Chill Beats</span>
+            <span class="music-artist">Lo-Fi Hip Hop</span>
+          </div>
+          <i class="fas fa-play"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final Share Modal -->
+  <div class="share-modal" id="shareModal" style="display: none;">
+    <div class="share-content">
+      <i class="fas fa-check-circle"></i>
+      <h2>Ready to share 🎉</h2>
+      <p>Sab layers image mein merge ho gaye</p>
+      <div class="share-actions">
+        <button class="btn-edit-more">
+          <i class="fas fa-pen"></i> Edit more
+        </button>
+        <button class="btn-save-story">
+          <i class="fas fa-download"></i> Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="story-editor-new.js"></script>
+</body>
+
+</html>

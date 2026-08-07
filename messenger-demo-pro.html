@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2E6B41">
+    <title>Aarvex Messenger Pro — Full Screen Demo</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Base Styles -->
+    <style>
+        :root {
+            --cream: #FDFAF4;
+            --white: #fff;
+            --mist: #EDF4EF;
+            --leaf: #2E6B41;
+            --green-600: #3E9159;
+            --gold: #C7993A;
+            --gold-300: #F4D68E;
+            --gold-400: #F0C97A;
+            --text: #16120C;
+            --text2: #445;
+            --text3: #6B5F50;
+            --text4: #b5bdb7;
+            --border: #E4DBCA;
+            --neutral-0: #12160f;
+            --neutral-25: #171c13;
+            --neutral-50: #1c2118;
+            --neutral-100: #232a1e;
+            --neutral-200: #2c3228;
+            --neutral-300: #D5C9B6;
+            --neutral-400: #3a4034;
+            --neutral-600: #8a927f;
+            --neutral-900: #f3f3ee;
+
+            --color-surface-base: var(--cream);
+            --color-surface-raised: var(--white);
+            --color-surface-sunken: var(--mist);
+            --color-action-primary: var(--leaf);
+            --color-action-secondary: var(--gold);
+            --color-text-primary: var(--text);
+            --color-text-tertiary: var(--text3);
+            --color-border-subtle: var(--border);
+            --color-feedback-error: #D93644;
+            --color-feedback-success: #2E6B41;
+
+            --f-display-ui: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+            --f-body: 'Inter', system-ui, sans-serif;
+
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+
+            --r-sm: 10px;
+            --r-md: 16px;
+            --r-full: 999px;
+
+            --t-fast: 0.15s;
+            --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+            --sh-xs: 0 1px 3px rgba(13, 11, 8, 0.06);
+            --sh-sm: 0 4px 12px rgba(13, 11, 8, 0.08);
+            --sh-md: 0 16px 48px rgba(13, 11, 8, 0.13);
+            --sh-lg: 0 32px 80px rgba(13, 11, 8, 0.18);
+            --sh-leaf: 0 4px 14px rgba(46, 107, 65, 0.25);
+
+            --gradient-brand-soft: linear-gradient(135deg, #3E9159, #2E6B41);
+        }
+
+        html[data-theme="dark"] {
+            --color-surface-base: var(--neutral-0);
+            --color-surface-raised: var(--neutral-50);
+            --color-surface-sunken: var(--neutral-25);
+            --color-text-primary: var(--neutral-900);
+            --color-text-tertiary: var(--neutral-600);
+            --color-border-subtle: var(--neutral-200);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--f-body);
+            background: linear-gradient(135deg, #FDFAF4 0%, #EDF4EF 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--text);
+        }
+
+        html[data-theme="dark"] body {
+            background: linear-gradient(135deg, #12160f 0%, #0d1610 100%);
+            color: var(--neutral-900);
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .demo-header h1 {
+            font-family: var(--f-display-ui);
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--leaf);
+            margin-bottom: 8px;
+        }
+
+        .demo-header p {
+            font-size: 15px;
+            color: var(--text3);
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .demo-btn {
+            padding: 12px 24px;
+            border-radius: 999px;
+            border: none;
+            background: var(--leaf);
+            color: white;
+            font-family: var(--f-display-ui);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: var(--sh-leaf);
+        }
+
+        .demo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 107, 65, 0.35);
+        }
+
+        .demo-btn:active {
+            transform: scale(0.96);
+        }
+
+        .demo-btn-secondary {
+            background: rgba(46, 107, 65, 0.1);
+            color: var(--leaf);
+            box-shadow: none;
+        }
+
+        .theme-toggle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(46, 107, 65, 0.1);
+            color: var(--leaf);
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(46, 107, 65, 0.18);
+            transform: scale(1.06);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="demo-header">
+        <h1>Aarvex Messenger Pro</h1>
+        <p>Full-screen professional messenger experience</p>
+    </div>
+
+    <div class="demo-controls">
+        <button class="demo-btn" onclick="openMessengerHub()">
+            <i class="fa-solid fa-comment-dots"></i> Open Messages
+        </button>
+        <button class="demo-btn" onclick="openDemoChat()">
+            <i class="fa-solid fa-message"></i> Open Chat
+        </button>
+        <button class="demo-btn-secondary" onclick="showCallDemo()">
+            <i class="fa-solid fa-phone"></i> Call Demo
+        </button>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+    </div>
+
+    <!-- Load Messenger Styles -->
+    <link rel="stylesheet" href="ax-messenger.css">
+    <link rel="stylesheet" href="ax-messenger-pro.css">
+
+    <!-- Load Messenger Scripts -->
+    <script src="ax-messenger.js"></script>
+    <script src="ax-messenger-e2e.js"></script>
+    <script src="ax-messenger-webrtc.js"></script>
+
+    <script>
+        // Theme toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme === 'dark' ? 'dark' : '');
+
+            const icon = document.querySelector('.theme-toggle i');
+            icon.className = newTheme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        }
+
+        // Demo: Open messenger hub
+        function openMessengerHub() {
+            const overlay = document.createElement('div');
+            overlay.id = 'axInboxOverlay';
+            overlay.className = 'ax-chat-overlay';
+            overlay.innerHTML = `
+                <div class="ax-chat-sheet ax-msg-hub">
+                    <div class="ax-chat-topbar">
+                        <button type="button" class="ax-chat-back" onclick="closeMessenger()" aria-label="Close">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <b>Messages</b>
+                        <button type="button" class="ax-chat-newbtn" aria-label="Menu">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="ax-msg-hub-tabs">
+                        <button type="button" class="ax-msg-hub-tab active" aria-label="Chats">
+                            <i class="fa-solid fa-comment-dots"></i>
+                        </button>
+                        <button type="button" class="ax-msg-hub-tab" aria-label="Calls">
+                            <i class="fa-solid fa-phone"></i>
+                        </button>
+                        <button type="button" class="ax-msg-hub-tab" aria-label="Settings">
+                            <i class="fa-solid fa-gear"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="axMsgHubBody" class="ax-inbox-list">
+                        <div class="ax-inbox-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" placeholder="Search or start new chat">
+                        </div>
+                        
+                        <div class="ax-msg-filters">
+                            <button class="ax-msg-chip active">All</button>
+                            <button class="ax-msg-chip">Unread</button>
+                            <button class="ax-msg-chip">Favourites</button>
+                            <button class="ax-msg-chip">Groups</button>
+                        </div>
+                        
+                        ${generateDemoConversations()}
+                    </div>
+                </div>
+            `;
+
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeMessenger();
+            });
+
+            document.body.appendChild(overlay);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function generateDemoConversations() {
+            const conversations = [
+                { name: 'Parag Lakhadive', preview: 'Hey! How are you doing?', time: 'Just now', unread: 3, photo: 'P', live: true },
+                { name: 'Parag Fastway', preview: 'The project looks great 👍', time: '2m ago', unread: 0, photo: 'P', live: false },
+                { name: 'Aarvex User', preview: 'Jaise ki ismein bahut se chijen karna hai...', time: '5m ago', unread: 1, photo: 'A', live: false },
+                { name: 'Team Discussion', preview: 'Sarah: Let me check that', time: '1h ago', unread: 0, photo: 'T', live: false },
+                { name: 'Design Team', preview: 'New mockups shared', time: 'Yesterday', unread: 5, photo: 'D', live: false },
+            ];
+
+            return conversations.map(conv => `
+                <button type="button" class="ax-inbox-row" onclick="openDemoChat()">
+                    <span class="ax-signal-ring ${conv.live ? 'live' : 'seen'}">
+                        <span class="ax-signal-ph">${conv.photo}</span>
+                    </span>
+                    <div class="ax-inbox-text">
+                        <b>${conv.name}</b>
+                        <span>${conv.preview}</span>
+                    </div>
+                    <div class="ax-inbox-meta">
+                        <span class="ax-inbox-ts">${conv.time}</span>
+                        ${conv.unread ? `<span class="ax-inbox-badge">${conv.unread}</span>` : ''}
+                    </div>
+                </button>
+            `).join('');
+        }
+
+        function closeMessenger() {
+            const overlay = document.getElementById('axInboxOverlay');
+            if (overlay) overlay.remove();
+            document.body.style.overflow = '';
+        }
+
+        // Demo: Open chat conversation
+        function openDemoChat() {
+            closeMessenger(); // Close hub first
+
+            const overlay = document.createElement('div');
+            overlay.id = 'axChatOverlay';
+            overlay.className = 'ax-chat-overlay';
+            overlay.innerHTML = `
+                <div class="ax-chat-sheet">
+                    <div class="ax-chat-topbar">
+                        <button type="button" class="ax-chat-back" onclick="closeDemoChat()" aria-label="Back">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <button type="button" class="ax-chat-peer" style="border: none; background: none;">
+                            <span class="ax-signal-ring seen">
+                                <span class="ax-signal-ph">P</span>
+                            </span>
+                            <b>Parag Fastway</b>
+                        </button>
+                        <div class="ax-chat-call">
+                            <button type="button" class="ax-chat-callbtn" onclick="alert('Voice call')" aria-label="Voice call">
+                                <i class="fa-solid fa-phone"></i>
+                            </button>
+                            <button type="button" class="ax-chat-callbtn" onclick="showCallDemo()" aria-label="Video call">
+                                <i class="fa-solid fa-video"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="ax-chat-messages" id="demoMessages">
+                        ${generateDemoMessages()}
+                    </div>
+                    
+                    <div class="ax-chat-composer">
+                        <button type="button" class="ax-chat-attach-btn" aria-label="Attach">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                        <button type="button" class="ax-chat-attach-btn" aria-label="Emoji">
+                            <i class="fa-regular fa-face-smile"></i>
+                        </button>
+                        <input type="text" id="demoChatInput" placeholder="Message…" onkeydown="if(event.key==='Enter') sendDemoMessage()">
+                        <button type="button" class="ax-chat-send-btn" onclick="sendDemoMessage()" aria-label="Send">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                        <button type="button" class="ax-chat-attach-btn" aria-label="Voice">
+                            <i class="fa-solid fa-microphone"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeDemoChat();
+            });
+
+            document.body.appendChild(overlay);
+            document.body.style.overflow = 'hidden';
+
+            // Auto-scroll to bottom
+            setTimeout(() => {
+                const msgContainer = document.getElementById('demoMessages');
+                if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
+            }, 100);
+        }
+
+        function generateDemoMessages() {
+            const messages = [
+                { text: 'Hi! How are you doing?', time: '03:56 PM', mine: false },
+                { text: 'Hey! I\'m doing great, thanks for asking 😊', time: '03:57 PM', mine: true, status: 'read' },
+                { text: 'Working on the new messenger design', time: '03:57 PM', mine: true, status: 'read' },
+                { text: 'That sounds exciting! Can\'t wait to see it', time: '03:58 PM', mine: false, reactions: [{ emoji: '❤️', count: 1 }] },
+                { text: 'I\'ll share the preview soon', time: '03:58 PM', mine: true, status: 'delivered' },
+            ];
+
+            let html = '<div class="ax-chat-daysep"><span>Today</span></div>';
+
+            messages.forEach((msg, idx) => {
+                const wrapClass = msg.mine ? 'ax-chat-out' : 'ax-chat-in';
+                const bubbleClass = msg.mine ? 'mine' : 'theirs';
+
+                html += `
+                    <div class="ax-msg-bubble-wrap ${wrapClass}" data-id="${idx}">
+                        ${!msg.mine ? '<span class="ax-signal-ring seen" style="width: 32px; height: 32px; flex-shrink: 0;"><span class="ax-signal-ph" style="font-size: 12px;">P</span></span>' : ''}
+                        <div>
+                            <div class="ax-chat-bubble ${bubbleClass}">
+                                ${msg.text}
+                            </div>
+                            <div class="ax-chat-time-${msg.mine ? 'out' : 'in'}">
+                                ${msg.time}
+                                ${msg.status ? `<span class="ax-chat-delivery-status ${msg.status === 'read' ? 'ax-chat-check-read' : 'ax-chat-check-delivered'}"><i class="fa-solid fa-check-double"></i></span>` : ''}
+                            </div>
+                            ${msg.reactions ? `
+                                <div class="ax-chat-reactions">
+                                    ${msg.reactions.map(r => `<span class="ax-chat-reaction-pill">${r.emoji} <span class="ax-chat-reaction-count">${r.count}</span></span>`).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            return html;
+        }
+
+        function sendDemoMessage() {
+            const input = document.getElementById('demoChatInput');
+            if (!input || !input.value.trim()) return;
+
+            const msgContainer = document.getElementById('demoMessages');
+            if (!msgContainer) return;
+
+            const text = input.value.trim();
+            const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+            const msgHtml = `
+                <div class="ax-msg-bubble-wrap ax-chat-out">
+                    <div>
+                        <div class="ax-chat-bubble mine">${text}</div>
+                        <div class="ax-chat-time-out">
+                            ${time}
+                            <span class="ax-chat-delivery-status ax-chat-check-sent"><i class="fa-solid fa-check"></i></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            msgContainer.insertAdjacentHTML('beforeend', msgHtml);
+            input.value = '';
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+        }
+
+        function closeDemoChat() {
+            const overlay = document.getElementById('axChatOverlay');
+            if (overlay) overlay.remove();
+            document.body.style.overflow = '';
+        }
+
+        // Demo: Show call interface
+        function showCallDemo() {
+            closeDemoChat();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'axRtcOverlay';
+            overlay.className = 'ax-rtc-overlay';
+            overlay.innerHTML = `
+                <div class="ax-rtc-sheet">
+                    <div class="ax-rtc-videos">
+                        <video id="axRtcRemote" autoplay playsinline style="background: linear-gradient(135deg, #1a2820, #0d1610);"></video>
+                        <video id="axRtcLocal" autoplay playsinline muted style="background: #1a2820;"></video>
+                    </div>
+                    
+                    <div class="ax-rtc-info">
+                        <b>Parag Fastway</b>
+                        <span id="callStatus">Connecting...</span>
+                    </div>
+                    
+                    <div class="ax-rtc-controls">
+                        <button type="button" id="mutBtn" onclick="toggleMute()" aria-label="Mute">
+                            <i class="fa-solid fa-microphone"></i>
+                        </button>
+                        <button type="button" id="camBtn" onclick="toggleCam()" aria-label="Camera">
+                            <i class="fa-solid fa-video"></i>
+                        </button>
+                        <button type="button" class="ax-rtc-end" onclick="endCallDemo()" aria-label="End call">
+                            <i class="fa-solid fa-phone-slash"></i>
+                        </button>
+                        <button type="button" aria-label="Speaker">
+                            <i class="fa-solid fa-volume-high"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+            document.body.style.overflow = 'hidden';
+
+            // Simulate connection
+            setTimeout(() => {
+                const status = document.getElementById('callStatus');
+                if (status) status.textContent = 'Connected';
+            }, 1500);
+        }
+
+        let isMuted = false;
+        let isCamOff = false;
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const btn = document.getElementById('mutBtn');
+            if (btn) {
+                btn.classList.toggle('off', isMuted);
+                btn.querySelector('i').className = isMuted ? 'fa-solid fa-microphone-slash' : 'fa-solid fa-microphone';
+            }
+        }
+
+        function toggleCam() {
+            isCamOff = !isCamOff;
+            const btn = document.getElementById('camBtn');
+            if (btn) {
+                btn.classList.toggle('off', isCamOff);
+                btn.querySelector('i').className = isCamOff ? 'fa-solid fa-video-slash' : 'fa-solid fa-video';
+            }
+        }
+
+        function endCallDemo() {
+            const overlay = document.getElementById('axRtcOverlay');
+            if (overlay) overlay.remove();
+            document.body.style.overflow = '';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Add touch feedback for better mobile UX
+            document.body.addEventListener('touchstart', () => { }, { passive: true });
+
+            console.log('%cAarvex Messenger Pro%c\n🚀 Full-screen professional messaging experience\n💚 Built with advanced UI/UX patterns',
+                'font-size: 20px; font-weight: bold; color: #2E6B41;',
+                'font-size: 12px; color: #6B5F50;');
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,36 @@
+name: SVG optimization check
+
+on:
+  pull_request:
+    paths:
+      - 'Icons/**.svg'
+  push:
+    paths:
+      - 'Icons/**.svg'
+
+jobs:
+  svgo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install svgo
+        run: npm install -g svgo
+      - name: Run SVGO
+        run: |
+          svgo Icons/*.svg --multipass
+      - name: Check for changes
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "SVGO modified files — please commit optimized SVGs"
+            git --no-pager status --porcelain
+            git --no-pager diff
+            exit 1
+          else
+            echo "All SVGs optimized"
+          fi

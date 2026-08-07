@@ -1,0 +1,319 @@
+/* ══════════════════════════════════════════════════════════════
+   AARVEX GLOBAL — SHARED COMPONENTS (Phase 2)
+   Loaded by BOTH index.html and portal.html, after tokens.css and
+   catalogue-ui.css. Everything here references Layer 2/3 tokens
+   from tokens.css only (§1 of the master prompt) — no raw hex.
+
+   This file is additive: it does not redefine any class that
+   already has a correct, working definition elsewhere. Where a
+   fix required consolidating a duplicate/near-duplicate rule (the
+   same class of bug as Section 0 #1 — portal-ui-pro.css:521's old
+   .status-new collision), the duplicate was deleted at its old
+   location, not shadowed. See the Phase 2 summary for the exact
+   before/after diff of each moved rule.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Toast system ─────────────────────────────────────────────
+   Consolidates three previously-scattered, hardcoded-hex definitions
+   into one token-driven rule:
+     - portal-ui-pro.css:423-446 (base #toast + success/error/warning/
+       info colors, all hardcoded hex, all !important)
+     - portal-ui.css:400-415 (mobile-only #toast override, also
+       hardcoded !important)
+   Both blocks are DELETED from those files (see Phase 2 diff) — not
+   shadowed — exactly per the Section 0 #1 precedent. index.html
+   previously had no #toast styling or element at all, so guest
+   users on the marketing page never saw wishlist/error toasts;
+   this makes the same toast available there too. JS side:
+   CatalogueUI.toast() in catalogue-ui.js, installed as
+   window.showToast only where nothing has already claimed that
+   name (portal.html's own richer inline implementation is
+   untouched and still wins on portal.html). */
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%) translateY(12px);
+  z-index: 9999;
+  min-width: 200px;
+  max-width: min(420px, calc(100vw - 32px));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 22px;
+  border-radius: var(--r-sm);
+  font-size: var(--text-body-sm);
+  font-weight: 600;
+  color: var(--color-text-on-action);
+  box-shadow: var(--sh-lg);
+  backdrop-filter: blur(12px);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-align: left;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
+  background: var(--color-surface-brand-deep);
+}
+#toast.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+#toast.success { background: var(--color-feedback-success); }
+#toast.error   { background: var(--color-feedback-error); }
+#toast.warning { background: var(--color-feedback-warning); color: var(--neutral-900); }
+#toast.info,
+#toast.show:not(.success):not(.error):not(.warning) {
+  /* Covers both callers: CatalogueUI.toast() (catalogue-ui.js) always
+     appends a type class ("show info"), while portal.html's own existing
+     showToast() (portal.html:3674) leaves the default/info case as bare
+     "show" with no type suffix — this rule has to catch both. */
+  background: var(--color-surface-brand-deep);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #toast { transition: opacity var(--duration-fast) linear; transform: translateX(-50%); }
+}
+
+@media (max-width: 768px) {
+  #toast {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    white-space: normal;
+    max-width: calc(100vw - 32px);
+    font-size: var(--text-caption);
+    padding: 11px 18px;
+  }
+}
+
+/* ── Notification-item extensions (resolves Section 0 #4) ──────
+   .notif-item / .notif-icon / .notif-title / .notif-body / .notif-time
+   already exist and are correctly styled in portal.html:1026-1032 —
+   NOT redefined here. These are only the new pieces the templated
+   render (CatalogueUI.notificationItemHtml) introduces: the flex
+   content wrapper, supporting-fact lines, the collapsible details
+   block, the mark-read action, and the OTP gold-highlight modifier
+   (previously only present as .notif-alert-item.otp-item in
+   portal-ui.css:576 — extended here to the unified .notif-item
+   class so both the full Alerts panel and the bell popup get it). */
+.notif-item-content { flex: 1; min-width: 0; }
+.notif-fact { margin-top: 2px; }
+.notif-details {
+  margin-top: 6px;
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary);
+}
+.notif-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-action-primary);
+  list-style: none;
+}
+.notif-details summary::-webkit-details-marker { display: none; }
+.notif-details summary::after { content: '›'; margin-left: 4px; display: inline-block; transform: rotate(90deg); transition: transform var(--duration-fast) var(--ease-out); }
+.notif-details[open] summary::after { transform: rotate(270deg); }
+.notif-details div { padding: 4px 0 0 2px; }
+.notif-markread-btn {
+  margin-top: 6px;
+  font-size: var(--text-caption);
+  color: var(--color-action-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  min-height: 32px; /* generous tap target even though the text is small */
+}
+.notif-item.otp-item {
+  background: linear-gradient(135deg, var(--gold-50), var(--green-50));
+  border-radius: var(--r-sm);
+}
+/* Compact sizing when the same template renders inside the bell-icon
+   popup (.notif-alert-list) instead of the full-width Alerts panel. */
+.notif-alert-list .notif-icon { width: 34px; height: 34px; font-size: 13px; }
+.notif-alert-list .notif-title { font-size: 12.5px; }
+
+/* ── One-tap copy chips (Order ID / Tracking key inside the message) ── */
+.notif-chips-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.notif-copy-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; font-family: inherit;
+  color: var(--color-action-primary, #2E6B41);
+  background: rgba(46, 107, 65, .07);
+  border: 1px dashed rgba(46, 107, 65, .4);
+  border-radius: 999px; padding: 5px 11px; cursor: pointer;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.notif-copy-chip:hover { background: rgba(46, 107, 65, .14); }
+.notif-copy-chip.copied { background: #2E6B41; color: #fff; border-style: solid; }
+
+/* ── Per-notification delete (corner ×) ── */
+.notif-item { position: relative; }
+/* keep long titles from running under the corner delete button */
+.notif-item .notif-item-content { padding-right: 30px; }
+.notif-del-btn {
+  position: absolute; top: 8px; right: 8px;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: none; background: none; cursor: pointer;
+  color: var(--color-text-tertiary, #8B7C6A); font-size: 12px;
+  display: grid; place-items: center;
+  transition: background .15s, color .15s;
+}
+.notif-del-btn:hover { background: rgba(217, 54, 68, .1); color: #DC2626; }
+
+/* ── New-notification popup card ───────────────────────────────────
+   Slides in top-right (≈⅓ screen width on desktop, full-width strip on
+   mobile) with the real title + message; grows with the text. Dismissal
+   (auto or ×) flies it INTO the bell icon via --fly-x/--fly-y set by JS. */
+#axNotifPop {
+  position: fixed; top: 74px; right: 16px; z-index: 9500;
+  width: min(400px, 33vw);
+  display: none; align-items: flex-start; gap: 11px;
+  padding: 14px 15px;
+  background: var(--color-surface-raised, #fff);
+  border: 1px solid rgba(20, 48, 38, .1);
+  border-left: 4px solid #2E6B41;
+  border-radius: 16px;
+  box-shadow: 0 18px 48px rgba(13, 11, 8, .18);
+  cursor: pointer;
+  transform-origin: center;
+}
+#axNotifPop.show { display: flex; animation: axnpIn .38s cubic-bezier(.22, 1, .36, 1); }
+@keyframes axnpIn { from { opacity: 0; transform: translateY(-14px) scale(.96); } to { opacity: 1; transform: none; } }
+#axNotifPop.fly {
+  animation: none;
+  transform: translate(var(--fly-x, 40vw), var(--fly-y, -60px)) scale(.08);
+  opacity: 0;
+  transition: transform .45s cubic-bezier(.5, -.1, .75, .4), opacity .4s ease;
+  pointer-events: none;
+}
+#axNotifPop .axnp-icon {
+  width: 36px; height: 36px; border-radius: 12px; flex-shrink: 0;
+  background: linear-gradient(135deg, #2E6B41, #3E9159); color: #fff;
+  display: grid; place-items: center; font-size: 14px;
+}
+#axNotifPop .axnp-body { flex: 1; min-width: 0; }
+#axNotifPop .axnp-title { font-size: 13.5px; font-weight: 800; color: var(--color-text-primary, #16120C); margin-bottom: 3px; }
+#axNotifPop .axnp-text {
+  font-size: 12.5px; line-height: 1.5; color: var(--color-text-secondary, #4C4236);
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
+#axNotifPop .axnp-close {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  border: none; background: rgba(20, 48, 38, .06); cursor: pointer;
+  color: var(--color-text-tertiary, #8B7C6A); font-size: 12px;
+  display: grid; place-items: center; transition: background .15s, color .15s;
+}
+#axNotifPop .axnp-close:hover { background: rgba(20, 48, 38, .12); color: var(--color-text-primary, #16120C); }
+@media (max-width: 768px) {
+  #axNotifPop { top: 66px; left: 12px; right: 12px; width: auto; }
+}
+/* bell acknowledges the card landing in it */
+@keyframes axBellCatch {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.28) rotate(-8deg); }
+  70% { transform: scale(.94) rotate(5deg); }
+  100% { transform: scale(1); }
+}
+.bell-catch { animation: axBellCatch .5s cubic-bezier(.34, 1.56, .64, 1); }
+@media (prefers-reduced-motion: reduce) {
+  #axNotifPop.show { animation: none; }
+  #axNotifPop.fly { transition: opacity .2s; transform: none; }
+  .bell-catch { animation: none; }
+}
+
+/* ── Empty state / error state with retry ───────────────────────
+   Generalizes the loadAddressBook() retry pattern (portal-address.js)
+   so any panel can reuse the same look instead of a bespoke inline
+   error block. CatalogueUI.emptyStateHtml() / errorStateHtml(). */
+.empty-state {
+  padding: var(--space-9) var(--space-4);
+  text-align: center;
+  color: var(--color-text-tertiary);
+}
+.empty-state i { font-size: 32px; opacity: .5; margin-bottom: var(--space-3); display: block; }
+.empty-state b { display: block; font-size: 16px; font-weight: 700; color: var(--color-text-secondary); margin-bottom: 6px; }
+.empty-state p { font-size: var(--text-body-sm); margin: 0; }
+
+/* Shared "patch" card for the Favourites empty states (Products + Shops) so
+   both tabs render in an identical box — same width, padding, and surface. */
+.ax-fav-empty {
+  background: var(--color-surface-raised, #f4f6f4);
+  border: 1px solid var(--color-border-subtle, rgba(20, 48, 38, .08));
+  border-radius: 16px;
+  padding: 30px 22px;
+  max-width: 340px;
+  margin: 22px auto;
+  text-align: center;
+}
+.ax-fav-empty .empty-state { padding: 0; }
+html[data-theme="dark"] .ax-fav-empty {
+  background: var(--neutral-50);
+  border-color: var(--neutral-200);
+}
+
+.error-state {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid rgba(217, 54, 68, .3);
+  background: var(--color-feedback-error-surface);
+  border-radius: var(--r-sm);
+  font-size: var(--text-body-sm);
+  color: var(--color-feedback-error-text);
+}
+.error-state-retry {
+  margin-left: auto;
+  cursor: pointer;
+  text-decoration: underline;
+  color: inherit;
+  font-weight: 600;
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Avatar initials fallback ─────────────────────────────────
+   CatalogueUI.avatarInitialsHtml() — mirrors the look of portal.html's
+   existing renderAvatarEl() (portal.html:2647) initials circle, for
+   pages/spots that don't have that helper (index.html's two raw
+   <img src="${user.picture}"> renders at index.html:2552,2561). */
+.avatar-initials {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--gradient-brand-soft);
+  color: var(--color-text-on-action);
+  font-weight: 700;
+  font-family: var(--f-display-ui);
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+/* ── Filter-chip row scroll affordance (Section 0 #7) ───────────
+   Add class="chip-scroll-fade" to the scroll container that wraps
+   the category filter chips so users can tell it's horizontally
+   scrollable. Pairs with overflow-x:auto already on that container
+   — this only adds the trailing fade mask, it doesn't change layout. */
+.chip-scroll-fade {
+  position: relative;
+}
+.chip-scroll-fade::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 32px;
+  background: linear-gradient(90deg, transparent, var(--color-surface-raised));
+  pointer-events: none;
+}
+
+/* ── Focus-visible baseline ──────────────────────────────────────
+   portal.html:42 already has this exact rule inline — repeated here
+   only so index.html (which has none) gets the same accessible
+   focus ring. Values are kept identical on purpose so there is
+   nothing for the two definitions to disagree about. */
+:focus-visible { outline: 2px solid var(--c-leaf2); outline-offset: 2px; border-radius: 4px; }

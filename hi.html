@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aarvex Messenger — All Screens Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deepest:#0A120D; --bg-page:#0D1712; --bg-panel:#121F18; --bg-panel-raised:#16261D;
+    --line-hairline:#233326; --accent-mint:#3EB489; --accent-mint-dim:#2A8564; --accent-gold:#C9A227;
+    --text-primary:#EAF2ED; --text-secondary:#9FB3A6; --text-muted:#5E7266; --danger:#D2665A;
+    --radius-card:16px; --radius-ctrl:10px;
+    --font-display:'Fraunces', serif; --font-alt-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif; --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg-deepest); color:var(--text-primary); font-family:var(--font-body); line-height:1.6; padding:0 0 80px;}
+  .wrap{max-width:1260px; margin:0 auto; padding:48px 28px;}
+  .eyebrow{font-family:var(--font-mono); font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent-mint); margin-bottom:12px; display:flex; align-items:center; gap:10px;}
+  .eyebrow::before{content:""; width:22px; height:1px; background:var(--accent-mint);}
+  h1{font-family:var(--font-display); font-weight:600; font-size:36px; letter-spacing:-0.01em; max-width:760px; color:#F5FAF6;}
+  .sub{margin-top:14px; max-width:640px; color:var(--text-secondary); font-size:15px;}
+  .vine{height:30px; margin:40px 0 34px;}
+  .vine svg{width:100%; height:100%; opacity:0.85;}
+  .mockup-stage{display:flex; gap:28px; flex-wrap:wrap; justify-content:flex-start;}
+  .phone{width:302px; height:640px; background:var(--bg-panel); border-radius:30px; border:1px solid var(--line-hairline); overflow:hidden; display:flex; flex-direction:column; box-shadow:0 26px 50px -18px rgba(0,0,0,0.6); position:relative;}
+  .phone-caption{font-family:var(--font-mono); font-size:11px; color:var(--text-muted); text-align:center; margin-top:12px; letter-spacing:0.03em;}
+  .phone-num{color:var(--accent-gold);}
+  .phone-col{display:flex; flex-direction:column; align-items:center;}
+  .statusbar{height:26px; display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-family:var(--font-mono); font-size:10px; color:var(--text-secondary); flex-shrink:0;}
+
+  .app-header{padding:4px 18px 14px; display:flex; align-items:center; justify-content:space-between;}
+  .app-title{font-family:var(--font-display); font-weight:600; font-size:21px; color:#F5FAF6;}
+  .header-icons{display:flex; gap:12px; color:var(--text-secondary); font-size:14px;}
+  .tab-row{display:flex; margin:0 18px 10px; border:1px solid var(--line-hairline); border-radius:999px; padding:3px; gap:2px;}
+  .tab-item{flex:1; text-align:center; font-size:11px; padding:7px 0; border-radius:999px; color:var(--text-secondary); font-weight:500;}
+  .tab-item.active{background:var(--accent-mint); color:#062017;}
+  .search-row{padding:0 18px 12px;}
+  .search-box{background:var(--bg-panel-raised); border:1px solid var(--line-hairline); border-radius:var(--radius-ctrl); padding:9px 12px; font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:8px;}
+  .filter-row{padding:0 18px 10px; display:flex; gap:6px;}
+  .chip{font-size:11px; padding:5px 11px; border-radius:999px; border:1px solid var(--line-hairline); color:var(--text-secondary); font-weight:500;}
+  .chip.active{background:var(--accent-mint); color:#062017; border-color:var(--accent-mint);}
+  .chat-list{padding:0 10px; overflow-y:auto; flex:1;}
+  .chat-row{display:flex; align-items:center; gap:11px; padding:10px 8px; border-radius:12px;}
+  .chat-row.unread{background:var(--bg-panel-raised);}
+  .avatar{width:42px; height:42px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-alt-display); font-weight:600; font-size:14px; position:relative;}
+  .avatar.a1{background:#1F3A2C; color:var(--accent-mint);}
+  .avatar.a2{background:#2B2F1E; color:var(--accent-gold);}
+  .avatar.a3{background:#2A1E1E; color:#D2665A;}
+  .avatar .verified{position:absolute; bottom:-2px; right:-2px; width:14px; height:14px; border-radius:50%; background:var(--accent-mint); border:2px solid var(--bg-panel); display:flex; align-items:center; justify-content:center; font-size:8px; color:#062017;}
+  .chat-meta{flex:1; min-width:0;}
+  .chat-name-row{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .chat-name{font-size:13.5px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .chat-time{font-family:var(--font-mono); font-size:10px; color:var(--text-muted); flex-shrink:0;}
+  .chat-preview-row{display:flex; justify-content:space-between; align-items:center; margin-top:2px;}
+  .chat-preview{font-size:11.5px; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:170px;}
+  .unread-badge{background:var(--accent-mint); color:#062017; font-size:10px; font-weight:600; min-width:17px; height:17px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 5px; font-family:var(--font-mono);}
+  .fab{position:absolute; bottom:22px; right:22px; width:48px; height:48px; border-radius:50%; background:var(--accent-mint); display:flex; align-items:center; justify-content:center; color:#062017; font-size:20px; box-shadow:0 10px 22px -6px rgba(62,180,137,0.5);}
+
+  .call-row{display:flex; align-items:center; gap:12px; padding:14px 18px; border-bottom:1px solid var(--line-hairline);}
+  .call-meta{flex:1;}
+  .call-name{font-size:13.5px; font-weight:600;}
+  .call-sub{font-size:11px; color:var(--text-secondary); margin-top:3px; display:flex; align-items:center; gap:5px;}
+  .call-sub .arrow{color:var(--accent-mint);}
+  .call-btn{width:34px; height:34px; border-radius:50%; background:var(--bg-panel-raised); color:var(--accent-mint); display:flex; align-items:center; justify-content:center; font-size:13px;}
+  .empty-state{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:30px; text-align:center;}
+  .empty-state .ic{width:52px; height:52px; border-radius:16px; background:var(--bg-panel-raised); display:flex; align-items:center; justify-content:center; color:var(--accent-mint); font-size:20px; margin-bottom:6px;}
+  .empty-state b{font-size:13px;}
+  .empty-state span{font-size:11.5px; color:var(--text-muted);}
+
+  .settings-group{padding:16px 18px 4px;}
+  .settings-label{font-family:var(--font-mono); font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent-gold); margin-bottom:8px;}
+  .settings-item{display:flex; align-items:center; justify-content:space-between; padding:11px 0; border-top:1px solid var(--line-hairline);}
+  .settings-group .settings-item:first-of-type{border-top:none;}
+  .settings-item .txt b{font-size:13px; font-weight:500; display:block;}
+  .settings-item .txt span{font-size:11px; color:var(--text-muted);}
+  .chev{color:var(--text-muted); font-size:13px;}
+  .toggle{width:36px; height:20px; border-radius:999px; background:var(--accent-mint); position:relative; flex-shrink:0;}
+  .toggle::after{content:""; position:absolute; top:2px; right:2px; width:16px; height:16px; border-radius:50%; background:#062017;}
+  .toggle.off{background:var(--line-hairline);}
+  .toggle.off::after{right:auto; left:2px; background:var(--text-muted);}
+
+  .thread-header{display:flex; align-items:center; gap:10px; padding:8px 14px 12px; border-bottom:1px solid var(--line-hairline);}
+  .thread-header .avatar{width:34px; height:34px; font-size:12px;}
+  .thread-name{font-size:13px; font-weight:600;}
+  .thread-handle{font-family:var(--font-mono); font-size:10px; color:var(--text-muted);}
+  .thread-status{font-size:10px; color:var(--accent-mint); display:flex; align-items:center; gap:5px;}
+  .thread-status::before{content:""; width:5px; height:5px; border-radius:50%; background:var(--accent-mint);}
+  .thread-icons{margin-left:auto; display:flex; gap:14px; color:var(--text-secondary); font-size:13px;}
+  .thread-body{flex:1; padding:14px; display:flex; flex-direction:column; gap:9px; overflow-y:auto; background-image:radial-gradient(circle at 20% 10%, rgba(62,180,137,0.05), transparent 40%); position:relative;}
+  .day-chip{align-self:center; font-family:var(--font-mono); font-size:10px; color:var(--text-muted); background:var(--bg-panel-raised); padding:4px 11px; border-radius:999px; margin-bottom:3px;}
+  .bubble{max-width:78%; padding:8px 12px; font-size:12.5px; line-height:1.5; position:relative;}
+  .bubble.in{align-self:flex-start; background:var(--bg-panel-raised); border-radius:4px 14px 14px 14px;}
+  .bubble.out{align-self:flex-end; background:var(--accent-mint-dim); border-radius:14px 4px 14px 14px; color:#EAF9F1;}
+  .bubble .meta{display:flex; gap:5px; align-items:center; justify-content:flex-end; margin-top:4px;}
+  .bubble .time{font-family:var(--font-mono); font-size:9px; opacity:0.65;}
+  .tick{font-size:10px; color:var(--accent-mint);}
+  .quoted{background:rgba(0,0,0,0.18); border-left:2px solid var(--accent-gold); border-radius:6px; padding:5px 8px; margin-bottom:5px; font-size:11px; color:var(--text-secondary);}
+  .quoted b{color:var(--accent-gold); display:block; font-size:10.5px;}
+  .reaction-pill{position:absolute; bottom:-9px; right:6px; background:var(--bg-panel); border:1px solid var(--line-hairline); border-radius:999px; padding:1px 5px; font-size:10px;}
+  .voice-bubble{align-self:flex-end; background:var(--accent-mint-dim); border-radius:14px 4px 14px 14px; padding:8px 11px; display:flex; align-items:center; gap:9px; max-width:78%;}
+  .voice-play{width:24px; height:24px; border-radius:50%; background:#EAF9F1; color:var(--accent-mint-dim); display:flex; align-items:center; justify-content:center; font-size:10px; flex-shrink:0;}
+  .voice-wave{flex:1; height:18px; display:flex; align-items:center; gap:2px;}
+  .voice-wave span{width:2px; background:rgba(234,249,241,0.55); border-radius:2px;}
+  .voice-dur{font-family:var(--font-mono); font-size:9px; color:rgba(234,249,241,0.75);}
+  .composer{display:flex; align-items:center; gap:9px; padding:11px 13px; border-top:1px solid var(--line-hairline);}
+  .composer-input{flex:1; background:var(--bg-panel-raised); border:1px solid var(--line-hairline); border-radius:999px; padding:9px 15px; font-size:12px; color:var(--text-muted);}
+  .composer-icons{display:flex; gap:10px; color:var(--text-secondary); font-size:13px;}
+  .send-btn{width:32px; height:32px; border-radius:50%; background:var(--accent-mint); display:flex; align-items:center; justify-content:center; color:#062017; font-size:13px;}
+
+  .overlay{position:absolute; inset:0; background:rgba(5,10,7,0.72); display:flex; align-items:flex-end; z-index:5;}
+  .overlay.center{align-items:center; justify-content:center;}
+  .reaction-bar{display:flex; gap:8px; background:var(--bg-panel-raised); border:1px solid var(--line-hairline); border-radius:999px; padding:8px 12px; position:absolute; bottom:190px; left:14px; font-size:16px; z-index:6;}
+  .action-sheet{background:var(--bg-panel); border-top:1px solid var(--line-hairline); border-radius:20px 20px 0 0; padding:16px 16px 20px; width:100%;}
+  .action-item{display:flex; align-items:center; gap:12px; padding:11px 4px; font-size:13px; border-bottom:1px solid var(--line-hairline);}
+  .action-item:last-child{border-bottom:none;}
+  .action-item .ic{width:22px; text-align:center; color:var(--accent-mint);}
+  .action-item.danger .ic{color:var(--danger);}
+  .action-item.danger{color:var(--danger);}
+
+  .modal-card{background:var(--bg-panel); border:1px solid var(--line-hairline); border-radius:18px; width:88%; padding:20px; z-index:6;}
+  .modal-title{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .modal-title b{font-size:14px; font-weight:600;}
+  .modal-title span{font-family:var(--font-mono); font-size:11px; color:var(--text-muted);}
+  .modal-search{background:var(--bg-panel-raised); border:1px solid var(--line-hairline); border-radius:var(--radius-ctrl); padding:9px 12px; font-size:12px; color:var(--text-muted); margin-bottom:14px;}
+  .fwd-row{display:flex; align-items:center; gap:10px; padding:9px 0;}
+  .fwd-row .avatar{width:34px; height:34px; font-size:12px;}
+  .fwd-row .nm{flex:1; font-size:12.5px; font-weight:500;}
+  .radio{width:19px; height:19px; border-radius:50%; border:1.5px solid var(--line-hairline);}
+  .radio.checked{border-color:var(--accent-mint); background:var(--accent-mint); position:relative;}
+  .modal-btn{margin-top:14px; background:var(--accent-mint); color:#062017; text-align:center; padding:11px; border-radius:999px; font-size:12.5px; font-weight:600;}
+
+  .prompt-card{background:var(--bg-panel); border:1px solid var(--line-hairline); border-radius:16px; width:86%; padding:20px; z-index:6;}
+  .prompt-card p{font-size:12.5px; color:var(--text-secondary); margin-bottom:12px;}
+  .prompt-input{width:100%; background:var(--bg-panel-raised); border:1px solid var(--accent-mint); border-radius:var(--radius-ctrl); padding:10px 12px; font-size:12.5px; color:var(--text-primary); margin-bottom:16px;}
+  .prompt-btns{display:flex; gap:8px; justify-content:flex-end;}
+  .pbtn{padding:8px 16px; border-radius:999px; font-size:12px; font-weight:600;}
+  .pbtn.cancel{color:var(--text-secondary); border:1px solid var(--line-hairline);}
+  .pbtn.ok{background:var(--accent-mint); color:#062017;}
+
+  .profile-cover{height:78px; background:linear-gradient(135deg, #1F3A2C, #16261D);}
+  .profile-body{padding:0 18px 18px; margin-top:-30px; overflow-y:auto;}
+  .profile-avatar{width:66px; height:66px; border-radius:20px; background:#1F3A2C; color:var(--accent-mint); display:flex; align-items:center; justify-content:center; font-family:var(--font-alt-display); font-weight:600; font-size:22px; border:4px solid var(--bg-panel); margin-bottom:9px;}
+  .profile-name{font-family:var(--font-display); font-size:18px; font-weight:600;}
+  .profile-handle{font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-bottom:12px;}
+  .stat-row{display:flex; gap:8px; margin-bottom:14px;}
+  .stat{flex:1; background:var(--bg-panel-raised); border-radius:12px; padding:9px 4px; text-align:center;}
+  .stat b{display:block; font-size:14px; font-family:var(--font-alt-display);}
+  .stat span{font-size:9px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;}
+  .action-row{display:flex; gap:7px; margin-bottom:16px;}
+  .btn{flex:1; text-align:center; padding:9px; border-radius:var(--radius-ctrl); font-size:11.5px; font-weight:600;}
+  .btn.primary{background:var(--accent-mint); color:#062017;}
+  .btn.ghost{border:1px solid var(--line-hairline); color:var(--text-primary);}
+  .record-card{background:var(--bg-panel-raised); border-radius:14px; padding:13px; margin-bottom:12px;}
+  .record-title{font-size:11px; font-weight:600; color:var(--text-secondary); margin-bottom:9px;}
+  .record-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:7px;}
+  .record-item{background:var(--bg-panel); border-radius:10px; padding:9px 5px; text-align:center;}
+  .record-item b{display:block; font-size:13px; font-family:var(--font-mono);}
+  .record-item.verified b{color:var(--accent-mint);}
+  .record-item span{font-size:9px; color:var(--text-muted); text-transform:uppercase;}
+  .trust-bar{height:5px; border-radius:3px; background:var(--bg-panel); margin-top:9px; overflow:hidden;}
+  .trust-bar i{display:block; height:100%; width:38%; background:var(--accent-gold);}
+  .trust-label{font-size:9.5px; color:var(--text-muted); margin-top:6px;}
+
+  .privacy-body{padding:16px 18px; overflow-y:auto;}
+  .privacy-title{font-family:var(--font-display); font-size:17px; font-weight:600; margin-bottom:14px;}
+  .bio-box{background:var(--bg-panel-raised); border:1px solid var(--line-hairline); border-radius:var(--radius-ctrl); padding:11px; font-size:11.5px; color:var(--text-muted); margin-bottom:16px; min-height:52px;}
+  .priv-label{font-family:var(--font-mono); font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:var(--accent-gold); margin-bottom:8px;}
+  .priv-row{display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--line-hairline);}
+  .priv-row:first-of-type{border-top:none;}
+  .priv-row .ic{width:16px; text-align:center; color:var(--text-secondary); font-size:13px;}
+  .priv-row .lbl{flex:1; font-size:12.5px;}
+  .save-btn{margin-top:16px; background:var(--accent-mint); color:#062017; text-align:center; padding:11px; border-radius:999px; font-size:12.5px; font-weight:600;}
+
+  footer{margin-top:60px; padding-top:20px; border-top:1px solid var(--line-hairline); color:var(--text-muted); font-size:11.5px; font-family:var(--font-mono);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">All 10 screens — 1:1 redesign</div>
+  <h1>Aapke bheje har screenshot ka pro-level green-theme template</h1>
+  <p class="sub">Har original screen ke saamne uska redesigned version — same flow, same features, bas visual hierarchy, trust signals aur typography upgrade ke saath.</p>
+
+  <div class="vine"><svg viewBox="0 0 1000 30" preserveAspectRatio="none"><path d="M0 15 C 100 4, 150 26, 250 15 S 400 4, 500 15 S 650 26, 750 15 S 900 4, 1000 15" stroke="#2A8564" stroke-width="1.3" fill="none"/></svg></div>
+
+  <div class="mockup-stage">
+
+    <!-- 1: Chat list -->
+    <div class="phone-col">
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+        <div class="app-header"><div class="app-title">Messages</div><div class="header-icons"><span>&#8942;</span></div></div>
+        <div class="tab-row"><div class="tab-item active">Chats</div><div class="tab-item">Calls</div><div class="tab-item">Settings</div></div>
+        <div class="search-row"><div class="search-box">&#128269; Search or start new chat</div></div>
+        <div class="filter-row"><div class="chip active">All</div><div class="chip">Unread</div><div class="chip">Favourites</div></div>
+        <div class="chat-list">
+          <div class="chat-row unread">
+            <div class="avatar a1">NL<span class="verified">&#10003;</span></div>
+            <div class="chat-meta"><div class="chat-name-row"><span class="chat-name">Parag Lakhadive</span><span class="chat-time">Jul 29</span></div><div class="chat-preview-row"><span class="chat-preview">Order confirm ho gaya</span><span class="unread-badge">2</span></div></div>
+          </div>
+          <div class="chat-row">
+            <div class="avatar a2">p</div>
+            <div class="chat-meta"><div class="chat-name-row"><span class="chat-name">parag</span><span class="chat-time">Jul 29</span></div><div class="chat-preview-row"><span class="chat-preview">Theek hai, kal bhej dunga</span></div></div>
+          </div>
+          <div class="chat-row">
+            <div class="avatar a3">A</div>
+            <div class="chat-meta"><div class="chat-name-row"><span class="chat-name">Aarvex user</span><span class="chat-time">Jul 29</span></div><div class="chat-preview-row"><span class="chat-preview">Jaise ki ismein bahut se chijen...</span></div></div>
+          </div>
+          <div class="chat-row unread">
+            <div class="avatar a1" style="background:#1F3A2C;">p<span class="verified">&#10003;</span></div>
+            <div class="chat-meta"><div class="chat-name-row"><span class="chat-name">parag fastway</span><span class="chat-time">Jul 28</span></div><div class="chat-preview-row"><span class="chat-preview">&#127908; Voice message</span><span class="unread-badge">1</span></div></div>
+          </div>
+        </div>
+        <div class="fab">+</div>
+      </div>
+      <div class="phone-caption"><span class="phone-num">01</span> chat list — unread ko weight, verified badge</div>
+    </div>
+
+    <!-- 2: Calls tab -->
+    <div class="phone-col">
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+        <div class="app-header"><div class="app-title">Messages</div><div class="header-icons"><span>&#8942;</span></div></div>
+        <div class="tab-row"><div class="tab-item">Chats</div><div class="tab-item active">Calls</div><div class="tab-item">Settings</div></div>
+        <div class="call-row">
+          <div class="avatar a1" style="background:#1F3A2C;">p<span class="verified">&#10003;</span></div>
+          <div class="call-meta"><div class="call-name">parag fastway</div><div class="call-sub"><span class="arrow">&#8593;</span> Outgoing · 03:53 PM</div></div>
+          <div class="call-btn">&#128222;</div>
+        </div>
+        <div class="empty-state">
+          <div class="ic">&#128222;</div>
+          <b>Bas ek hi call yahan hai</b>
+          <span>Naye calls yahan list mein aayenge</span>
+        </div>
+      </div>
+      <div class="phone-caption"><span class="phone-num">02</span> calls — direction/time clear, empty state guided</div>
+    </div>
+
+    <!-- 3: Settings tab -->
+    <div class="phone-col">
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+        <div class="app-header"><div class="app-title">Messages</div><div class="header-icons"><span>&#8942;</span></div></div>
+        <div class="tab-row"><div class="tab-item">Chats</div><div class="tab-item">Calls</div><div class="tab-item active">Settings</div></div>
+        <div class="settings-group">
+          <div class="settings-label">Account</div>
+          <div class="settings-item"><div class="txt"><b>Username</b><span>Searchable @handle — change every 30 days</span></div><div class="chev">&#8250;</div></div>
+          <div class="settings-item"><div class="txt"><b>Linked Google account</b><span>Managed in portal profile</span></div><div class="chev">&#8250;</div></div>
+        </div>
+        <div class="settings-group">
+          <div class="settings-label">Privacy</div>
+          <div class="settings-item"><div class="txt"><b>Read receipts</b><span>Others see when you've read</span></div><div class="toggle"></div></div>
+          <div class="settings-item"><div class="txt"><b>Last seen</b><span>Show your last active time</span></div><div class="chev">&#8250;</div></div>
+          <div class="settings-item"><div class="txt"><b>Profile visibility</b><span>Control what buyers see</span></div><div class="chev">&#8250;</div></div>
+        </div>
+      </div>
+      <div class="phone-caption"><span class="phone-num">03</span> settings — grouped with plain-language sublabels</div>
+    </div>
+
+    <!-- 4: Thread with voice messages -->
+    <div class="phone-col">
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+        <div class="thread-header">
+          <div class="avatar a1">p<span class="verified">&#10003;</span></div>
+          <div><div class="thread-name">parag fastway</div><div class="thread-status">Online</div></div>
+          <div class="thread-icons"><span>&#128222;</span><span>&#128249;</span></div>
+        </div>
+        <div class="thread-body">
+          <div class="day-chip">Today</div>
+          <div class="bubble in">Hi<div class="meta"><span class="time">3:56 PM</span></div></div>
+          <div class="bubble out">
+            <div class="quoted"><b>parag fastway</b>hi</div>
+            Hi<div class="meta"><span class="time">3:57 PM</span><span class="tick">&#10003;&#10003;</span></div>
+          </div>
+          <div class="voice-bubble">
+            <div class="voice-play">&#9654;</div>
+            <div class="voice-wave"><span style="height:6px"></span><span style="height:14px"></span><span style="height:9px"></span><span style="height:17px"></span><span style="height:7px"></span><span style="height:15px"></span><span style="height:11px"></span></div>
+            <span class="voice-dur">0:14</span>
+          </div>
+          <div class="voice-bubble">
+            <div class="voice-play">&#9654;</div>
+            <div class="voice-wave"><span style="height:9px"></span><span style="height:5px"></span><span style="height:16px"></span><span style="height:8px"></span><span style="height:12px"></span><span style="height:6px"></span><span style="height:18px"></span></div>
+            <span class="voice-dur">0:22</span>
+          </div>
+        </div>
+        <div class="composer"><span>+</span><div class="composer-input">Message...</div><div class="composer-icons">&#128077;</div><div class="send-btn">&#10148;</div></div>
+      </div>
+      <div class="phone-caption"><span class="phone-num">04</span> thread — quoted reply + real waveform bubbles</div>
+    </div>
+
+    <!-- 5: Thread with heart reaction -->
+    <div class="phone-col">
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+        <div class="thread-header">
+          <div class="avatar a1">p<span class="verified">&#10003;</span></div>
+          <div><div class="thread-name">parag fastway</div><div class="thread-status">Online</div></div>
+          <div class="thread-icons"><span>&#128222;</span><span>&#128249;</span></div>
+        </div>
+        <div class="thread-body">
+          <div class="day-chip">Today</div>
+          <div class="bubble in">Hi<div class="meta"><span class="time">3:56 PM</span></div></div>
+          <div class="bubble out" style="margin-bottom:8px;">
+            <div class="quoted"><b>parag fastway</b>hi</div>
+            Hi<div class="meta"><span class="time">3:57 PM</span><span class="tick">&#10003;&#10003;</span></div>
+            <div class="reaction-pill">&#10084;&#65039;</div>
+          </div>
+          <div class="voice-bubble" style="margin-top:6px;">
+            <div class="voice-play">&#9654;</div>
+            <div class="voice-wave"><span style="height:6px"></span><span style="height:14px"></span><span style="height:9px"></span><span style="height:17px"></span><span style="height:7px"></span></div>
+            <span class="voice-dur">0:14</span>
+          </div>
+        </div>
+        <div class="composer"><span>+</span><div class="composer-input">Message...</div><div class="composer-icons">&#128077;</div><div class="send-btn">&#10148;</div></div>
+      </div>
+      <div class="phone-caption"><span class="phone-num">05</span> reaction — pill badge sits on bubble corner, clean</div>
+    </div>
+
+    <!-- 6: Reaction/context picker overlay -->
+    <div class="phone-col">
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+        <div class="thread-header">
+          <div class="avatar a1">p<span class="verified">&#10003;</span></div>
+          <div><div class="thread-name">parag fastway</div><div class="thread-status">Online</div></div>
+          <div class="thread-icons"><span>&#128222;</span></div>
+        </div>
+        <div class="thread-body">
+          <div class="day-chip">Today</div>
+          <div class="bubble in">Hi<div class="meta"><span class="time">3:56 PM</span></div></div>
+          <div class="bubble out"><div class="quoted"><b>parag fastway</b>hi</div>Hi<div class="meta"><span class="time">3:57 PM</span><span class="tick">&#10003;&#10003;</span></div></div>
+          <div class="reaction-bar">&#10084;&#65039;&#128514;&#128558;&#128546;&#128079;<span style="color:var(--text-muted); font-size:15px;">+</span></div>
+          <div class="overlay" style="align-items:flex-end;">
+            <div class="action-sheet">
+              <div class="action-item"><span class="ic">&#8617;</span>Reply</div>
+              <div class="action-item"><span class="ic">&#8618;</span>Forward</div>
+              <div class="action-item"><span class="ic">&#10063;</span>Copy</div>
+              <div class="action-item"><span class="ic">&#9733;</span>Star</div>
+              <div class="action-item"><span class="ic">&#128204;</span>Pin</div>
+              <div class="action-item danger"><span class="ic">&#128465;</span>Delete</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption"><span class="phone-num">06</span> long-press — reactions bar + clean action sheet</div>
+    </div>
+
+    <!-- 7: Forward to modal -->
+    <div class="phone-col">
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+        <div class="thread-header"><div class="avatar a1">p</div><div><div class="thread-name">parag fastway</div></div></div>
+        <div class="thread-body" style="align-items:center; justify-content:center;">
+          <div class="overlay center">
+            <div class="modal-card">
+              <div class="modal-title"><b>Forward to</b><span>0/5</span></div>
+              <div class="modal-search">&#128269; Search followers</div>
+              <div class="fwd-row"><div class="avatar a1">p</div><div class="nm">parag fastway</div><div class="radio"></div></div>
+              <div class="fwd-row"><div class="avatar a2">N</div><div class="nm">Parag Lakhadive</div><div class="radio checked"></div></div>
+              <div class="modal-btn">&#8618; Forward</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption"><span class="phone-num">07</span> forward — selected state visible, counter honest</div>
+    </div>
+
+    <!-- 8: Profile / buyer record -->
+    <div class="phone-col">
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+        <div class="profile-cover"></div>
+        <div class="profile-body">
+          <div class="profile-avatar">p</div>
+          <div class="profile-name">parag fastway</div>
+          <div class="profile-handle">@parag</div>
+          <div class="stat-row"><div class="stat"><b>1</b><span>Posts</span></div><div class="stat"><b>2</b><span>Followers</span></div><div class="stat"><b>2</b><span>Following</span></div></div>
+          <div class="action-row"><div class="btn primary">Following</div><div class="btn ghost">Message</div></div>
+          <div class="record-card">
+            <div class="record-title">&#128274; Buyer trust record</div>
+            <div class="record-grid">
+              <div class="record-item"><b>1</b><span>Orders</span></div>
+              <div class="record-item"><b style="color:var(--danger)">No</b><span>Verified</span></div>
+              <div class="record-item verified"><b>2026</b><span>Since</span></div>
+            </div>
+            <div class="trust-bar"><i></i></div>
+            <div class="trust-label">Trust score 38 — verify ID to unlock higher limits</div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption"><span class="phone-num">08</span> profile — trust score replaces flat "No"</div>
+    </div>
+
+    <!-- 9: Username prompt (native browser dialog -> in-app modal) -->
+    <div class="phone-col">
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+        <div class="app-header"><div class="app-title">Messages</div></div>
+        <div class="settings-group">
+          <div class="settings-label">Account</div>
+          <div class="settings-item"><div class="txt"><b>Username</b><span>Searchable @handle</span></div><div class="chev">&#8250;</div></div>
+          <div class="settings-item"><div class="txt"><b>Linked Google account</b><span>Managed in portal profile</span></div><div class="chev">&#8250;</div></div>
+        </div>
+        <div class="overlay center">
+          <div class="prompt-card">
+            <div class="modal-title"><b>Choose username</b></div>
+            <p>3–30 chars, a-z, 0-9, underscore. Yeh aapka public buyer/seller handle hai.</p>
+            <div class="prompt-input">@parag</div>
+            <div class="prompt-btns"><div class="pbtn cancel">Cancel</div><div class="pbtn ok">Save</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="phone-caption"><span class="phone-num">09</span> username — native browser prompt ki jagah in-app modal</div>
+    </div>
+
+    <!-- 10: Privacy panel -->
+    <div class="phone-col">
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+        <div class="app-header"><div class="app-title">Privacy</div><div class="header-icons"><span>&#10005;</span></div></div>
+        <div class="privacy-body">
+          <div class="priv-label">Bio</div>
+          <div class="bio-box">Tell buyers about you / your farm / your shop...</div>
+          <div class="priv-label">What shows on your public profile</div>
+          <div class="priv-row"><span class="ic">&#128205;</span><span class="lbl">City</span><div class="toggle"></div></div>
+          <div class="priv-row"><span class="ic">&#128222;</span><span class="lbl">Phone number</span><div class="toggle off"></div></div>
+          <div class="priv-row"><span class="ic">&#9993;</span><span class="lbl">Email</span><div class="toggle off"></div></div>
+          <div class="priv-row"><span class="ic">&#127874;</span><span class="lbl">Date of birth</span><div class="toggle off"></div></div>
+          <div class="priv-row"><span class="ic">&#128506;</span><span class="lbl">Address</span><div class="toggle off"></div></div>
+          <div class="save-btn">&#10003; Save</div>
+        </div>
+      </div>
+      <div class="phone-caption"><span class="phone-num">10</span> privacy — toggles grouped, defaults safer (off)</div>
+    </div>
+
+  </div>
+
+  <footer>Aarvex Messenger — full screen-by-screen redesign · green theme · 10/10 screens matched</footer>
+</div>
+</body>
+</html>

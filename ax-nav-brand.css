@@ -1,0 +1,350 @@
+/* ══════════════════════════════════════════════════════════════
+   AARVEX — Nav + Icon Patch Brand Pass (Wave 1)
+   Loaded AFTER portal-base.css + ax-nav-pro.css so these rules win.
+   Adaptive translucent patches (~70% transparent) + φ spacing.
+   ══════════════════════════════════════════════════════════════ */
+
+/* Shared icon-patch primitive (sidebar, login, trust badges) */
+.ax-ico-patch,
+.portal-sidebar .sidebar-nav-item .nav-icon,
+.login-benefit-icon,
+.ax-trust-badge > i,
+.ax-trust-badge .ax-trust-ico {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--nav-radius, 12px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  /* Fallback when color-mix unsupported */
+  background: rgba(22, 18, 12, .12);
+  background: var(--nav-patch-idle);
+  color: var(--nav-ico);
+  transition: background var(--t-fast, .15s) var(--ease, ease), color var(--t-fast, .15s) var(--ease, ease);
+}
+.ax-ico-patch i,
+.portal-sidebar .sidebar-nav-item .nav-icon > i,
+.login-benefit-icon i {
+  color: inherit;
+  font-size: 15px;
+}
+.portal-sidebar .sidebar-nav-item .nav-anim-icon,
+.portal-sidebar .sidebar-nav-item .nav-anim-icon svg {
+  color: inherit;
+  stroke: currentColor;
+  fill: currentColor;
+}
+
+/* ── Sidebar layout (φ: 8 → 13 → 21) ── */
+.portal-sidebar .sidebar-nav {
+  padding: 13px 8px 21px;
+}
+.portal-sidebar .sidebar-section-title {
+  font-family: var(--f-display-ui, 'Plus Jakarta Sans', system-ui, sans-serif);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary, var(--c-text4));
+  padding: 0 var(--nav-pad-x, 13px) 8px;
+  margin: var(--nav-section-gap, 21px) 8px 0;
+  border-top: 1px solid var(--nav-section-line, rgba(0,0,0,.08));
+  padding-top: 13px;
+}
+.portal-sidebar .sidebar-section-title:first-of-type,
+.portal-sidebar .sidebar-nav > .sidebar-section-title:first-child {
+  margin-top: 8px;
+  border-top: none;
+  padding-top: 0;
+}
+
+.portal-sidebar .sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--nav-gap-icon-label, 13px);
+  min-height: var(--nav-row-h, 42px);
+  padding: 8px var(--nav-pad-x, 13px) !important;
+  margin: 2px 8px !important;
+  border-radius: var(--nav-radius, 12px) !important;
+  font-family: var(--f-display-ui, 'Plus Jakarta Sans', system-ui, sans-serif);
+  font-size: 13.5px;
+  font-weight: 550;
+  color: var(--color-text-tertiary, var(--c-text3));
+  background: transparent !important;
+  position: relative;
+}
+.portal-sidebar .sidebar-nav-item .nav-label {
+  font-weight: inherit;
+  letter-spacing: -0.01em;
+}
+.portal-sidebar .sidebar-nav-item .nav-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--nav-radius, 12px);
+  background: rgba(22, 18, 12, .1);
+  background: var(--nav-patch-idle) !important;
+  color: var(--nav-ico) !important;
+}
+
+.portal-sidebar .sidebar-nav-item:hover {
+  color: var(--color-text-primary, var(--c-earth));
+  background: color-mix(in srgb, var(--brand-lime, #D4ED6B) 8%, transparent) !important;
+}
+.portal-sidebar .sidebar-nav-item:hover .nav-icon {
+  background: var(--nav-patch-hover) !important;
+  color: var(--nav-ico) !important;
+}
+
+.portal-sidebar .sidebar-nav-item.active {
+  font-weight: 650;
+  color: var(--brand-lime-ink, #0A0A0A) !important;
+  background: var(--brand-lime, #D4ED6B) !important;
+}
+.portal-sidebar .sidebar-nav-item.active .nav-icon {
+  background: rgba(10, 10, 10, .12) !important;
+  color: var(--brand-lime-ink, #0A0A0A) !important;
+}
+.portal-sidebar .sidebar-nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 55%;
+  background: var(--nav-rail, var(--brand-lime, #D4ED6B));
+  border-radius: 0 3px 3px 0;
+  display: block !important;
+}
+
+/* Favourites keep heart accent but same patch model */
+.portal-sidebar .sidebar-fav-btn.active {
+  background: rgba(214, 63, 90, .1) !important;
+  color: #D63F5A !important;
+}
+.portal-sidebar .sidebar-fav-btn.active .nav-icon {
+  background: rgba(214, 63, 90, .22) !important;
+  color: #D63F5A !important;
+}
+.portal-sidebar .sidebar-fav-btn.active::before {
+  background: #D63F5A;
+}
+
+/* Profile card — tighter + brand glow */
+.portal-sidebar .sidebar-profile-card {
+  padding: 21px 16px 18px;
+}
+.portal-sidebar .sidebar-profile-card::after {
+  background: radial-gradient(circle, rgba(212, 237, 107, .22), transparent 70%);
+}
+
+/* Login mark — black plate + lime A (logo geometry) */
+.login-card-logo-mark {
+  background: #0A0A0A !important;
+  border-color: rgba(212, 237, 107, .28) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .28) !important;
+}
+.login-card-logo-mark img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Login benefit tiles */
+.login-benefit-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(22, 18, 12, .1);
+  background: var(--nav-patch-idle) !important;
+  color: var(--nav-ico) !important;
+}
+.login-benefit:hover .login-benefit-icon {
+  background: var(--nav-patch-hover) !important;
+}
+html[data-theme="dark"] .login-benefit-icon {
+  color: var(--nav-ico) !important;
+}
+
+/* Trust badges — no solid dark square behind glyph */
+.ax-trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.ax-trust-badge > i,
+.ax-trust-badge .ax-trust-ico {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  font-size: 11px;
+  background: var(--nav-patch-idle) !important;
+  color: var(--nav-ico) !important;
+}
+
+/* Dark theme: light icons on surface-tinted patches */
+html[data-theme="dark"] .portal-sidebar .sidebar-nav-item .nav-icon,
+html[data-theme="dark"] .login-benefit-icon,
+html[data-theme="dark"] .ax-trust-badge > i {
+  background: var(--nav-patch-idle) !important;
+  color: var(--nav-ico) !important;
+}
+html[data-theme="dark"] .portal-sidebar .sidebar-nav-item.active .nav-icon {
+  background: rgba(10, 10, 10, .12) !important;
+  color: var(--brand-lime-ink, #0A0A0A) !important;
+}
+html[data-theme="dark"] .portal-sidebar .sidebar-nav-item.active {
+  background: var(--brand-lime, #D4ED6B) !important;
+  color: var(--brand-lime-ink, #0A0A0A) !important;
+}
+
+/* Mobile grid: same patch system, kill forced green boxes */
+@media (max-width: 900px) {
+  .portal-sidebar .sidebar-nav-item .nav-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    background: var(--nav-patch-idle) !important;
+    color: var(--nav-ico) !important;
+    margin: 0;
+  }
+  .portal-sidebar .sidebar-nav-item.active {
+    background: var(--brand-lime, #D4ED6B) !important;
+    color: var(--brand-lime-ink, #0A0A0A) !important;
+  }
+  .portal-sidebar .sidebar-nav-item.active .nav-icon {
+    background: rgba(10, 10, 10, .12) !important;
+    color: var(--brand-lime-ink, #0A0A0A) !important;
+  }
+  .portal-sidebar .sidebar-nav-item.active::before {
+    display: none !important;
+  }
+  html[data-theme="dark"] .portal-sidebar .sidebar-nav-item .nav-icon {
+    background: var(--nav-patch-idle) !important;
+    color: var(--nav-ico) !important;
+  }
+  html[data-theme="dark"] .portal-sidebar .sidebar-nav-item.active .nav-icon {
+    background: rgba(10, 10, 10, .12) !important;
+    color: var(--brand-lime-ink, #0A0A0A) !important;
+  }
+}
+
+/* Wave-2 design: lime Products/Shops pills + neutral header chips */
+.ax-grid-mode-btn.trade-mode-tab.active,
+.trade-mode-tab.active {
+  background: var(--brand-lime, #D4ED6B) !important;
+  color: var(--brand-lime-ink, #0A0A0A) !important;
+  border-color: var(--brand-lime-deep, #B8D94A) !important;
+}
+.ax-navico-btn {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.ax-navico-btn.is-active .ax-ico {
+  color: var(--brand-lime-deep, #B8D94A) !important;
+}
+.cta-icon.sell {
+  background: color-mix(in srgb, var(--brand-lime, #D4ED6B) 30%, transparent) !important;
+  color: var(--brand-lime-ink, #0A0A0A) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   AARVEX — Menu icon system (Wave 3, owner request)
+   ▸ Every glyph: LINE by default, SOLID NEON only when its tab is
+     selected — one 24-grid, one stroke weight, one size.
+   ▸ No translucent "patch" square behind icons. No left curved rail.
+   ▸ Selected = neon lime icon + neon label + a whisper-soft tint tile
+     (not a full lime pill). Light theme swaps to lime-deep for contrast.
+   Appended last so it wins the earlier patch/rail rules in this file,
+   portal-base.css and ax-nav-pro.css.
+   ══════════════════════════════════════════════════════════════ */
+:root { --nav-ico-solid: var(--brand-lime, #D4ED6B); }
+html[data-theme="light"] { --nav-ico-solid: var(--brand-lime-deep, #B8D94A); }
+
+/* 1 — Kill the icon patch square everywhere (desktop + mobile, both themes) */
+.portal-sidebar .sidebar-nav-item .nav-icon,
+html[data-theme="dark"] .portal-sidebar .sidebar-nav-item .nav-icon,
+html[data-theme="light"] .portal-sidebar .sidebar-nav-item .nav-icon,
+.portal-sidebar .sidebar-nav-item.active .nav-icon,
+html[data-theme="dark"] .portal-sidebar .sidebar-nav-item.active .nav-icon {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 2 — Remove the left curved rail on the active row */
+.portal-sidebar .sidebar-nav-item.active::before,
+.portal-sidebar .sidebar-fav-btn.active::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* 3 — Idle glyph: muted line colour, one uniform box + svg size.
+   CRITICAL: fill:none on the <svg> so pure-stroke (line) glyphs stay
+   OUTLINED. The solid variants fill anyway because their own <path>s carry
+   fill="currentColor". Without this, an earlier rule forces fill:currentColor
+   and every line icon renders as a solid blob. */
+.portal-sidebar .sidebar-nav-item .nav-icon {
+  color: var(--nav-ico) !important;
+}
+.portal-sidebar .sidebar-nav-item .nav-anim-icon,
+.portal-sidebar .sidebar-nav-item .nav-anim-icon svg {
+  color: inherit;
+  fill: none !important;
+  stroke: currentColor;
+}
+.portal-sidebar .sidebar-nav-item .nav-anim-icon > svg {
+  width: 24px !important;
+  height: 24px !important;
+  display: block;
+}
+/* FA utility glyphs (WhatsApp brand, theme moon/sun) sized to match */
+.portal-sidebar .sidebar-nav-item .nav-icon > i { font-size: 17px !important; }
+
+/* 4 — Selected: neon-solid icon + neon label + soft tint tile */
+.portal-sidebar .sidebar-nav-item.active,
+html[data-theme="dark"] .portal-sidebar .sidebar-nav-item.active,
+html[data-theme="light"] .portal-sidebar .sidebar-nav-item.active,
+.portal-sidebar .sidebar-fav-btn.active {
+  background: color-mix(in srgb, var(--nav-ico-solid) 13%, transparent) !important;
+  color: var(--nav-ico-solid) !important;
+}
+.portal-sidebar .sidebar-nav-item.active .nav-icon,
+.portal-sidebar .sidebar-fav-btn.active .nav-icon,
+html[data-theme="dark"] .portal-sidebar .sidebar-nav-item.active .nav-icon {
+  color: var(--nav-ico-solid) !important;
+}
+.portal-sidebar .sidebar-nav-item.active .nav-label {
+  color: var(--nav-ico-solid) !important;
+  font-weight: 700 !important;
+}
+
+/* 5 — Mobile drawer: uniform sizing + fit-one-screen tightening */
+@media (max-width: 768px) {
+  .portal-sidebar .sidebar-nav-item .nav-icon {
+    width: 42px !important;
+    height: 42px !important;
+    background: transparent !important;
+  }
+  .portal-sidebar .sidebar-nav-item .nav-anim-icon > svg {
+    width: 23px !important;
+    height: 23px !important;
+  }
+  .portal-sidebar .sidebar-nav-item .nav-icon > i { font-size: 18px !important; }
+  .portal-sidebar .sidebar-nav-item {
+    padding: 9px 4px 8px !important;
+    border-radius: 14px !important;
+  }
+  .portal-sidebar .sidebar-nav-item.active {
+    border-radius: 14px !important;
+  }
+  .portal-sidebar .sidebar-nav {
+    gap: 4px 4px !important;
+    padding: var(--s2) var(--s3) var(--s3) !important;
+  }
+  .portal-sidebar .sidebar-section-title {
+    padding: 8px 4px 3px !important;
+    margin: 0 !important;
+  }
+}

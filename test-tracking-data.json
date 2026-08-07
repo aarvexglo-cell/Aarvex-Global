@@ -1,0 +1,40 @@
+{
+  "arn": "TEST123456",
+  "status": "in_transit",
+  "buyer_name": "Test Importer Pvt Ltd",
+  "distance_remaining_km": 5.2,
+  "time_remaining_min": 15,
+  "driver": {
+    "lat": 28.6139,
+    "lng": 77.2090,
+    "name": "Test Driver"
+  },
+  "destination": {
+    "lat": 28.6278,
+    "lng": 77.2219,
+    "city": "New Delhi",
+    "address": "Test Address, Connaught Place"
+  },
+  "tracking_points": [
+    {
+      "lat": 28.6139,
+      "lng": 77.2090,
+      "timestamp": "2026-07-09T07:30:00Z"
+    },
+    {
+      "lat": 28.6150,
+      "lng": 77.2100,
+      "timestamp": "2026-07-09T07:31:00Z"
+    },
+    {
+      "lat": 28.6170,
+      "lng": 77.2120,
+      "timestamp": "2026-07-09T07:32:00Z"
+    },
+    {
+      "lat": 28.6200,
+      "lng": 77.2150,
+      "timestamp": "2026-07-09T07:33:00Z"
+    }
+  ]
+}

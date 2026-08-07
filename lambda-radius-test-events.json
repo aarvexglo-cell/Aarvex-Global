@@ -1,0 +1,142 @@
+{
+  "how_to_use": [
+    "Deploy the latest marketplace.py first.",
+    "In every event, replace __VALID_GOOGLE_ID_TOKEN__ with the signed-in tester's current Google ID token from browser localStorage key ax_google_token.",
+    "Run the cases in the listed order. The two test accounts must have saved Personal Information map pins roughly 10–15 km apart, and both must have a public post, story, and one active KYC-approved shop/product.",
+    "Each item below is a complete Lambda/API Gateway v2 event. Copy one event object at a time into the Lambda Test console."
+  ],
+  "expected": {
+    "strict_radius": "At 5 km, the distant account must not appear in /geo/users, /feed, /story/list, /catalogue/sections, /catalogue/search, or /shop/list. At 10 km, it appears only if its permanent Personal Information pin is within 10 km.",
+    "selected_exception": "A distant selected-audience post/story appears only when both users follow each other and the viewer is explicitly in audience_subs. Public and followers-only content remains radius-filtered.",
+    "independent_sections": "GET /shops/top is city-based and does not change when 5 km/10 km changes. Favourites endpoints retain liked items outside the radius. GET /banner/active is unaffected by radius.",
+    "address_sync": "After profile_update_address, GET /profile shows the new Personal Information address/pin; the user's shop uses the same address on its next public/profile response; re-running geo_set_10 centres the radius on the new pin."
+  },
+  "events": {
+    "profile_update_address": {
+      "version": "2.0",
+      "rawPath": "/profile/update",
+      "requestContext": { "http": { "method": "POST" } },
+      "headers": { "Content-Type": "application/json", "Authorization": "Bearer __VALID_GOOGLE_ID_TOKEN__" },
+      "queryStringParameters": null,
+      "body": "{\"address\":\"Central MIDC Road, Nagpur\",\"city\":\"Nagpur\",\"state\":\"Maharashtra\",\"pincode\":\"440016\",\"address_lat\":\"21.150063\",\"address_lng\":\"79.092983\"}",
+      "isBase64Encoded": false
+    },
+    "geo_set_5_km": {
+      "version": "2.0",
+      "rawPath": "/geo/set",
+      "requestContext": { "http": { "method": "POST" } },
+      "headers": { "Content-Type": "application/json", "Authorization": "Bearer __VALID_GOOGLE_ID_TOKEN__" },
+      "queryStringParameters": null,
+      "body": "{\"radius_km\":5,\"label\":\"Within 5 km\"}",
+      "isBase64Encoded": false
+    },
+    "geo_set_10_km": {
+      "version": "2.0",
+      "rawPath": "/geo/set",
+      "requestContext": { "http": { "method": "POST" } },
+      "headers": { "Content-Type": "application/json", "Authorization": "Bearer __VALID_GOOGLE_ID_TOKEN__" },
+      "queryStringParameters": null,
+      "body": "{\"radius_km\":10,\"label\":\"Within 10 km\"}",
+      "isBase64Encoded": false
+    },
+    "geo_users_5_km": {
+      "version": "2.0",
+      "rawPath": "/geo/users",
+      "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __VALID_GOOGLE_ID_TOKEN__" },
+      "queryStringParameters": { "radius_km": "5" },
+      "body": null,
+      "isBase64Encoded": false
+    },
+    "feed_public": {
+      "version": "2.0",
+      "rawPath": "/feed",
+      "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __VALID_GOOGLE_ID_TOKEN__" },
+      "queryStringParameters": { "limit": "50", "offset": "0" },
+      "body": null,
+      "isBase64Encoded": false
+    },
+    "story_list": {
+      "version": "2.0",
+      "rawPath": "/story/list",
+      "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __VALID_GOOGLE_ID_TOKEN__" },
+      "queryStringParameters": null,
+      "body": null,
+      "isBase64Encoded": false
+    },
+    "catalogue_sections": {
+      "version": "2.0",
+      "rawPath": "/catalogue/sections",
+      "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __VALID_GOOGLE_ID_TOKEN__" },
+      "queryStringParameters": null,
+      "body": null,
+      "isBase64Encoded": false
+    },
+    "catalogue_search": {
+      "version": "2.0",
+      "rawPath": "/catalogue/search",
+      "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __VALID_GOOGLE_ID_TOKEN__" },
+      "queryStringParameters": { "q": "", "limit": "48", "offset": "0" },
+      "body": null,
+      "isBase64Encoded": false
+    },
+    "shop_directory": {
+      "version": "2.0",
+      "rawPath": "/shop/list",
+      "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __VALID_GOOGLE_ID_TOKEN__" },
+      "queryStringParameters": { "limit": "100", "offset": "0" },
+      "body": null,
+      "isBase64Encoded": false
+    },
+    "top_shops_city_only": {
+      "version": "2.0",
+      "rawPath": "/shops/top",
+      "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __VALID_GOOGLE_ID_TOKEN__" },
+      "queryStringParameters": null,
+      "body": null,
+      "isBase64Encoded": false
+    },
+    "favourite_products": {
+      "version": "2.0",
+      "rawPath": "/favourites/products",
+      "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __VALID_GOOGLE_ID_TOKEN__" },
+      "queryStringParameters": null,
+      "body": null,
+      "isBase64Encoded": false
+    },
+    "favourite_shops": {
+      "version": "2.0",
+      "rawPath": "/shop/favourites",
+      "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __VALID_GOOGLE_ID_TOKEN__" },
+      "queryStringParameters": null,
+      "body": null,
+      "isBase64Encoded": false
+    },
+    "ad_placement": {
+      "version": "2.0",
+      "rawPath": "/banner/active",
+      "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __VALID_GOOGLE_ID_TOKEN__" },
+      "queryStringParameters": { "placement": "trade_top" },
+      "body": null,
+      "isBase64Encoded": false
+    },
+    "geo_clear": {
+      "version": "2.0",
+      "rawPath": "/geo/set",
+      "requestContext": { "http": { "method": "POST" } },
+      "headers": { "Content-Type": "application/json", "Authorization": "Bearer __VALID_GOOGLE_ID_TOKEN__" },
+      "queryStringParameters": null,
+      "body": "{\"clear\":true}",
+      "isBase64Encoded": false
+    }
+  }
+}

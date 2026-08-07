@@ -1,0 +1,6 @@
+# Aarvex Global
+User-agent: *
+Allow: /
+Disallow: /admin_dashboard.html
+Disallow: /portal.html
+Sitemap: https://aarvexglobal.com/sitemap.xml

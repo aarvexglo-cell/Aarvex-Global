@@ -1,0 +1,681 @@
+/* ══════════════════════════════════════════════════════════════
+   AARVEX — Brand polish (LAST stylesheet on portal)
+   Screenshots pass: full-bleed sharp search, lime+ink contrast,
+   nav/menu CTAs, dark/light consistency.
+   ══════════════════════════════════════════════════════════════ */
+
+:root {
+  --ax-ink-on-lime: var(--brand-lime-ink, #0A0A0A);
+  --ax-lime: var(--brand-lime, #D4ED6B);
+  --ax-lime-deep: var(--brand-lime-deep, #B8D94A);
+  --ax-search-h: 56px;
+  --ax-radius-sharp: 0;
+  --ax-radius-tight: 4px;
+}
+
+/* ── Universal: any lime-filled control → dark ink content ── */
+.btn-primary,
+.btn-primary i,
+.pd-btn-buy,
+.pd-btn-buy i,
+.pd-btn-primary,
+.pd-btn-primary i,
+.ax-grid-mode-btn.active,
+.ax-grid-mode-btn.active i,
+.trade-mode-tab.active,
+.trade-mode-tab.active i,
+.filter-pill.active,
+.filter-pill.active i,
+.catalogue-chip.active,
+.catalogue-chip.active i,
+.listings-tab.active,
+.profile-tab-btn.active,
+.chip.active,
+.filter-chip.active,
+.ax-tab.active,
+.tab-item.active,
+.ax-msg-chip.active,
+.ax-notif-tab.active,
+.ax-notif-tab.active .axnt-ico,
+.ax-notif-tab.active .axnt-label,
+html[data-theme="dark"] .btn-primary,
+html[data-theme="dark"] .ax-grid-mode-btn.active,
+html[data-theme="dark"] .trade-mode-tab.active,
+html[data-theme="dark"] .listings-tab.active,
+html[data-theme="dark"] .profile-tab-btn.active,
+html[data-theme="dark"] .filter-pill.active,
+html[data-theme="dark"] .catalogue-chip.active,
+html[data-theme="dark"] .chip.active,
+html[data-theme="dark"] .filter-chip.active {
+  color: var(--ax-ink-on-lime) !important;
+}
+
+/* Lime surfaces (fill) */
+.btn-primary,
+.pd-btn-buy,
+.pd-btn-primary,
+.ax-grid-mode-btn.active,
+.trade-mode-tab.active,
+html[data-theme="dark"] .ax-grid-mode-btn.active,
+html[data-theme="dark"] .trade-mode-tab.active,
+html[data-theme="dark"] .listings-tab.active,
+html[data-theme="dark"] .profile-tab-btn.active,
+html[data-theme="dark"] .filter-pill.active,
+html[data-theme="dark"] .catalogue-chip.active,
+html[data-theme="dark"] .chip.active,
+html[data-theme="dark"] .filter-chip.active,
+html[data-theme="dark"] .ax-tab.active,
+html[data-theme="dark"] .tab-item.active {
+  background: var(--ax-lime) !important;
+  border-color: var(--ax-lime-deep) !important;
+}
+
+html[data-theme="dark"] .catalogue-chip.active i,
+html[data-theme="dark"] .filter-pill.active i,
+html[data-theme="dark"] .ax-grid-mode-btn.active i,
+html[data-theme="dark"] .trade-mode-tab.active i,
+.btn-primary i,
+.pd-btn-buy i {
+  color: var(--ax-ink-on-lime) !important;
+  background: transparent !important;
+}
+
+/* Light mode: keep forest leaf for subtle chips OR use lime — brand lime for primary CTAs */
+html:not([data-theme="dark"]) .btn-primary,
+html:not([data-theme="dark"]) .pd-btn-buy {
+  background: var(--ax-lime) !important;
+  color: var(--ax-ink-on-lime) !important;
+  border-color: var(--ax-lime-deep) !important;
+  box-shadow: 0 8px 22px -8px var(--brand-lime-glow, rgba(212, 237, 107, .4));
+}
+html:not([data-theme="dark"]) .ax-grid-mode-btn.active,
+html:not([data-theme="dark"]) .trade-mode-tab.active {
+  background: var(--ax-lime) !important;
+  color: var(--ax-ink-on-lime) !important;
+}
+
+/* Sharp primary actions (professional, not pill) */
+.btn-primary,
+.pd-btn-buy,
+.pd-btn-primary,
+.ax-grid-mode-btn,
+.trade-mode-tab,
+.ax-grid-mode-row,
+.filter-pill,
+.listings-tab,
+.profile-tab-btn {
+  border-radius: var(--ax-radius-tight) !important;
+}
+.ax-grid-mode-row {
+  padding: 3px !important;
+  border-radius: var(--ax-radius-tight) !important;
+}
+
+/* ── Sidebar / drawer: solid lime active + ink ── */
+.portal-sidebar .sidebar-nav-item.active,
+html[data-theme="dark"] .portal-sidebar .sidebar-nav-item.active,
+html[data-theme="dark"] .portal-sidebar .sidebar-nav-item.active:hover {
+  background: var(--ax-lime) !important;
+  color: var(--ax-ink-on-lime) !important;
+  background-image: none !important;
+}
+.portal-sidebar .sidebar-nav-item.active .nav-label,
+.portal-sidebar .sidebar-nav-item.active .nav-icon,
+.portal-sidebar .sidebar-nav-item.active .nav-icon i,
+.portal-sidebar .sidebar-nav-item.active .nav-anim-icon,
+.portal-sidebar .sidebar-nav-item.active .nav-anim-icon i,
+.portal-sidebar .sidebar-nav-item.active .nav-anim-icon svg,
+html[data-theme="dark"] .portal-sidebar .sidebar-nav-item.active .nav-icon,
+html[data-theme="dark"] .portal-sidebar .sidebar-nav-item.active .nav-icon i,
+html[data-theme="dark"] .portal-sidebar .sidebar-nav-item.active .nav-anim-icon i,
+html[data-theme="dark"] .portal-sidebar .sidebar-nav-item.active .nav-anim-icon svg {
+  color: var(--ax-ink-on-lime) !important;
+  stroke: currentColor !important;
+  fill: currentColor !important;
+}
+.portal-sidebar .sidebar-nav-item.active .nav-icon,
+html[data-theme="dark"] .portal-sidebar .sidebar-nav-item.active .nav-icon {
+  background: rgba(10, 10, 10, .12) !important;
+}
+.portal-sidebar .sidebar-nav-item.active::before {
+  background: var(--ax-ink-on-lime) !important;
+  opacity: .35;
+}
+.portal-sidebar .sidebar-nav-item,
+.portal-sidebar .sidebar-nav-item .nav-icon {
+  border-radius: var(--ax-radius-tight) !important;
+}
+
+/* Favourites keep heart accent */
+.portal-sidebar .sidebar-fav-btn.active,
+html[data-theme="dark"] .portal-sidebar .sidebar-fav-btn.active {
+  background: rgba(214, 63, 90, .14) !important;
+  color: #D63F5A !important;
+}
+.portal-sidebar .sidebar-fav-btn.active .nav-icon {
+  background: rgba(214, 63, 90, .22) !important;
+  color: #D63F5A !important;
+}
+
+html[data-theme="dark"] .mobile-nav-btn.active { color: var(--ax-lime, #D4ED6B) !important; }
+html[data-theme="dark"] .mobile-nav-btn.active .nav-anim-icon i,
+html[data-theme="dark"] .mobile-nav-btn.active .nav-anim-icon svg {
+  color: var(--ax-lime, #D4ED6B) !important;
+}
+
+/* Light mode: active nav stays readable forest/lime ink */
+html:not([data-theme="dark"]) .portal-sidebar .sidebar-nav-item.active {
+  background: var(--ax-lime) !important;
+  color: var(--ax-ink-on-lime) !important;
+}
+html:not([data-theme="dark"]) .mobile-nav-btn.active {
+  color: var(--green-700, #2E6B41) !important;
+}
+
+/* ── SEARCH BARS: full patch, no side pad, sharp, taller ── */
+.search-filter-group,
+.ax-search-bar.search-filter-group,
+.catalogue-search-sticky .ax-search-bar.search-filter-group {
+  border-radius: var(--ax-radius-sharp) !important;
+  min-height: var(--ax-search-h) !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  overflow: hidden;
+  box-shadow: none !important;
+}
+.ax-search-bar .catalogue-search-input-wrap input {
+  min-height: var(--ax-search-h) !important;
+  padding-top: 16px !important;
+  padding-bottom: 16px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+.ax-search-bar .catalogue-search-input-wrap .search-icon,
+.ax-search-bar .catalogue-search-input-wrap .search-clear,
+.ax-search-bar .ax-voice-btn {
+  border-radius: var(--ax-radius-sharp) !important;
+}
+
+/* Kill horizontal padding around search sticky (content-inner bleed) */
+#panel-dashboard .catalogue-search-sticky:not(.is-docked),
+#panel-trade .catalogue-search-sticky:not(.is-docked),
+#panel-favourites .catalogue-search-sticky:not(.is-docked) {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: calc(-1 * var(--s5, 24px));
+  margin-right: calc(-1 * var(--s5, 24px));
+  width: calc(100% + 2 * var(--s5, 24px));
+  max-width: none;
+}
+@media (max-width: 768px) {
+  #panel-dashboard .catalogue-search-sticky:not(.is-docked),
+  #panel-trade .catalogue-search-sticky:not(.is-docked),
+  #panel-favourites .catalogue-search-sticky:not(.is-docked) {
+    margin-left: calc(-1 * var(--s3, 13px));
+    margin-right: calc(-1 * var(--s3, 13px));
+    width: calc(100% + 2 * var(--s3, 13px));
+  }
+  .ax-search-bar.search-filter-group {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    border-radius: 0 !important;
+  }
+}
+
+/* Docked search: edge-flush, sharp, fill header height */
+.catalogue-search-sticky.is-docked {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  gap: 0 !important;
+}
+.catalogue-search-sticky.is-docked .ax-search-bar.search-filter-group {
+  border-radius: 0 !important;
+  min-height: 100% !important;
+  height: 100% !important;
+  align-self: stretch !important;
+}
+.catalogue-search-sticky.is-docked .search-dock-icon-btn {
+  border-radius: 0 !important;
+  height: 100%;
+  min-height: 100%;
+}
+
+/* Category quick-grid search — full patch sharp */
+.ax-category-grid-panel {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  max-height: 100vh;
+  height: 100%;
+}
+.ax-category-grid-searchrow {
+  border-radius: 0 !important;
+  margin: 0 0 16px !important;
+  padding: 0 12px !important;
+  min-height: var(--ax-search-h);
+  box-shadow: none !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+  background: #1D2614 !important;
+}
+html:not([data-theme="dark"]) .ax-category-grid-searchrow {
+  background: #EDF4EF !important;
+  border-bottom-color: rgba(20, 48, 38, .1);
+}
+.ax-category-grid-searchrow input {
+  padding: 18px 8px !important;
+  font-size: 16px !important;
+  font-weight: 600;
+}
+.ax-category-grid-searchrow button {
+  border-radius: var(--ax-radius-tight) !important;
+}
+.ax-category-grid-label,
+.ax-category-grid {
+  padding-left: var(--s4, 16px);
+  padding-right: var(--s4, 16px);
+}
+.ax-category-grid-item .cat-icon-circle,
+.ax-category-grid-item {
+  border-radius: var(--ax-radius-tight) !important;
+}
+
+/* Quick-grid Categories | Shops — ink on lime */
+.ax-category-grid-overlay .ax-grid-mode-btn.active,
+.ax-category-grid-overlay .ax-grid-mode-btn.active i {
+  background: var(--ax-lime) !important;
+  color: var(--ax-ink-on-lime) !important;
+}
+
+/* Messenger inbox search — full width sharp taller */
+.ax-chat-overlay .ax-inbox-search,
+.ax-fwd-search {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  border-radius: 0 !important;
+  min-height: 48px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+.ax-msg-chip,
+.ax-msg-chip.active {
+  border-radius: var(--ax-radius-tight) !important;
+}
+html[data-theme="dark"] .ax-msg-chip.active {
+  background: var(--ax-lime) !important;
+  color: var(--ax-ink-on-lime) !important;
+  border-color: var(--ax-lime) !important;
+}
+
+/* Notifications — brand lime, not mint; ink on active */
+#axNotifBody .ax-notif-tab.active,
+#panel-notifications.portal-panel .ax-notif-tab.active {
+  background: var(--ax-lime) !important;
+  color: var(--ax-ink-on-lime) !important;
+  box-shadow: 0 6px 16px -8px rgba(212, 237, 107, .55) !important;
+  border-radius: var(--ax-radius-tight) !important;
+}
+#axNotifBody .ax-notif-tab.active .axnt-ico,
+#panel-notifications.portal-panel .ax-notif-tab.active .axnt-ico {
+  background: rgba(10, 10, 10, .12) !important;
+  color: var(--ax-ink-on-lime) !important;
+}
+#axNotifBody .ax-notif-tab,
+#axNotifBody .ax-notif-tool {
+  border-radius: var(--ax-radius-tight) !important;
+}
+
+/* Product detail CTAs */
+.pd-btn-buy,
+.pd-btn-primary,
+.pd-btn-negotiate,
+.pd-modal-actions .pd-btn-cart {
+  border-radius: var(--ax-radius-tight) !important;
+}
+.pd-btn-buy {
+  background: var(--ax-lime) !important;
+  color: var(--ax-ink-on-lime) !important;
+  box-shadow: 0 8px 24px -10px rgba(212, 237, 107, .5) !important;
+}
+.pd-btn-negotiate {
+  border-color: var(--ax-lime) !important;
+  color: var(--ax-lime) !important;
+}
+
+/* Profile gate modal primary */
+.ax-profile-gate .btn-primary,
+#axProfileGateModal .btn-primary,
+.modal .btn-primary {
+  border-radius: var(--ax-radius-tight) !important;
+}
+
+/* Live / refresh pills — tighter, themed */
+#catalogueSourceBadge,
+#panel-trade button[onclick="loadCatalogue()"] {
+  border-radius: var(--ax-radius-tight) !important;
+}
+
+/* Dark search surface polish */
+html[data-theme="dark"] .ax-search-bar.search-filter-group {
+  background: #1D2614 !important;
+  border: 1px solid rgba(212, 237, 107, .12) !important;
+}
+html[data-theme="dark"] .ax-search-bar .catalogue-search-input-wrap input {
+  color: #f3f3ee !important;
+}
+html[data-theme="dark"] .ax-search-bar .ax-voice-btn {
+  color: var(--ax-lime) !important;
+}
+
+/* Light search surface */
+html:not([data-theme="dark"]) .ax-search-bar.search-filter-group {
+  background: #EDF4EF !important;
+  border: 1px solid rgba(20, 48, 38, .1) !important;
+}
+
+/* Mic / icons readable */
+.ax-search-bar .ax-voice-btn {
+  color: var(--c-leaf, var(--ax-lime-deep));
+}
+html[data-theme="dark"] .ax-search-bar .search-icon {
+  color: var(--neutral-600, #9aa39a) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PHASE 3 — Neon button & link system (owner request)
+   ▸ Any lime-filled control → DARK ink for BOTH text and SVG/icon
+     (was only enforced on <i>; inline-SVG icons were slipping through
+     and rendering white → the "neon + white merge" the owner flagged).
+   ▸ Remaining teal-green secondary controls → neon family.
+   ══════════════════════════════════════════════════════════════ */
+
+/* 1 — Dark ink on EVERY lime surface, including inline-SVG icons */
+.btn-primary svg, .btn-primary i,
+.pd-btn-buy svg, .pd-btn-buy i,
+.pd-btn-primary svg, .pd-btn-primary i,
+.ax-grid-mode-btn.active svg, .ax-grid-mode-btn.active i,
+.trade-mode-tab.active svg, .trade-mode-tab.active i,
+.filter-pill.active svg, .filter-pill.active i,
+.catalogue-chip.active svg, .catalogue-chip.active i,
+.chip.active svg, .chip.active i,
+.filter-chip.active svg, .filter-chip.active i,
+.ax-tab.active svg, .ax-tab.active i,
+.tab-item.active svg, .tab-item.active i,
+.ax-msg-chip.active svg, .ax-msg-chip.active i,
+.listings-tab.active svg, .listings-tab.active i,
+.profile-tab-btn.active svg, .profile-tab-btn.active i,
+#axNotifBody .ax-notif-tab.active svg,
+#axNotifBody .ax-notif-tab.active i,
+#panel-notifications.portal-panel .ax-notif-tab.active svg,
+#panel-notifications.portal-panel .ax-notif-tab.active i {
+  color: var(--ax-ink-on-lime) !important;
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+/* 2 — Product-modal cart: teal outline → neon outline (matches Negotiate) */
+.pd-btn-cart,
+html[data-theme="dark"] .pd-btn-cart {
+  border-color: var(--ax-lime) !important;
+  color: var(--ax-lime) !important;
+  background: color-mix(in srgb, var(--ax-lime) 8%, transparent) !important;
+}
+.pd-btn-cart:hover,
+html[data-theme="dark"] .pd-btn-cart:hover {
+  background: color-mix(in srgb, var(--ax-lime) 16%, transparent) !important;
+}
+
+/* 3 — Feed toggle switch "on" track → neon */
+.ax-toggle-pill.on {
+  background: var(--ax-lime) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PHASE 4 — Uniform roundness (owner request)
+   Every card / box / tile that was previously round now shares ONE
+   radius = --r (16px, the approved card radius). Was a mix of
+   20 (product media) / 14 (shop row) / 16 (top shop) / 4 (category
+   tiles). Intentionally-sharp surfaces (search bar, tight CTAs) are
+   left untouched per the owner's "sharp stays sharp" note.
+   ══════════════════════════════════════════════════════════════ */
+.product-card-media,
+.product-card-thumb,
+.product-card-placeholder,
+.ax-shop-row,
+.top-shop-card,
+.ax-category-grid-item,
+.ax-category-grid-item .cat-icon-circle,
+.ax-category-grid-item .cat-icon-circle.cat-icon-photo {
+  border-radius: var(--r, 16px) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PHASE 6 — Product detail modal, premium pass (owner request)
+   CSS-only — reuses product-modal.js's existing classes. Focus:
+   a bigger cinematic hero, a real price block, chip-style meta, and
+   a confident action row, all on the neon-olive theme.
+   ══════════════════════════════════════════════════════════════ */
+
+/* Hero — taller, cinematic scrim, Fraunces name */
+#productDetailModal .pd-modal-hero,
+.pd-modal-box .pd-modal-hero {
+  border-radius: 0 !important;
+  margin-bottom: 0 !important;
+  max-height: 46vh;
+}
+.pd-modal-hero .pd-modal-img,
+.pd-modal-hero .pd-modal-img-fallback {
+  max-height: 46vh !important;
+  min-height: 220px;
+}
+.pd-hero-overlay {
+  position: absolute; inset: auto 0 0 0;
+  padding: 40px 21px 18px;
+  background: linear-gradient(to top, rgba(5,7,3,.88) 0%, rgba(5,7,3,.45) 55%, transparent 100%);
+}
+.pd-hero-name {
+  font-family: var(--f-display, Georgia, serif) !important;
+  font-size: 27px !important; font-weight: 700 !important;
+  letter-spacing: -.02em; color: #F7FAEC !important; line-height: 1.1;
+  text-shadow: 0 2px 12px rgba(0,0,0,.5);
+}
+.pd-modal-close-float {
+  width: 40px !important; height: 40px !important; border-radius: 50% !important;
+  background: rgba(8,11,5,.55) !important; color: #F1F5E6 !important;
+  backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,.14) !important;
+}
+
+/* Info — generous rhythm */
+.pd-modal-info { padding: 21px !important; display: flex; flex-direction: column; gap: 13px; }
+.pd-modal-info > * { margin: 0 !important; }
+.pd-modal-rating { display: flex; align-items: center; gap: 6px; }
+
+/* Meta → subtle chip strip */
+.pd-modal-meta {
+  display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: 12.5px !important; color: var(--color-text-tertiary) !important;
+  font-weight: 600; letter-spacing: .01em;
+}
+
+/* Price block — a real tinted panel: big number, struck MRP, lime OFF pill */
+.pd-modal-info .product-card-price-wrap {
+  display: flex !important; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding: 15px 17px; margin-top: 4px !important;
+  background: color-mix(in srgb, var(--ax-lime) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ax-lime) 22%, transparent);
+  border-radius: var(--r, 16px);
+}
+.pd-modal-price {
+  font-family: var(--f-display, Georgia, serif) !important;
+  font-size: 29px !important; font-weight: 800 !important;
+  color: var(--color-text-primary) !important; line-height: 1;
+}
+.pd-modal-price span { font-size: 13px !important; font-weight: 600 !important; color: var(--color-text-tertiary) !important; }
+.pd-modal-info .pc-mrp {
+  text-decoration: line-through; color: var(--color-text-tertiary);
+  font-size: 15px; font-weight: 600;
+}
+.pd-modal-info .pc-discount-badge {
+  display: inline-block; margin-top: 8px;
+  background: var(--ax-lime) !important; color: var(--ax-ink-on-lime) !important;
+  padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 800;
+  letter-spacing: .02em;
+}
+.pd-price-contact { color: var(--color-text-secondary) !important; font-weight: 700; }
+
+/* Actions — Buy dominant, cart square, negotiate full-width outline */
+.pd-modal-actions { padding: 0 21px 21px !important; display: flex; flex-direction: column; gap: 10px; }
+.pd-btn-row { gap: 10px !important; }
+.pd-btn-buy, .pd-btn-primary {
+  font-weight: 800 !important; letter-spacing: .01em; padding: 15px 20px !important;
+}
+.pd-btn-cart { width: 54px !important; }
+.pd-btn-negotiate { width: 100%; justify-content: center; padding: 13px 20px !important; font-weight: 700 !important; }
+
+/* Reviews — quiet cards */
+.pd-reviews-section { padding: 21px !important; border-top: 1px solid var(--color-border-subtle) !important; }
+.pd-reviews-section h4 { font-family: var(--f-display, Georgia, serif); font-size: 17px !important; margin-bottom: 14px !important; }
+.pd-review-item {
+  padding: 13px 14px !important; margin-bottom: 10px;
+  background: var(--color-surface-sunken); border: 1px solid var(--color-border-subtle);
+  border-radius: var(--r-sm, 12px); border-bottom: 1px solid var(--color-border-subtle) !important;
+}
+.pd-review-form textarea {
+  border-radius: var(--r-sm, 12px) !important;
+  background: var(--color-surface-sunken) !important;
+  border: 1px solid var(--color-border-subtle) !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PHASE 9 — Home header buttons (owner request)
+   No dark/white "patch" behind menu · message · notifications ·
+   profile in EITHER theme; uniform 40px hit area; neon on hover.
+   ══════════════════════════════════════════════════════════════ */
+.nav-right .ax-navico-btn,
+.nav-right .nav-btn-menu,
+.nav-right .nav-btn-ghost,
+.nav-right .nav-btn-icon,
+.nav-profile-btn,
+html[data-theme="dark"] .nav-right .ax-navico-btn,
+html[data-theme="dark"] .nav-right .nav-btn-menu.ax-navico-btn,
+html[data-theme="dark"] .nav-right .nav-btn-ghost.ax-navico-btn,
+html:not([data-theme="dark"]) .nav-right .ax-navico-btn {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.nav-right { gap: 4px !important; align-items: center; }
+.nav-right .ax-navico-btn {
+  width: 40px !important; height: 40px !important; border-radius: 12px !important;
+  transition: transform .15s var(--ease, ease) !important;
+}
+.nav-right .ax-navico-btn .ax-ico { width: 20px !important; height: 20px !important; }
+.nav-right .ax-navico-btn:hover .ax-ico { color: var(--ax-lime) !important; }
+.nav-right .ax-navico-btn:active { transform: scale(.92); }
+/* Count badges (messages / notifications) → neon pill, dark ink */
+.ax-nav-count-pill { background: var(--ax-lime) !important; color: var(--ax-ink-on-lime) !important; }
+.ax-nav-unread-dot { background: var(--ax-lime) !important; }
+/* Profile avatar ring → neon-deep, no square patch */
+.nav-profile-btn img, .nav-avatar-init {
+  border-color: var(--ax-lime-deep) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PHASE 10 — Global polish (owner request)
+   Cross-cutting, low-risk finish: one focus ring, consistent tap
+   feedback, aligned numerals, calmer transitions.
+   ══════════════════════════════════════════════════════════════ */
+/* One brand focus ring everywhere (a11y + polish) */
+a:focus-visible, button:focus-visible,
+input:focus-visible, textarea:focus-visible, select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--ax-lime) !important;
+  outline-offset: 2px !important;
+  border-radius: var(--ax-radius-tight, 4px);
+}
+/* Prices / counts / stats line up on their digits */
+.pd-modal-price, .product-card-price-now, .product-card-price-mrp,
+.pc-mrp, .cart-total, .shop-stat, .dash-stat-num,
+.ax-nav-count-pill, .axnh-count {
+  font-variant-numeric: tabular-nums;
+}
+/* Consistent, subtle press feedback on primary actions */
+.btn-primary:active, .pd-btn-buy:active, .pd-btn-primary:active,
+.pd-btn-negotiate:active, .pd-btn-cart:active,
+.trade-mode-tab:active, .ax-grid-mode-btn:active {
+  transform: scale(.985);
+}
+/* Respect reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .nav-right .ax-navico-btn, .btn-primary, .pd-btn-buy,
+  .pd-btn-primary, .pd-btn-negotiate { transition: none !important; }
+  .nav-right .ax-navico-btn:active, .btn-primary:active,
+  .pd-btn-buy:active, .pd-btn-primary:active { transform: none !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   HOME FEED HEADER — refinement (owner request)
+   ▸ Flush-top nav = fully transparent (kills the dark/greenish
+     "patti" strip behind menu/notif/profile) in BOTH themes.
+   ▸ Header glyphs sit on the cover photo → always white + a soft
+     shadow (light mode was turning the menu icon black).
+   ▸ Message icon moves INTO the header (menu · message · alert);
+     the on-cover message button is removed.
+   ▸ Search box: no border, taller, neon focus highlight.
+   ══════════════════════════════════════════════════════════════ */
+
+/* 1 — Transparent flush-top nav, both themes (beats the dark .nav rule) */
+body.is-signed-in.ax-flush-top .nav,
+html[data-theme="dark"] body.is-signed-in.ax-flush-top .nav,
+html:not([data-theme="dark"]) body.is-signed-in.ax-flush-top .nav {
+  background: transparent !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* 2 — Header glyphs white on the photo (both themes) + legible shadow */
+body.is-signed-in.ax-flush-top .nav-right .ax-navico-btn,
+body.is-signed-in.ax-flush-top .nav-right .ax-navico-btn .ax-ico,
+body.is-signed-in.ax-flush-top .nav-right .ax-navico-btn svg,
+html:not([data-theme="dark"]) body.is-signed-in.ax-flush-top .nav-right .ax-navico-btn,
+html:not([data-theme="dark"]) body.is-signed-in.ax-flush-top .nav-right .ax-navico-btn .ax-ico {
+  color: #ffffff !important;
+}
+body.is-signed-in.ax-flush-top .nav-right .ax-navico-btn .ax-ico,
+body.is-signed-in.ax-flush-top .nav-right .ax-navico-btn svg {
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,.55));
+}
+
+/* 3 — Message icon in the header (between menu & alert); hide on-cover one */
+body.is-signed-in:has(#panel-dashboard.active) .nav-right .ax-msg-nav-btn,
+body.is-signed-in.ax-flush-top .nav-right .ax-msg-nav-btn {
+  display: inline-flex !important;
+}
+.ax-banner-msg-btn { display: none !important; }
+.ax-geo-bar.ax-geo-bar-onbanner { justify-content: center !important; }
+
+/* 4 — Search box: no border, taller, brand focus highlight */
+.ax-search-bar.search-filter-group,
+html[data-theme="dark"] .ax-search-bar.search-filter-group,
+html:not([data-theme="dark"]) .ax-search-bar.search-filter-group {
+  border: none !important;
+}
+.catalogue-search-sticky:not(.is-docked) .ax-search-bar.search-filter-group {
+  min-height: 62px !important;
+}
+.ax-search-bar.search-filter-group:focus-within,
+html[data-theme="dark"] .ax-search-bar.search-filter-group:focus-within {
+  box-shadow: inset 0 0 0 2px var(--ax-lime),
+              0 6px 20px -8px rgba(212,237,107,.38) !important;
+}
+html:not([data-theme="dark"]) .ax-search-bar.search-filter-group:focus-within {
+  box-shadow: inset 0 0 0 2px var(--ax-lime-deep),
+              0 6px 20px -8px rgba(184,217,74,.35) !important;
+}

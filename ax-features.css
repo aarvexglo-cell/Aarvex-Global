@@ -1,0 +1,2649 @@
+/* Aarvex Portal — Delivery/Track UX + category grid modes + dark theme.
+   Loaded LAST (after portal-ui-pro.css) so these rules win the cascade. */
+
+/* ═══════════ JOURNEY / TRACK STRIP — the top "patti" ═══════════
+   Full-width bar glued edge-to-edge: importer (or order) identity on the
+   first row, km-away / ETA chips underneath, circle icon-buttons on the
+   right (call · triangle · collapse). */
+.ax-journey-strip {
+  background: linear-gradient(145deg, var(--c-forest, #143026), var(--c-forest3, #1A3D2B));
+  color: #fff;
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: var(--s3, 12px);
+  box-shadow: 0 10px 30px rgba(12, 31, 24, .25);
+}
+@media (max-width: 768px) {
+  /* True edge-to-edge patti on mobile — right side से left तक जुड़ी हुई. */
+  .ax-journey-strip {
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    border-radius: 0;
+  }
+}
+.ax-journey-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.ax-journey-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .14);
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  flex-shrink: 0;
+}
+.ax-journey-text { flex: 1; min-width: 0; }
+.ax-journey-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .6);
+  margin-bottom: 2px;
+}
+.ax-journey-name {
+  font-family: var(--f-display, Georgia, serif);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+  /* Wrap to at most 2 lines so long importer names (e.g. "Parag Lakhadive")
+     show in full instead of being clipped to "Parag Lakha…". */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+.ax-journey-addr {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, .65);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ax-strip-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, .25);
+  background: rgba(255, 255, 255, .1);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  cursor: pointer;
+  flex-shrink: 0;
+  text-decoration: none;
+  transition: background .15s ease;
+}
+.ax-strip-icon-btn:active { background: rgba(255, 255, 255, .25); }
+.ax-journey-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.ax-journey-chip {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, .12);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, .85);
+  white-space: nowrap;
+}
+.ax-journey-chip b { color: #fff; font-weight: 800; }
+/* The ₹ chip is now a button that opens a live earning/trip popover. */
+.ax-journey-chip-btn { border: none; cursor: pointer; font-family: inherit; }
+.ax-journey-chip-btn:active { background: rgba(255, 255, 255, .22); }
+.ax-chip-info { font-size: 10px; opacity: .7; margin-left: 2px; }
+
+/* Live earning / trip details popover (anchored under the ₹ chip). */
+.ax-earn-pop {
+  position: fixed; z-index: 100003; width: 240px;
+  background: var(--color-surface-raised, #fff); color: var(--c-earth, #1C160D);
+  border: 1px solid var(--c-border, #E3DAC8); border-radius: 14px;
+  box-shadow: 0 14px 34px rgba(6, 22, 14, .32); padding: 12px 14px;
+  animation: axJbIn .18s cubic-bezier(.2,.8,.2,1);
+}
+html[data-theme="dark"] .ax-earn-pop { background: #1B231D; color: #ECF3EE; border-color: #2C382E; }
+.ax-earn-pop-head {
+  font-size: 12px; font-weight: 800; color: var(--c-leaf, #2E6B41);
+  display: flex; align-items: center; gap: 7px; margin-bottom: 8px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--c-border, #EEE7D8);
+}
+html[data-theme="dark"] .ax-earn-pop-head { color: #7FD199; border-color: #2C382E; }
+.ax-earn-pop-row { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; padding: 4px 0; }
+.ax-earn-pop-row span { color: var(--c-text3, #7A6E60); }
+.ax-earn-pop-row b { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.ax-journey-pause-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: 999px;
+  background: var(--c-gold, #C7993A);
+  color: #14100A;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 16px;
+  cursor: pointer;
+}
+.ax-journey-strip.collapsed .ax-journey-stats,
+.ax-journey-strip.collapsed .ax-strip-contacts,
+.ax-journey-strip.collapsed .ax-journey-addr { display: none; }
+.ax-journey-strip.collapsed { padding-top: 10px; padding-bottom: 10px; }
+
+/* ── Active Delivery controls card (themed; replaces the old hardcoded white
+   patch that broke in dark mode) ── */
+.ax-delivery-controls {
+  background: var(--color-surface-raised, #fff);
+  padding: 18px;
+  border: 1px solid var(--c-border, #E3DAC8);
+  border-radius: 12px;
+}
+/* Collapsible "tracking key & cancel" section — collapsed by default. */
+.ax-delivery-adv { border-top: 1px solid var(--c-border, #E3DAC8); margin-top: 4px; padding-top: 4px; }
+.ax-delivery-adv > summary {
+  list-style: none; cursor: pointer; user-select: none;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12.5px; font-weight: 700; color: var(--c-text3, #6B5F50);
+  padding: 8px 2px;
+}
+.ax-delivery-adv > summary::-webkit-details-marker { display: none; }
+.ax-delivery-adv > summary::after {
+  content: "\f078"; font-family: "Font Awesome 6 Free"; font-weight: 900;
+  margin-left: auto; font-size: 11px; transition: transform .2s;
+}
+.ax-delivery-adv[open] > summary::after { transform: rotate(180deg); }
+.ax-delivery-adv-body { padding: 6px 2px 4px; }
+html[data-theme="dark"] .ax-delivery-adv { border-color: var(--neutral-200); }
+html[data-theme="dark"] .ax-delivery-adv > summary { color: var(--neutral-700); }
+/* OTP + Complete-delivery, one compact row: [key] [input] [✓] */
+.ax-otp-row { display: flex; align-items: stretch; gap: 8px; }
+.ax-otp-key {
+  flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; border-radius: 10px; font-size: 16px;
+  background: var(--c-mist, #EDF4EF); color: var(--c-leaf, #2E6B41);
+}
+html[data-theme="dark"] .ax-otp-key { background: var(--neutral-50); color: #7FD199; }
+.ax-otp-input {
+  flex: 1 1 auto; min-width: 0;
+  letter-spacing: .28em; font-weight: 700; font-size: 16px; text-align: center;
+  padding: 12px 10px;
+}
+.ax-otp-go {
+  flex: 0 0 52px; width: 52px; min-width: 52px; max-width: 52px;
+  padding: 0; font-size: 18px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+/* Contact rows (Track strip): importer / shop keeper / delivery boy */
+.ax-strip-contacts {
+  margin-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, .14);
+  padding-top: 6px;
+}
+.ax-contact-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+}
+.ax-contact-row + .ax-contact-row { border-top: 1px dashed rgba(255, 255, 255, .1); }
+.ax-contact-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .12);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.ax-contact-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ax-contact-text small {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .55);
+}
+.ax-contact-text b {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ax-contact-call {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--c-leaf2, #3E9159);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.ax-contact-call-na {
+  background: rgba(255, 255, 255, .1);
+  color: rgba(255, 255, 255, .5);
+  font-weight: 600;
+}
+
+/* While a journey is active the Delivery tab is journey-first: header and
+   claims door step aside, the strip + map own the screen. */
+#panel-delivery.ax-journey-active #deliveryPageHeader,
+#panel-delivery.ax-journey-active #deliveryOrdersOpenBtn,
+#panel-delivery.ax-journey-active #deliveryEarningsSummary { display: none; }
+#panel-delivery.ax-journey-active #deliveryMapWrap { min-height: 64vh; }
+#panel-delivery.ax-journey-active #deliveryMapCanvas { height: 64vh; }
+/* Non-fullscreen active view: keep the controls patch compact so the map is
+   the hero (the "patch bada, map chhota" fix). */
+#panel-delivery.ax-journey-active .ax-delivery-controls { padding: 12px 16px; }
+#panel-delivery.ax-journey-active #deliveryMapControlsOverlay { margin-bottom: 12px; }
+
+/* ═══════════ CLAIMS PAGE ═══════════ */
+.ax-claims-open-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  background: #fff;
+  border: 1.5px solid var(--c-border, #E4DBCA);
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  text-align: left;
+  margin-bottom: var(--s4, 16px);
+  transition: border-color .15s ease;
+}
+.ax-claims-open-btn:active { border-color: var(--c-leaf, #2E6B41); }
+.ax-claims-open-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--c-mist, #EDF4EF);
+  color: var(--c-leaf, #2E6B41);
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.ax-claims-open-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ax-claims-open-text b { font-size: 15px; color: var(--c-text, #16120C); }
+.ax-claims-open-text small { font-size: 12px; color: var(--c-text3, #6B5F50); }
+.ax-claims-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: var(--s3, 12px);
+}
+.ax-claims-head .ax-strip-icon-btn {
+  border-color: var(--c-border, #E4DBCA);
+  background: #fff;
+  color: var(--c-text, #16120C);
+}
+.ax-claims-head > div { flex: 1; }
+.ax-claims-title {
+  font-family: var(--f-display, Georgia, serif);
+  font-size: 20px;
+  margin: 0;
+  color: var(--c-text, #16120C);
+}
+.ax-claims-sub { font-size: 12px; color: var(--c-text3, #6B5F50); margin: 2px 0 0; }
+.ax-claims-head .ax-journey-pause-btn { margin-left: 0; }
+.ax-radius-card {
+  background: #fff;
+  border: 1.5px solid var(--c-border, #E4DBCA);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: var(--s3, 12px);
+}
+.ax-radius-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ax-radius-row label { font-size: 13px; font-weight: 700; color: var(--c-text, #16120C); }
+.ax-radius-row input {
+  width: 76px;
+  padding: 8px 10px;
+  border: 1.5px solid var(--c-border2, #D5C9B6);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+.ax-radius-row span { font-size: 13px; color: var(--c-text3, #6B5F50); font-weight: 600; }
+.ax-radius-row .btn-primary { margin-left: auto; }
+.ax-radius-note {
+  font-size: 11.5px;
+  color: var(--c-text3, #6B5F50);
+  margin: 8px 0 0;
+  line-height: 1.5;
+}
+.ax-paused-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--c-sand, #F4EAD7);
+  border: 1px solid var(--c-gold, #C7993A);
+  color: #7C6029;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: var(--s3, 12px);
+}
+.ax-claim-card {
+  background: #fff;
+  border: 1.5px solid var(--c-border, #E4DBCA);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.ax-claim-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.ax-claim-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--c-mist, #EDF4EF);
+  color: var(--c-leaf, #2E6B41);
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.ax-claim-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ax-claim-card-info strong { font-size: 14.5px; color: var(--c-text, #16120C); }
+.ax-claim-card-info small { font-size: 12px; color: var(--c-text3, #6B5F50); }
+.ax-claim-card-info .ax-claim-legs { color: var(--c-leaf, #2E6B41); font-weight: 600; }
+.ax-claim-card-earn {
+  text-align: right;
+  font-weight: 800;
+  color: var(--c-leaf, #2E6B41);
+  font-size: 16px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ax-claim-card-earn small {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--c-text4, #93897A);
+}
+.ax-claim-card-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--c-border, #E4DBCA);
+}
+
+/* "My pending claims" button — breathing room above/below (the reported
+   missing padding), matching the card rhythm around it. */
+#deliveryEarningsSummary .btn-secondary.btn-sm {
+  padding: 13px 16px !important;
+  margin-top: 14px !important;
+  margin-bottom: 4px;
+  border-radius: 12px;
+}
+
+/* ═══════════ TRACK TAB ═══════════ */
+.ax-track-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.ax-track-actions .btn-sm-outline { padding: 10px 18px; }
+
+/* ═══════════ DISTANCE TRIANGLE OVERLAY ═══════════ */
+.ax-triangle-overlay {
+  position: fixed;
+  inset: 0;
+  /* Above the fullscreen map (z 9999) + its pinned strip/sheet (10000–10001)
+     and the exit button (100000) so the triangle popup is visible and tappable
+     WHILE the live map is fullscreen — not trapped behind it. */
+  z-index: 100002;
+  background: rgba(13, 11, 8, .55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+.ax-triangle-box {
+  background: #fff;
+  border-radius: 20px;
+  padding: 18px;
+  width: min(420px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 30px 80px rgba(13, 11, 8, .3);
+}
+.ax-triangle-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.ax-triangle-head h3 {
+  font-family: var(--f-display, Georgia, serif);
+  font-size: 17px;
+  margin: 0;
+  color: var(--c-text, #16120C);
+}
+.ax-triangle-head .ax-strip-icon-btn {
+  border-color: var(--c-border, #E4DBCA);
+  background: #fff;
+  color: var(--c-text3, #6B5F50);
+}
+.ax-triangle-svg { width: 100%; height: auto; display: block; }
+.ax-triangle-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--c-text2, #3D3428);
+  margin: 4px 0 12px;
+}
+.ax-tri-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: baseline;
+}
+.ax-triangle-rows {
+  border-top: 1px solid var(--c-border, #E4DBCA);
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ax-triangle-rows > div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--c-text2, #3D3428);
+}
+.ax-triangle-rows b { color: var(--c-leaf, #2E6B41); }
+.ax-triangle-scale {
+  margin: 6px 0 0; font-size: 11.5px; text-align: center;
+  color: var(--c-text3, #6B5F50); display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.ax-triangle-scale i { color: #2E6B41; }
+.ax-triangle-note {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--c-text3, #6B5F50);
+  background: var(--c-mist, #EDF4EF);
+  border-radius: 10px;
+  padding: 10px 12px;
+  line-height: 1.5;
+}
+
+/* ═══════════ NOTIFICATION ACTION BUTTONS (Call / Track live) ═══════════ */
+.notif-actions-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.notif-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: none;
+  border-radius: 999px;
+  background: var(--c-leaf, #2E6B41);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 16px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.notif-action-btn.notif-action-track { background: var(--c-blue, #2A7F7E); }
+.notif-action-btn:active { transform: scale(.97); }
+
+/* ═══════════ CATEGORY GRID — mode toggle + shops list ═══════════ */
+.ax-grid-mode-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  background: rgba(20, 48, 38, .06);
+  border-radius: 999px;
+  padding: 4px;
+}
+.ax-grid-mode-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  padding: 10px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-text3, #6B5F50);
+  cursor: pointer;
+}
+.ax-grid-mode-btn.active {
+  background: var(--brand-lime, #D4ED6B);
+  color: var(--brand-lime-ink, #0A0A0A);
+}
+.cat-icon-circle.cat-icon-all { color: var(--c-leaf, #2E6B41); }
+.ax-shops-grid-list { display: flex; flex-direction: column; gap: 10px; }
+.ax-shop-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: #fff;
+  border: 1.5px solid var(--c-border, #E4DBCA);
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+  text-align: left;
+}
+.ax-shop-row:active { border-color: var(--c-leaf, #2E6B41); }
+.ax-shop-row-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4EA86A, #2E6B41);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 15px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.ax-shop-row-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.ax-shop-row-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ax-shop-row-info b {
+  font-size: 14px;
+  color: var(--c-text, #16120C);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ax-shop-row-info small {
+  font-size: 11.5px;
+  color: var(--c-text3, #6B5F50);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ax-shop-row-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 11.5px;
+  color: var(--c-text3, #6B5F50);
+  flex-shrink: 0;
+}
+.ax-shop-row-meta i { color: var(--c-gold, #C7993A); }
+
+/* ═══════════ DARK MODE ═══════════
+   html[data-theme="dark"] re-points the token layers (tokens.css) that
+   nearly all component CSS reads through, plus targeted fixes for the
+   handful of hardcoded light surfaces. Toggled from the menu drawer,
+   persisted in localStorage (ax_theme). */
+html[data-theme="dark"] {
+  --neutral-0:   #1B211D;   /* raised cards */
+  --neutral-25:  #121714;   /* page background */
+  --neutral-50:  #232B26;   /* sunken panels */
+  --neutral-100: #2A332D;
+  --neutral-200: #33403A;   /* subtle borders */
+  --neutral-300: #3E4C44;
+  --neutral-400: #5E7066;
+  --neutral-600: #93A79A;
+  --neutral-700: #AEC0B4;
+  --neutral-800: #D3DFD6;
+  --neutral-900: #EFF5F0;
+  --neutral-950: #F7FAF7;
+  --green-50:  #1C2921;
+  --green-100: #22332A;
+  --gold-50:   #2A251A;
+  --gold-100:  #332C1D;
+  --red-50:    #2E1D1F;
+  --blue-50:   #1C2A29;
+  --color-surface-base:   var(--neutral-25);
+  --color-surface-raised: var(--neutral-0);
+  --color-surface-sunken: var(--neutral-50);
+  --c-forest:  #10160B;
+  --c-forest2: #070A04;
+  --c-forest3: #1D2614;
+  color-scheme: dark;
+}
+html[data-theme="dark"] body { background: var(--neutral-25); color: var(--neutral-800); }
+/* Hardcoded-white surfaces that tokens can't reach */
+html[data-theme="dark"] .mobile-nav,
+html[data-theme="dark"] .section-card,
+html[data-theme="dark"] .ax-delivery-controls,
+html[data-theme="dark"] .stat-card,
+html[data-theme="dark"] .ax-claims-open-btn,
+html[data-theme="dark"] .ax-radius-card,
+html[data-theme="dark"] .ax-claim-card,
+html[data-theme="dark"] .ax-shop-row,
+html[data-theme="dark"] .ax-triangle-box,
+html[data-theme="dark"] .pd-modal-box,
+html[data-theme="dark"] .pd-modal-head,
+html[data-theme="dark"] .pd-modal-actions,
+html[data-theme="dark"] .profile-dropdown,
+html[data-theme="dark"] .ax-star-shops,
+html[data-theme="dark"] .catalogue-search-sticky.is-docked,
+html[data-theme="dark"] .ax-category-grid-searchrow,
+html[data-theme="dark"] .product-card,
+html[data-theme="dark"] .form-section,
+html[data-theme="dark"] .order-card,
+html[data-theme="dark"] .cta-card {
+  background: var(--neutral-0) !important;
+  border-color: var(--neutral-200) !important;
+  color: var(--neutral-800);
+}
+html[data-theme="dark"] .mobile-nav { background: #161C18 !important; }
+html[data-theme="dark"] .nav-btn-menu,
+html[data-theme="dark"] .nav-btn-ghost {
+  background: var(--neutral-50) !important;
+  color: var(--neutral-800) !important;
+  border-color: var(--neutral-300) !important;
+}
+/* Dock search menu stays patch-free (handled with search chrome above). */
+html[data-theme="dark"] .search-dock-icon-btn {
+  background: transparent !important;
+}
+/* Header glyph buttons — never show a dark patch behind menu / messages /
+   notifications (overrides the generic .nav-btn-ghost dark fill above). */
+html[data-theme="dark"] .ax-navico-btn,
+html[data-theme="dark"] .nav-btn-menu.ax-navico-btn,
+html[data-theme="dark"] .nav-btn-ghost.ax-navico-btn {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #fff !important;
+}
+html[data-theme="dark"] .ax-navico-btn:hover { background: transparent !important; color: #fff !important; }
+html[data-theme="dark"] .ax-navico-btn .ax-ico { filter: none; }
+
+/* Flush-top hero: profile avatar is the green circle itself — no dark ring patch */
+@media (max-width: 768px) {
+  body.is-signed-in.ax-flush-top .nav-profile-btn img,
+  body.is-signed-in.ax-flush-top .nav-avatar-init {
+    border-color: rgba(255,255,255,.85);
+    box-shadow: none;
+  }
+  body.is-signed-in.ax-flush-top .nav-profile-wrap,
+  body.is-signed-in.ax-flush-top .nav-profile-btn {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Like / dislike (thumbs) pills in the shop/product modal had a hardcoded
+   white background and no dark override → showed as glaring white pills in
+   dark mode. Give them a proper dark surface. */
+html[data-theme="dark"] .pd-react-btn {
+  background: var(--neutral-50);
+  border-color: var(--neutral-300);
+  color: var(--neutral-800);
+}
+html[data-theme="dark"] .pd-react-btn.like:hover { background: rgba(34,197,94,.16); border-color: #22C55E; color: #4ADE80; }
+html[data-theme="dark"] .pd-react-btn.dislike:hover { background: rgba(239,68,68,.16); border-color: #EF4444; color: #F87171; }
+
+/* LocationPicker fields (label / full address / city / state / pincode) were
+   overflowing the right screen edge because their inline styles set padding
+   but not box-sizing, so content-box + padding pushed them past their grid
+   cell. Force border-box + shrinkable so everything fits on-screen. Applies
+   in BOTH themes. */
+#locationPickerModal input,
+#locationPickerModal textarea {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+#locationPickerModal > div > div { min-width: 0; }
+
+/* ── LocationPicker (address map) — full dark theme + mobile fit ──
+   The picker is built entirely from hardcoded LIGHT inline styles, so these
+   !important overrides re-skin the whole surface (panel, header, inputs,
+   textarea, the "My location"/Cancel buttons, helper text and the search
+   dropdown) when the app is in dark mode. The Leaflet map tiles are OSM
+   (always light) — inverting only the tile-pane darkens the map while
+   leaving the pin and zoom controls their normal colour. */
+html[data-theme="dark"] #locationPickerModal > div {
+  background: var(--neutral-0, #121814) !important;
+  color: var(--neutral-800) !important;
+}
+html[data-theme="dark"] #locationPickerModal > div > div:first-child { border-bottom-color: var(--neutral-200) !important; }
+html[data-theme="dark"] #locationPickerModal strong { color: var(--neutral-900) !important; }
+html[data-theme="dark"] #locationPickerModal #lpCloseBtn { color: var(--neutral-600) !important; }
+html[data-theme="dark"] #locationPickerModal input,
+html[data-theme="dark"] #locationPickerModal textarea {
+  background: var(--neutral-50) !important;
+  border-color: var(--neutral-300) !important;
+  color: var(--neutral-900) !important;
+}
+html[data-theme="dark"] #locationPickerModal input::placeholder,
+html[data-theme="dark"] #locationPickerModal textarea::placeholder { color: var(--neutral-500) !important; }
+html[data-theme="dark"] #lpUseMyLocation,
+html[data-theme="dark"] #lpCancelBtn {
+  background: var(--neutral-50) !important;
+  border-color: var(--neutral-300) !important;
+  color: var(--neutral-800) !important;
+}
+html[data-theme="dark"] #lpMapHost .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(.95) contrast(.9);
+}
+html[data-theme="dark"] #lpSearchDropdown {
+  background: var(--neutral-0, #121814) !important;
+  border-color: var(--neutral-300) !important;
+  color: var(--neutral-800) !important;
+}
+html[data-theme="dark"] #lpSearchDropdown .lp-suggestion { border-bottom-color: var(--neutral-200) !important; color: var(--neutral-800) !important; }
+html[data-theme="dark"] #lpSearchDropdown .lp-suggestion:hover { background: var(--neutral-50) !important; }
+
+/* Mobile: make the picker a true full-screen sheet so nothing runs off the
+   edge (map, the 3-up city/state/pincode grid, or the action buttons). */
+@media (max-width: 560px) {
+  #locationPickerModal { padding: 0 !important; align-items: stretch !important; }
+  #locationPickerModal > div {
+    max-width: 100% !important; width: 100% !important;
+    max-height: 100% !important; height: 100% !important; border-radius: 0 !important;
+  }
+  #lpMapHost { height: 34vh !important; min-height: 200px; }
+}
+html[data-theme="dark"] .ax-category-grid-backdrop { background: rgba(18, 23, 20, .97); }
+html[data-theme="dark"] .catalogue-search-sticky {
+  background: #1D2614;
+}
+html[data-theme="dark"] .catalogue-search-sticky.is-docked {
+  background: #1D2614 !important;
+  border-bottom: none !important;
+}
+html[data-theme="dark"] .form-input,
+html[data-theme="dark"] .form-textarea,
+html[data-theme="dark"] select.form-input,
+html[data-theme="dark"] .ax-radius-row input,
+html[data-theme="dark"] .email-form-input {
+  background: var(--neutral-50) !important;
+  color: var(--neutral-900) !important;
+  border-color: var(--neutral-300) !important;
+}
+/* Search plane — one flat colour, no border / gray patches */
+html[data-theme="dark"] .catalogue-search-input-wrap,
+html[data-theme="dark"] .catalogue-search-input-wrap input,
+html[data-theme="dark"] .ax-search-bar .catalogue-search-input-wrap input {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--neutral-900) !important;
+}
+html[data-theme="dark"] .ax-search-bar.search-filter-group {
+  background: #1D2614 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+html[data-theme="dark"] .search-dock-icon-btn,
+html[data-theme="dark"] .catalogue-search-sticky.is-docked .search-dock-icon-btn {
+  background: #1D2614 !important;
+  border: none !important;
+  color: var(--neutral-900) !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+html[data-theme="dark"] .search-dock-icon-btn:hover {
+  background: #222c26 !important;
+  color: #7FD199 !important;
+}
+html[data-theme="dark"] .page-title,
+html[data-theme="dark"] .section-header-title,
+html[data-theme="dark"] .cta-title,
+html[data-theme="dark"] .stat-value,
+html[data-theme="dark"] h1, html[data-theme="dark"] h2,
+html[data-theme="dark"] h3, html[data-theme="dark"] h4 {
+  color: var(--neutral-900);
+}
+html[data-theme="dark"] img.pd-modal-img,
+html[data-theme="dark"] .product-card img { filter: brightness(.92); }
+/* Product-modal close (X) button was a hardcoded white circle — theme it. */
+html[data-theme="dark"] .pd-modal-head { background: var(--neutral-0) !important; border-color: var(--neutral-200) !important; }
+html[data-theme="dark"] .pd-modal-close {
+  background: var(--neutral-50) !important;
+  border-color: var(--neutral-300) !important;
+  color: var(--neutral-700) !important;
+}
+html[data-theme="dark"] .pd-modal-close:hover { background: var(--neutral-100) !important; color: #7FD199 !important; }
+
+/* Product-card price is hardcoded near-black (#181410) in portal-base.css so it
+   merges into the dark card — force it to the light text token in dark mode.
+   The MRP strike + "Contact for price" already use tokens, so only the loud
+   price line needs re-pointing. */
+html[data-theme="dark"] .product-card-price-now { color: var(--neutral-900) !important; }
+html[data-theme="dark"] .product-card-price-now.product-card-price-unset { color: var(--neutral-500) !important; }
+
+/* Drawer theme toggle row */
+.ax-theme-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.ax-theme-toggle-pill {
+  margin-left: auto;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--c-border2, #D5C9B6);
+  position: relative;
+  transition: background .2s ease;
+  flex-shrink: 0;
+}
+.ax-theme-toggle-pill::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .2s ease;
+}
+html[data-theme="dark"] .ax-theme-toggle-pill { background: var(--c-leaf, #2E6B41); }
+html[data-theme="dark"] .ax-theme-toggle-pill::after { transform: translateX(18px); }
+
+/* ═══════════ BUG FIXES (round 2) ═══════════ */
+
+/* Belt-and-braces: a docked bar belonging to a non-active panel must never
+   render (kills any residual stuck-dock overlay). */
+.portal-panel:not(.active) .catalogue-search-sticky.is-docked { display: none !important; }
+
+/* Profile menu → a proper bottom-sheet on mobile (matches the notifications /
+   messages sheets: dim + blur behind, slide up, grip handle). Identity block on
+   top, then icon rows. Desktop keeps the compact dropdown. */
+@media (max-width: 768px) {
+  .profile-dropdown {
+    position: fixed !important;
+    left: 0 !important; right: 0 !important; top: auto !important; bottom: 0 !important;
+    min-width: 0 !important; max-width: 100% !important; width: 100% !important;
+    max-height: 84vh; overflow-y: auto;
+    border: none !important; border-radius: 22px 22px 0 0 !important;
+    box-shadow: 0 -12px 40px rgba(0,0,0,.35) !important;
+    padding: 6px 12px calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+    z-index: 5400 !important;
+    transform: translateY(100%) !important;
+    transition: transform .28s cubic-bezier(.2,.8,.2,1) !important;
+  }
+  .profile-dropdown.open { transform: translateY(0) !important; }
+  /* grip handle */
+  .profile-dropdown::before {
+    content: ""; display: block; width: 44px; height: 5px; border-radius: 999px;
+    background: var(--c-border2, #ccc); margin: 6px auto 10px;
+  }
+  html[data-theme="dark"] .profile-dropdown::before { background: var(--neutral-300, #3a4034); }
+  .profile-dd-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 6px 8px 14px; margin-bottom: 6px;
+    border-bottom: 1px solid var(--c-border, #eee);
+  }
+  html[data-theme="dark"] .profile-dd-header { border-color: var(--neutral-200, #2c3228); }
+  .profile-dd-header #ddAvatarWrap img,
+  .profile-dd-header #ddAvatarWrap .ax-avatar-initial {
+    width: 52px !important; height: 52px !important; border-radius: 50% !important;
+    border: 2px solid rgba(46,107,65,.25);
+  }
+  .profile-dd-name { font-size: 17px !important; font-weight: 800 !important; font-family: var(--f-display, Georgia, serif); }
+  .profile-dd-email { font-size: 12.5px !important; }
+  .profile-dd-item {
+    display: flex !important; align-items: center; gap: 14px;
+    padding: 13px 10px !important; font-size: 15px !important; font-weight: 600;
+    border-radius: 12px; position: relative;
+  }
+  .profile-dd-item i {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px;
+    display: grid; place-items: center; font-size: 15px;
+    background: rgba(46,107,65,.12); color: #2E6B41;
+  }
+  html[data-theme="dark"] .profile-dd-item i { background: rgba(127,209,153,.14); color: #7FD199; }
+  /* chevron affordance on the non-destructive rows */
+  .profile-dd-item:not(.danger)::after {
+    content: "\f054"; font-family: "Font Awesome 6 Free"; font-weight: 900;
+    margin-left: auto; font-size: 12px; color: var(--c-text3, #b3a894);
+  }
+  .profile-dd-item.danger i { background: rgba(217,54,68,.12); color: #D93644; }
+  .profile-dd-item.danger { color: #D93644; margin-top: 4px; }
+}
+
+/* Blur backdrop behind the profile sheet (mobile only). */
+.ax-profile-backdrop {
+  position: fixed; inset: 0; z-index: 5350;
+  background: rgba(18,30,24,.42);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  opacity: 0; visibility: hidden; transition: opacity .2s;
+}
+.ax-profile-backdrop.open { opacity: 1; visibility: visible; }
+@media (min-width: 769px) { .ax-profile-backdrop { display: none !important; } }
+
+/* ── Dark mode: menu drawer + profile dropdown were still light ── */
+/* NOTE: portal-ui-pro.css sets a light `.portal-sidebar` background with
+   !important, which beat this dark override (specificity loses to !important),
+   leaving the left drawer white in dark mode. These now carry !important too. */
+html[data-theme="dark"] .portal-sidebar {
+  background: #161C18 !important;
+  border-color: var(--neutral-200) !important;
+  box-shadow: none !important;
+}
+html[data-theme="dark"] .sidebar-nav-item { color: var(--neutral-800); }
+html[data-theme="dark"] .sidebar-nav-item.active {
+  background: var(--neutral-50) !important;
+  background-image: none !important;
+}
+html[data-theme="dark"] .sidebar-nav-slider { background: var(--neutral-50); }
+
+/* ── Dark mode: kill the light `!important` backgrounds in portal-ui-pro.css
+   that were painting cards / inputs / buttons / bottom-nav white ON TOP of the
+   dark theme. These load last + carry !important so they finally win. ── */
+html[data-theme="dark"] .dash-stats .stat-card,
+html[data-theme="dark"] .section-card,
+html[data-theme="dark"] .order-card,
+html[data-theme="dark"] .listing-card {
+  background: var(--neutral-0, #161D0F) !important;
+  border-color: var(--neutral-200, #2c3228) !important;
+}
+html[data-theme="dark"] .form-input,
+html[data-theme="dark"] .form-select,
+html[data-theme="dark"] .form-textarea {
+  background: var(--neutral-50, #1D2614) !important;
+  border-color: var(--neutral-300, #3a4034) !important;
+  color: var(--neutral-900, #f3f3ee) !important;
+}
+html[data-theme="dark"] .btn-secondary,
+html[data-theme="dark"] .btn-sm-outline {
+  background: var(--neutral-50, #1D2614) !important;
+  border-color: var(--neutral-300, #3a4034) !important;
+  color: var(--neutral-900, #f3f3ee) !important;
+}
+html[data-theme="dark"] .mobile-nav { background: #0B0F06 !important; }
+
+/* Trade-tab (and all) ad banners: rounded edges (Batch 1). */
+.dash-banner { border-radius: 16px; overflow: hidden; }
+#tradeMidAdSlot .dash-banner, #tradeMidAdSlot img { border-radius: 16px; }
+html[data-theme="dark"] .sidebar-section-title { color: var(--neutral-600); }
+html[data-theme="dark"] .sidebar-bottom { border-color: var(--neutral-200); }
+html[data-theme="dark"] .profile-dropdown {
+  background: var(--neutral-0);
+  border-color: var(--neutral-200);
+}
+html[data-theme="dark"] .profile-dd-item { color: var(--neutral-800); }
+html[data-theme="dark"] .profile-dd-item:hover { background: var(--neutral-50); }
+html[data-theme="dark"] .profile-dd-header { border-color: var(--neutral-200); }
+
+/* ── Dark mode: bottom-nav icons were too faded — inactive icons/labels go
+   near-white, active stays a brighter green for contrast on dark. ── */
+html[data-theme="dark"] .mobile-nav-btn { color: #E8EFEA; }
+html[data-theme="dark"] .nav-anim-icon svg,
+html[data-theme="dark"] .nav-anim-icon i { color: #E8EFEA; }
+html[data-theme="dark"] .mobile-nav-btn.active { color: var(--brand-lime, #D4ED6B); }
+html[data-theme="dark"] .mobile-nav-btn.active .nav-anim-icon svg,
+html[data-theme="dark"] .mobile-nav-btn.active .nav-anim-icon i {
+  color: var(--brand-lime, #D4ED6B);
+}
+html[data-theme="dark"] .sidebar-nav-item.active .nav-anim-icon svg,
+html[data-theme="dark"] .sidebar-nav-item.active .nav-anim-icon i {
+  color: var(--brand-lime-ink, #0A0A0A);
+}
+
+/* ═══════════ DARK MODE — hardcoded light surfaces (Batch A) ═══════════
+   These components use literal light hex values (not tokens), so the
+   token re-pointing above never reaches them and they render as jarring
+   white/cream patches on the dark page. Re-skin each to the dark surface
+   tokens; text inside already uses --c-* tokens that flip automatically. */
+
+/* Product-card placeholder (no-image tile): the light green→cream gradient
+   showed as a highlighted rounded rectangle with visible corners inside the
+   dark card. Flatten it to the sunken surface so it reads as one dark card. */
+html[data-theme="dark"] .product-card-placeholder {
+  background: var(--neutral-50);
+}
+html[data-theme="dark"] .product-card-placeholder i { color: var(--c-leaf2); opacity: .5; }
+
+/* Seller "Out for delivery" claim card — was a cream gradient (#FEF9EC). */
+html[data-theme="dark"] .shop-claim-card {
+  background: linear-gradient(135deg, var(--gold-50), var(--neutral-50));
+  border-color: rgba(199,153,58,.35);
+}
+
+/* Pause / Activate / Delete buttons + ARN copy chip + shop-prod-row buttons
+   were background:#fff — invisible on the dark card. */
+html[data-theme="dark"] .sp-btn,
+html[data-theme="dark"] .sc-arn,
+html[data-theme="dark"] .shop-prod-row button {
+  background: var(--neutral-50) !important;
+  color: var(--neutral-800) !important;
+  border-color: var(--neutral-300) !important;
+}
+html[data-theme="dark"] .sp-btn.sp-danger { color: #F87171 !important; }
+
+/* Shop ID chip: dark-green text on a dark-green tint merged. Brighten. */
+html[data-theme="dark"] .shop-id-chip {
+  color: #7FD199;
+  border-color: rgba(127,209,153,.5);
+  background: rgba(46,107,65,.18);
+}
+
+/* Marketplace modal box was background:#fff. */
+html[data-theme="dark"] .mp-modal-box { background: var(--neutral-0); color: var(--neutral-800); }
+
+/* ── Heart / favourite button on shop cards (shop directory + shops grid).
+   Shop media is often a light placeholder, so unlike the product like-btn
+   (bare white heart) this sits on a contrast chip that reads on any bg. ── */
+.ax-shop-fav-btn {
+  position: absolute; top: 8px; right: 8px; width: 34px; height: 34px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; background: rgba(255,255,255,.92); border: 1px solid rgba(20,48,38,.1);
+  color: #8A9691; cursor: pointer; z-index: 3; box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  transition: transform .15s var(--ease), color .15s var(--ease);
+}
+.ax-shop-fav-btn:hover { transform: scale(1.1); }
+.ax-shop-fav-btn.liked { color: #E1435A; }
+html[data-theme="dark"] .ax-shop-fav-btn { background: rgba(27,33,29,.9); border-color: var(--neutral-300); color: var(--neutral-600); }
+html[data-theme="dark"] .ax-shop-fav-btn.liked { color: #FF6B7F; }
+/* Row-style heart (shops grid list) — no chip, inline at the row end. */
+.ax-shop-row-fav {
+  flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; border: none;
+  background: none; color: #B7C0BB; font-size: 17px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: transform .15s var(--ease), color .15s var(--ease);
+}
+.ax-shop-row-fav:hover { transform: scale(1.12); }
+.ax-shop-row-fav.liked { color: #E1435A; }
+/* ═══════════ NAV / DRAWER ICON CONSISTENCY (Batch 1 revamp) ═══════════
+   Icons are now Flaticon UIcons: the INACTIVE tab uses a thin (fi-tr-/fi-ts-)
+   glyph and the ACTIVE tab swaps to the solid (fi-sr-/fi-ss-) glyph via
+   syncNavIcons() in portal-nav.js. That gives a real outline↔fill change, so
+   the old -webkit-text-stroke fake (which would blank out a thin glyph by
+   making its fill transparent) is removed. Colour still comes from the
+   button's currentColor — active = solid green is pure CSS. */
+.mobile-nav-btn[data-panel] .nav-anim-icon > i,
+.sidebar-nav-item[data-panel] .nav-anim-icon > i {
+  -webkit-text-fill-color: currentColor;
+  -webkit-text-stroke: 0;
+}
+/* Drawer icons were oversized/heavy — bring them to a calmer, aligned size. */
+.sidebar-nav-item .nav-icon,
+.sidebar-nav-item .nav-anim-icon { font-size: 17px; width: 22px; display: inline-flex; align-items: center; justify-content: center; }
+.sidebar-nav-item .nav-anim-icon > svg { width: 20px; height: 20px; }
+.mobile-nav-btn .nav-anim-icon > svg { width: 23px; height: 23px; }
+@media (max-width: 580px) { .mobile-nav-btn .nav-anim-icon > svg { width: 22px; height: 22px; } }
+
+/* ═══════════ ACCOUNT & HISTORY (Batch G) ═══════════ */
+.ax-account-loading, .ax-account-empty { text-align: center; padding: 40px 20px; color: var(--c-text3); }
+.ax-account-empty i { font-size: 34px; color: var(--c-text4); margin-bottom: 12px; display: block; }
+.ax-acct-card {
+  background: var(--c-white); border: 1px solid var(--c-border); border-radius: 16px;
+  padding: 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(20,48,38,.05);
+}
+html[data-theme="dark"] .ax-acct-card { background: var(--neutral-0); border-color: var(--neutral-200); }
+.ax-acct-card-head { font-size: 14px; font-weight: 800; color: var(--c-earth); display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.ax-acct-card-head i { color: var(--c-leaf2); }
+.ax-acct-stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+.ax-acct-stat { background: rgba(20,48,38,.05); border-radius: 12px; padding: 10px; text-align: center; }
+html[data-theme="dark"] .ax-acct-stat { background: var(--neutral-50); }
+.ax-acct-stat span { display: block; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--c-text3); margin-bottom: 4px; }
+.ax-acct-stat b { font-size: 16px; font-weight: 800; color: var(--c-earth); }
+.ax-acct-stat b.pos { color: #16A34A; }
+.ax-acct-stat b.warn { color: #E0872B; }
+/* COD / Online / order-count row — was cramped onto one line and clipped.
+   Now an even 3-up grid that wraps cleanly on narrow screens. */
+.ax-acct-split {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+  padding-top: 10px; border-top: 1px dashed var(--c-border);
+  font-size: 11.5px; font-weight: 700; color: var(--c-text3);
+}
+.ax-acct-split > span {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ax-acct-split i { color: var(--c-leaf2); flex-shrink: 0; }
+@media (max-width: 380px) {
+  .ax-acct-split { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ax-acct-split > span:last-child { grid-column: 1 / -1; }
+}
+html[data-theme="dark"] .ax-acct-split { border-color: var(--neutral-200); }
+.ax-acct-txn { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px dashed var(--c-border); }
+.ax-acct-txn:first-of-type { border-top: none; }
+.ax-acct-txn b { font-size: 13.5px; color: var(--c-earth); display: block; }
+.ax-acct-txn small { font-size: 11px; color: var(--c-text3); display: block; margin-top: 2px; }
+.ax-acct-role { display: inline-block; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--c-leaf2); background: rgba(46,107,65,.1); border-radius: 6px; padding: 1px 6px; vertical-align: middle; }
+.ax-acct-txn-status { flex-shrink: 0; font-size: 11px; font-weight: 800; text-transform: capitalize; color: var(--c-text3); }
+.ax-acct-txn-status.pos { color: #16A34A; }
+.ax-acct-txn-status.warn { color: #E0872B; }
+.ax-acct-note { font-size: 11.5px; color: var(--c-text4); margin-top: 6px; line-height: 1.6; }
+.ax-acct-note i { color: var(--c-leaf2); }
+
+/* Dispute / report-a-problem sheet (Phase 1) */
+.ax-dispute-box {
+  background: var(--c-white, #fff); border-radius: 16px; padding: 0 16px 18px;
+  width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto;
+}
+html[data-theme="dark"] .ax-dispute-box { background: var(--neutral-0); }
+.ax-dispute-label { display: block; font-size: 12px; font-weight: 700; color: var(--c-text2); margin: 12px 0 6px; }
+.ax-dispute-select, #axDisputeDetail {
+  width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--c-border); font-family: inherit; font-size: 14px;
+}
+html[data-theme="dark"] .ax-dispute-select,
+html[data-theme="dark"] #axDisputeDetail { background: var(--neutral-50); color: var(--neutral-900); border-color: var(--neutral-300); }
+#axDisputeDetail { margin: 10px 0; resize: vertical; }
+.ax-dispute-res { display: flex; gap: 8px; }
+.ax-dispute-res-btn {
+  flex: 1; border: 1.5px solid var(--c-border); background: transparent; border-radius: 999px;
+  padding: 8px 6px; font-size: 12.5px; font-weight: 700; color: var(--c-text2); cursor: pointer; font-family: inherit;
+}
+.ax-dispute-res-btn.active { background: var(--brand-lime, #D4ED6B); color: var(--brand-lime-ink, #0A0A0A); border-color: var(--brand-lime-deep, #B8D94A); }
+html[data-theme="dark"] .ax-dispute-res-btn { border-color: var(--neutral-300); color: var(--neutral-700); }
+.ax-dispute-photobtn {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  font-size: 13px; font-weight: 700; color: var(--c-leaf, #2E6B41); margin: 4px 0 8px;
+}
+.ax-dispute-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.ax-dispute-preview img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
+.ax-order-dispute-btn {
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  border: 1.5px solid rgba(217,54,68,.3); background: transparent; color: #D93644;
+  border-radius: 999px; padding: 5px 12px; font-size: 11.5px; font-weight: 800; cursor: pointer; font-family: inherit;
+}
+.ax-order-dispute-btn:hover { background: rgba(217,54,68,.08); }
+html[data-theme="dark"] .ax-order-dispute-btn { color: #F87171; border-color: rgba(248,113,113,.4); }
+
+/* Delivery rating sheet (Phase 1) */
+.ax-rate-box {
+  background: var(--c-white, #fff); border-radius: 16px; padding: 0 16px 18px;
+  width: 100%; max-width: 420px;
+}
+html[data-theme="dark"] .ax-rate-box { background: var(--neutral-0); }
+.ax-rate-sub { font-size: 13px; color: var(--c-text3); margin: 4px 0 14px; }
+.ax-rate-stars { display: flex; justify-content: center; gap: 10px; margin-bottom: 14px; }
+.ax-rate-star {
+  border: none; background: none; cursor: pointer; font-size: 30px;
+  color: var(--c-border2, #D5C9B6); padding: 4px; transition: transform .12s var(--ease), color .12s var(--ease);
+}
+.ax-rate-star:hover { transform: scale(1.15); }
+.ax-rate-star.on { color: #E8C468; }
+#axRateComment {
+  width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--c-border); font-family: inherit; font-size: 13.5px; margin-bottom: 12px;
+}
+html[data-theme="dark"] #axRateComment { background: var(--neutral-50); color: var(--neutral-900); border-color: var(--neutral-300); }
+.ax-order-rate-btn {
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  border: 1.5px solid var(--c-border2, #D5C9B6); background: transparent;
+  color: var(--c-text2); border-radius: 999px; padding: 5px 12px;
+  font-size: 11.5px; font-weight: 800; cursor: pointer; font-family: inherit;
+}
+.ax-order-rate-btn:hover { border-color: #E8C468; color: #8A6B2E; }
+html[data-theme="dark"] .ax-order-rate-btn { color: var(--neutral-700); border-color: var(--neutral-300); }
+html[data-theme="dark"] .ax-order-rate-btn:hover { color: #E8C468; border-color: rgba(232,196,104,.5); }
+
+/* GST invoice download buttons (Phase 1) */
+.ax-order-invoice-btn, .ax-acct-invoice-btn {
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  border: 1.5px solid var(--c-gold, #C7993A); background: rgba(199,153,58,.10);
+  color: #8A6B2E; border-radius: 999px; padding: 5px 12px;
+  font-size: 11.5px; font-weight: 800; cursor: pointer; font-family: inherit;
+  transition: background .15s var(--ease);
+}
+.ax-order-invoice-btn:hover, .ax-acct-invoice-btn:hover { background: rgba(199,153,58,.2); }
+html[data-theme="dark"] .ax-order-invoice-btn,
+html[data-theme="dark"] .ax-acct-invoice-btn { color: #E8C468; border-color: rgba(232,196,104,.45); background: rgba(199,153,58,.16); }
+.ax-acct-txn-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+
+/* Buyer order-card side column + Track button (Batch F) */
+.order-card-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+.ax-order-track-btn {
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+  border: 1.5px solid var(--c-leaf, #2E6B41); background: rgba(46,107,65,.08);
+  color: var(--c-leaf, #2E6B41); border-radius: 999px; padding: 5px 12px;
+  font-size: 11.5px; font-weight: 800; cursor: pointer; font-family: inherit;
+  transition: background .15s var(--ease);
+}
+.ax-order-track-btn:hover { background: rgba(46,107,65,.16); }
+html[data-theme="dark"] .ax-order-track-btn { color: #7FD199; border-color: rgba(127,209,153,.5); background: rgba(46,107,65,.18); }
+
+/* Quick-grid search button: neutral ✕ when empty, brand-green search when
+   there's a query to submit. */
+#axQuickGridActionBtn.is-submit {
+  background: var(--c-leaf, #2E6B41); color: #fff; border-radius: 50%;
+  width: 34px; height: 34px; display: grid; place-items: center;
+}
+
+/* Toast: was left-heavy (icon hugged one edge, text floated). Center the
+   content as one unit so short messages like "Product added" look balanced. */
+#toast .toast, #toast > div {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 10px; text-align: left;
+}
+#toast .toast i, #toast > div > i { flex-shrink: 0; }
+
+/* ── Product-card image carousel (multi-image products) ── */
+/* Grid product photos: taller 3:3.5 (=6:7) frame instead of square, and no
+   greenish-gray patch behind the image (transparent). Placeholder keeps a soft
+   fill so the fallback icon still reads. */
+.product-card-thumb,
+.pc-carousel .product-card-thumb,
+.product-card-placeholder { aspect-ratio: 6 / 7 !important; }
+.product-card-thumb { background: transparent !important; }
+.product-card-media { background: transparent !important; box-shadow: none !important; }
+html[data-theme="dark"] .product-card-media { background: transparent !important; }
+/* The whole grid card (image AND description area) sits on a fully transparent
+   surface — no greenish-gray patch behind it, no border, no shadow. */
+#panel-trade .product-card,
+#panel-favourites .product-card,
+#panel-trade .product-card-body,
+#panel-favourites .product-card-body,
+html[data-theme="dark"] #panel-trade .product-card,
+html[data-theme="dark"] #panel-favourites .product-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.pc-carousel { position: relative; width: 100%; overflow: hidden; }
+.pc-carousel-track {
+  display: flex; width: 100%;
+  transition: transform .38s cubic-bezier(.4, 0, .2, 1);
+}
+.pc-carousel-track .product-card-thumb { flex: 0 0 100%; width: 100%; }
+.pc-carousel-dots {
+  position: absolute; left: 0; right: 0; bottom: 34px; z-index: 2;
+  display: flex; justify-content: center; gap: 5px; pointer-events: none;
+}
+.pc-carousel-dots .pc-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(255,255,255,.55); box-shadow: 0 1px 3px rgba(0,0,0,.45);
+  transition: all .2s ease;
+}
+.pc-carousel-dots .pc-dot.on { background: #fff; width: 14px; border-radius: 3px; }
+
+/* ═══════════ PRODUCT DETAIL MODAL — image-led header ═══════════
+   The generic "Product Details" head is dropped; the hero image runs flush to
+   the modal's top + side edges (sharp corners), with the product name on a
+   bottom scrim and a floating close button top-right. */
+#productDetailModal .pd-modal-head { display: none !important; }
+#productDetailModal .pd-modal-content { padding-top: 0 !important; }
+#productDetailModal .pd-modal-hero {
+  margin: 0 -21px 18px !important; border-radius: 0 !important;
+  position: relative; background: #000; overflow: hidden;
+}
+#productDetailModal .pd-modal-hero img,
+#productDetailModal .pd-modal-hero .pd-swipe,
+#productDetailModal .pd-modal-hero .pd-modal-video { border-radius: 0 !important; }
+@media (max-width: 768px) {
+  /* Sharp corners, but KEEP the box scrollable (overflow:hidden here killed the
+     scroll so reviews/details below were unreachable). The hero clips itself. */
+  #productDetailModal .pd-modal-box { border-radius: 0 !important; overflow-y: auto !important; }
+}
+.pd-hero-overlay {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; pointer-events: none;
+  padding: 34px 18px 14px;
+  background: linear-gradient(to top, rgba(0,0,0,.78) 0%, rgba(0,0,0,.35) 45%, rgba(0,0,0,0) 100%);
+}
+.pd-hero-name {
+  color: #fff; font-family: var(--f-display, Georgia, serif);
+  font-size: 23px; font-weight: 800; line-height: 1.15;
+  text-shadow: 0 2px 10px rgba(0,0,0,.55);
+}
+.pd-modal-close-float {
+  position: absolute; top: 12px; right: 12px; z-index: 3;
+  width: 38px; height: 38px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(0,0,0,.5); color: #fff; font-size: 16px;
+  display: grid; place-items: center;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.pd-modal-close-float:active { background: rgba(0,0,0,.72); }
+/* Dots must clear the taller name scrim. */
+#productDetailModal .pd-swipe-dots { bottom: 46px; }
+
+/* ── Shop profile modal: cover banner + overlapping round DP + centred name,
+   like the My-Profile header. Cover is flush to the modal top + side edges. ── */
+.shop-profile-cover {
+  width: auto; height: 140px; overflow: hidden; border-radius: 0;
+  margin: -21px -21px 0 !important;
+  background: linear-gradient(135deg, #143026, #1a3d2b);
+}
+.shop-profile-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* When there is no cover image the header still needs a banner to overlap. */
+.shop-profile-header {
+  display: flex !important; flex-direction: column; align-items: center; text-align: center;
+  gap: 6px; margin-top: -50px !important; margin-bottom: 18px !important;
+  position: relative; z-index: 1;
+}
+.shop-profile-header > div { flex: none !important; text-align: center; }
+.shop-profile-header h3 { text-align: center; }
+.shop-profile-icon {
+  width: 92px !important; height: 92px !important; border-radius: 50% !important;
+  overflow: hidden; position: relative; z-index: 1; flex-shrink: 0;
+  border: 4px solid var(--c-white, #fff); box-shadow: 0 8px 22px rgba(13,11,8,.28);
+  background: linear-gradient(135deg, #4EA86A, #2E6B41);
+}
+html[data-theme="dark"] .shop-profile-icon { border-color: var(--neutral-0, #161D0F); }
+.shop-profile-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+.ax-trust-badges { justify-content: center; }
+
+/* Stats in ONE line (home-strip style) — one gradient bar, 4 inline cells. */
+.shop-stats-row {
+  display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 0 !important;
+  background: linear-gradient(135deg, #f2f7f3, #eaf1ec) !important;
+  border-radius: 14px; padding: 4px !important; margin: 16px 0 !important;
+}
+html[data-theme="dark"] .shop-stats-row { background: linear-gradient(135deg, #172119, #1c2820) !important; }
+.shop-stat { background: none !important; padding: 12px 4px !important; border-radius: 0 !important; }
+.shop-stat + .shop-stat { border-left: 1px solid rgba(20,48,38,.12); }
+html[data-theme="dark"] .shop-stat + .shop-stat { border-left-color: rgba(255,255,255,.08); }
+.shop-stat strong { font-size: 16px !important; }
+.shop-stat span { font-size: 8.5px !important; letter-spacing: .05em !important; }
+
+/* Shop products — same 3-col Trade grid pattern (2-col on narrow). */
+.shop-trade-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: var(--s3, 12px) !important;
+  margin-top: 4px;
+}
+@media (max-width: 720px) {
+  .shop-trade-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 420px) {
+  .shop-trade-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 8px !important; }
+}
+.shop-cat-section { margin-bottom: 22px; }
+.shop-trade-grid .product-card,
+.shop-trade-grid .product-card-body,
+html[data-theme="dark"] .shop-trade-grid .product-card {
+  background: transparent !important; border: none !important; box-shadow: none !important;
+}
+
+/* Shop products (fallback mini cards) → taller card grid closer to the Trade tab look. */
+.shop-product-mini { border: none !important; background: transparent !important; border-radius: 12px; }
+.shop-product-mini:hover { box-shadow: none !important; transform: none !important; }
+.shop-product-mini img, .shop-mini-ph { aspect-ratio: 6 / 7 !important; border-radius: 12px; }
+.shop-product-mini > div { padding: 8px 2px 4px !important; }
+.shop-product-mini strong { font-size: 13px; }
+.shop-product-mini { display: flex; flex-direction: column; }
+.shop-mini-buy-btn {
+  width: calc(100% - 8px); margin: 4px 4px 6px; border: none; cursor: pointer;
+  background: linear-gradient(135deg, #4EA86A, #2E6B41); color: #fff;
+  font-weight: 800; font-size: 12.5px; padding: 9px 0; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+
+/* Trade sub-tabs pinned at the top of the panel. body.ax-flush-top pulls the
+   panel under the transparent floating header, so this needs its own clearance
+   or the toggle sits beneath the hamburger/bell icons. */
+.ax-trade-modes { margin: 0 0 12px; position: relative; z-index: 2; }
+/* The ad now leads the Trade panel and the floating header icons sit ON it, so
+   the sub-tab slider only needs a normal gap under the search bar — not the old
+   62px clearance (that dated to when the tabs were the panel's first element and
+   produced a big empty band between the search bar and the slider). */
+body.ax-flush-top #panel-trade .ax-trade-modes { margin-top: 12px; }
+/* When NO ad is loaded the search bar becomes the first element under the
+   floating header icons, so the clearance moves onto it instead. */
+body.ax-flush-top #panel-trade #orderStep1:not(:has(.trade-banner:not([hidden]):not(:empty))) .catalogue-search-sticky {
+  padding-top: 54px;
+}
+/* Once docked, drop the flush padding — fixed header height owns clearance;
+   spacer + modes margin keep the first product row from sitting under the bar. */
+body.ax-flush-top #panel-trade #orderStep1:not(:has(.trade-banner:not([hidden]):not(:empty))) .catalogue-search-sticky.is-docked {
+  padding-top: 0 !important;
+}
+@media (max-width: 768px) {
+  #panel-trade .catalogue-search-sticky {
+    padding-bottom: 8px;
+  }
+  #panel-trade .catalogue-search-sticky.is-docked {
+    padding-bottom: 0 !important;
+  }
+  /* Extra top offset for Products/Shops row so sticky/docked search never
+     covers the first product cards (Tamato / Shimla…). */
+  body.ax-flush-top #panel-trade .ax-trade-modes {
+    margin-top: 10px;
+    padding-top: 2px;
+  }
+  #panel-trade .search-dock-spacer.active {
+    min-height: 58px;
+  }
+}
+
+/* Mid-feed promotional ad: full-bleed, edge to edge — no side gutters, no
+   rounded corners (matches the "chipka hua" look used elsewhere). */
+.trade-mid-ad {
+  width: 100vw; max-width: 100vw;
+  margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
+  border-radius: 0; overflow: hidden;
+}
+.trade-mid-ad img, .trade-mid-ad video, .trade-mid-ad a { display: block; width: 100%; border-radius: 0; }
+
+/* Dark mode: reaction/like hearts keep their real colour instead of going
+   grey-on-grey (light mode already shows a red heart). */
+html[data-theme="dark"] .product-card-like-btn.liked,
+html[data-theme="dark"] .ax-post-act.liked,
+html[data-theme="dark"] .ax-react-btn.reacted,
+html[data-theme="dark"] .ax-comment-like.liked,
+html[data-theme="dark"] .ax-shop-row-fav.liked,
+html[data-theme="dark"] .ax-star-shop-fav.liked,
+html[data-theme="dark"] .ax-shop-fav-btn.liked { color: #FF5A70 !important; }
+html[data-theme="dark"] .ax-star-shop-likes i,
+html[data-theme="dark"] .ax-post-act.liked i { color: #FF5A70; }
+
+/* ═══════════ TRADE TAB SECTIONED FEED (Batch B3–B6) ═══════════ */
+#productGrid.trade-sectioned { display: block; }
+.trade-section { margin-bottom: 24px; }
+.trade-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 2px 12px; }
+.trade-section-title {
+  font-family: var(--f-display, Georgia, serif); font-size: 18px; font-weight: 800;
+  color: var(--c-earth); display: flex; align-items: center; gap: 9px; line-height: 1.15;
+}
+.trade-section-title i { color: var(--c-leaf2); font-size: 16px; }
+.trade-offers .trade-section-title i { color: #E0872B; }
+.trade-highrated .trade-section-title i { color: #C7993A; }
+.trade-section-badge {
+  flex-shrink: 0; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em;
+  color: #E0872B; background: rgba(224,135,43,.12); border-radius: 999px; padding: 3px 11px;
+}
+/* "See all" link in a section header + the drill-down header it opens. */
+.trade-seeall-btn {
+  margin-left: auto; flex-shrink: 0; border: none; background: none; cursor: pointer;
+  font-family: inherit; font-size: 12px; font-weight: 800; color: var(--c-leaf2);
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.trade-seeall-btn i { font-size: 10px; }
+.trade-seeall-btn:hover { text-decoration: underline; }
+html[data-theme="dark"] .trade-seeall-btn { color: #7FD199; }
+.trade-seeall-head { display: flex; align-items: center; gap: 10px; margin: 0 2px 14px; }
+.trade-seeall-back {
+  width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--c-border);
+  background: var(--c-white); color: var(--c-text2); cursor: pointer; display: grid; place-items: center;
+}
+html[data-theme="dark"] .trade-seeall-back { background: var(--neutral-50); color: var(--neutral-800); border-color: var(--neutral-300); }
+.trade-seeall-title { font-family: var(--f-display, Georgia, serif); font-size: 18px; font-weight: 800; color: var(--c-earth); }
+.trade-seeall-head small { margin-left: auto; font-size: 11.5px; font-weight: 700; color: var(--c-text3); }
+/* Paginated "Load more" for search / category / see-all results (Phase 0). */
+.trade-loadmore { text-align: center; margin: 18px 0 8px; }
+.trade-loadmore .btn-sm-outline { display: inline-flex; align-items: center; gap: 8px; }
+html[data-theme="dark"] .trade-section-badge { background: rgba(224,135,43,.2); }
+/* Best Offers gets a warm hairline to set it apart at the very top. */
+.trade-offers { border-bottom: 1px dashed var(--c-border); padding-bottom: 20px; }
+/* Promotional ad slot — collapses when the admin has no active trade banner. */
+.trade-mid-ad { margin: 4px 0 24px; border-radius: 16px; overflow: hidden; }
+.trade-mid-ad:empty { display: none; margin: 0; }
+.trade-mid-ad[hidden] { display: none; }
+
+/* ── Trade-mid swipeable ad carousel (up to 3 slides, title + subline) ── */
+#tradeMidAdSlot.trade-mid-ad { width: 100%; max-width: 100%; margin: 8px 0 22px; border-radius: 16px; overflow: visible; }
+.ax-midad-carousel { position: relative; width: 100%; }
+.ax-midad-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.ax-midad-track::-webkit-scrollbar { display: none; }
+.ax-midad-slide { flex: 0 0 100%; scroll-snap-align: center; display: block; text-decoration: none; color: inherit; }
+.ax-midad-cap { padding: 2px 4px 8px; }
+.ax-midad-title { font-size: 15px; font-weight: 800; color: var(--c-earth, #143026); line-height: 1.2; }
+.ax-midad-sub { font-size: 12.5px; color: var(--c-text3, #6a7a72); margin-top: 2px; line-height: 1.3; }
+/* All ad slides render at ONE fixed banner ratio (16:9) via object-fit:cover —
+   any image size is cropped to fill, so the carousel never jumps height. */
+.ax-midad-media { border-radius: 14px; overflow: hidden; background: var(--c-mist, #EDF4EF); aspect-ratio: 16 / 9; }
+.ax-midad-media img, .ax-midad-media video { width: 100%; height: 100%; display: block; object-fit: cover; }
+/* Dots overlaid ON the image (bottom-centre), not below it. */
+.ax-midad-dots {
+  position: absolute; left: 0; right: 0; bottom: 10px; z-index: 2;
+  display: flex; justify-content: center; gap: 6px; margin: 0;
+}
+.ax-midad-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.55); box-shadow: 0 1px 3px rgba(0,0,0,.45); cursor: pointer; transition: all .2s; }
+.ax-midad-dot.on { background: #fff; width: 16px; border-radius: 3px; }
+html[data-theme="dark"] .ax-midad-title { color: var(--neutral-900); }
+html[data-theme="dark"] .ax-midad-sub { color: var(--neutral-600); }
+html[data-theme="dark"] .ax-midad-media { background: var(--neutral-50); }
+html[data-theme="dark"] .ax-midad-dot { background: rgba(255,255,255,.5); }
+html[data-theme="dark"] .ax-midad-dot.on { background: #fff; }
+/* Top-6 shops strip: favourite heart pinned on each cell. */
+.trade-topshops-grid { position: relative; }
+.ax-star-shop-cell { position: relative; }
+.ax-star-shop-fav {
+  position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; font-size: 15px;
+  display: flex; align-items: center; justify-content: center; border-radius: 50%;
+  background: rgba(255,255,255,.9); color: #B7C0BB; box-shadow: 0 2px 6px rgba(0,0,0,.12); z-index: 2;
+}
+.ax-star-shop-fav.liked { color: #E1435A; }
+html[data-theme="dark"] .ax-star-shop-fav { background: rgba(27,33,29,.9); color: var(--neutral-600); }
+html[data-theme="dark"] .ax-star-shop-fav.liked { color: #FF6B7F; }
+
+/* ═══════════ ORDER FORM REDESIGN (Batch D) ═══════════
+   Sample/Bulk + Payment as segmented sliders; the whole form re-tints via
+   --order-accent (green for Sample, orange for Bulk), set on #orderStep2. */
+#orderStep2.order-theme-sample { --order-accent: #2E6B41; --order-accent-2: #3E9159; --order-accent-soft: rgba(46,107,65,.10); }
+#orderStep2.order-theme-bulk   { --order-accent: #E0872B; --order-accent-2: #F0A94E; --order-accent-soft: rgba(224,135,43,.12); }
+
+.ax-order-toggle {
+  display: flex; gap: 6px; background: rgba(20,48,38,.06);
+  border-radius: 14px; padding: 5px; margin-bottom: 14px;
+}
+html[data-theme="dark"] .ax-order-toggle { background: var(--neutral-50); }
+.ax-order-seg {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  border: none; background: none; border-radius: 10px; padding: 10px 6px;
+  cursor: pointer; color: var(--c-text3); font-family: inherit;
+  transition: background .18s var(--ease), color .18s var(--ease), box-shadow .18s var(--ease);
+}
+.ax-order-seg-icon { font-size: 18px; line-height: 1; }
+.ax-order-seg-title { font-size: 13.5px; font-weight: 800; letter-spacing: -.01em; }
+.ax-order-seg-sub { font-size: 10.5px; font-weight: 600; opacity: .8; }
+.ax-order-seg.active {
+  background: var(--order-accent, #2E6B41); color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,.14);
+}
+.ax-order-seg.active .ax-order-seg-sub { opacity: .92; }
+
+/* Quarter / Half / Full fraction row */
+.ax-frac-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ax-frac-seg {
+  border: 1.5px solid var(--c-border); border-radius: 12px; padding: 12px 6px;
+  text-align: center; cursor: pointer; background: var(--c-white);
+  transition: border-color .15s var(--ease), background .15s var(--ease);
+}
+.ax-frac-seg .order-type-title { font-size: 13.5px; font-weight: 800; }
+.ax-frac-seg .order-type-sub { font-size: 11px; color: var(--c-text3); margin-top: 2px; }
+.ax-frac-seg.active { border-color: var(--order-accent, #2E6B41); background: var(--order-accent-soft, rgba(46,107,65,.08)); }
+.ax-frac-seg.active .order-type-title { color: var(--order-accent, #2E6B41); }
+
+/* Submit / update buttons follow the active accent (esp. orange in Bulk) */
+#orderStep2 .btn-primary.btn-full {
+  background: linear-gradient(135deg, var(--order-accent-2, #3E9159), var(--order-accent, #2E6B41));
+  border: none;
+}
+
+/* Nicer "Add new address" button — dashed accent tile, not a plain link */
+.ax-add-address-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; margin-top: 8px; padding: 12px; border-radius: 12px;
+  border: 1.5px dashed var(--order-accent, #2E6B41); background: var(--order-accent-soft, rgba(46,107,65,.08));
+  color: var(--order-accent, #2E6B41); font-weight: 700; font-size: 13px;
+  cursor: pointer; font-family: inherit; transition: filter .15s var(--ease);
+}
+.ax-add-address-btn:hover { filter: brightness(.97); }
+.ax-add-address-sub { font-weight: 600; opacity: .75; font-size: 11.5px; }
+
+/* Shop-card product-count chip — replaces the old red nav-badge blob that
+   cramped "N / products" onto two lines. Neutral, single-line, inline. */
+.ax-shop-prodcount {
+  flex-shrink: 0; white-space: nowrap;
+  font-size: 11px; font-weight: 700; color: var(--c-text3);
+  background: rgba(20,48,38,.06); border-radius: 999px; padding: 3px 10px;
+}
+html[data-theme="dark"] .ax-shop-prodcount { background: var(--neutral-50); color: var(--neutral-700); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   DARK MODE — COMPLETION PASS (final audit)
+   Every remaining component that hardcodes a light background. Several of
+   these are declared with `!important` in portal-ui-pro.css, so these
+   overrides need `!important` too — ax-features.css loads last, so equal
+   specificity + !important wins here.
+   ═══════════════════════════════════════════════════════════════════ */
+html[data-theme="dark"] .listing-card,
+html[data-theme="dark"] .btn-sm-outline,
+html[data-theme="dark"] .listings-tab,
+html[data-theme="dark"] .success-step,
+html[data-theme="dark"] .btn-logout-profile,
+html[data-theme="dark"] .captcha-code,
+html[data-theme="dark"] .notif-alert-box,
+html[data-theme="dark"] .otp-copy-btn,
+html[data-theme="dark"] .profile-tab-btn,
+html[data-theme="dark"] .top-shop-card,
+html[data-theme="dark"] .top-shop-like-btn,
+html[data-theme="dark"] .top-shop-card-like-btn,
+html[data-theme="dark"] #deliveryMapToggleBtn,
+html[data-theme="dark"] .trade-mode-tab,
+html[data-theme="dark"] .shop-prod-row button {
+  background: var(--neutral-50) !important;
+  color: var(--neutral-800) !important;
+  border-color: var(--neutral-300) !important;
+}
+/* Keep semantic colours after the reset above. */
+html[data-theme="dark"] .btn-logout-profile { color: #F87171 !important; border-color: rgba(248,113,113,.35) !important; }
+html[data-theme="dark"] .listings-tab.active,
+html[data-theme="dark"] .profile-tab-btn.active,
+html[data-theme="dark"] .trade-mode-tab.active,
+html[data-theme="dark"] .ax-grid-mode-btn.active {
+  /* --c-leaf is brand lime in dark theme — white text merges; use ink */
+  background: var(--brand-lime, #D4ED6B) !important;
+  color: var(--brand-lime-ink, #0A0A0A) !important;
+  border-color: var(--brand-lime-deep, #B8D94A) !important;
+}
+html[data-theme="dark"] .captcha-code { letter-spacing: inherit; box-shadow: inset 0 0 0 1px var(--neutral-300) !important; }
+html[data-theme="dark"] .ax-star-shops { background: var(--neutral-25) !important; }
+html[data-theme="dark"] .top-shop-like-btn.liked,
+html[data-theme="dark"] .top-shop-card-like-btn.liked { color: #FF5A70 !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PROFESSIONAL OPERATIONS UI — Track / Delivery / Shop
+   A shared visual grammar: quiet paper surfaces, clear operational states,
+   high-contrast primary actions and compact mobile-first information blocks.
+   ═══════════════════════════════════════════════════════════════════════ */
+#panel-track, #panel-delivery, #panel-shop { --ax-op-shadow: 0 12px 30px rgba(31, 48, 37, .08); }
+#panel-track .page-header, #panel-delivery .page-header, #panel-shop .page-header {
+  position: relative; overflow: hidden; padding: 22px 22px 20px; margin-bottom: 18px;
+  border: 1px solid rgba(46,107,65,.14); border-radius: 20px;
+  background: linear-gradient(115deg, #FBFDF9 0%, #F1F7F1 62%, #EEF6F3 100%);
+}
+#panel-track .page-header::after, #panel-delivery .page-header::after, #panel-shop .page-header::after {
+  content: ""; position: absolute; width: 172px; height: 172px; right: -64px; top: -92px;
+  border: 24px solid rgba(46,107,65,.08); border-radius: 50%; pointer-events: none;
+}
+#panel-track .page-eyebrow, #panel-delivery .page-eyebrow, #panel-shop .page-eyebrow { color: #28613D; }
+#panel-track .page-title, #panel-delivery .page-title, #panel-shop .page-title { letter-spacing: -.025em; }
+#panel-track .page-subtitle, #panel-delivery .page-subtitle, #panel-shop .page-subtitle { max-width: 580px; }
+
+/* Track lookup reads as a focused command card, rather than a generic form. */
+#panel-track > .form-section {
+  position: relative; overflow: hidden; max-width: 680px !important; padding: 20px !important;
+  border: 1px solid var(--c-border, #E3DAC8); border-radius: 18px;
+  background: var(--color-surface-raised, #fff); box-shadow: var(--ax-op-shadow);
+}
+#panel-track > .form-section::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: #2E6B41; }
+#panel-track #trackBtn { min-width: 160px; box-shadow: 0 8px 16px rgba(46,107,65,.20); }
+#panel-track #trackResultContent, #panel-track #trackTimeline, #panel-track > .section-card {
+  border: 1px solid var(--c-border, #E3DAC8); border-radius: 18px; background: var(--color-surface-raised, #fff);
+  box-shadow: var(--ax-op-shadow);
+}
+#panel-track #trackMapWrap { margin-top: 14px; border-radius: 18px !important; overflow: hidden; box-shadow: var(--ax-op-shadow) !important; }
+#panel-track #trackTimeline { margin-top: 14px !important; }
+.ax-track-actions { padding: 12px; border: 1px solid var(--c-border, #E3DAC8); border-radius: 14px; background: var(--color-surface-raised, #fff); }
+
+/* Calmer, compact OTP: important but no longer a giant fluorescent block. */
+#deliverySheetOtp {
+  background: linear-gradient(135deg, #F3F8F2, #EAF4EC) !important; color: var(--c-text, #16120C) !important;
+  border: 1px solid rgba(46,107,65,.20); border-radius: 14px !important; padding: 13px 14px 12px !important;
+  box-shadow: none !important;
+}
+.ax-otp-head { margin-bottom: 9px !important; }
+.ax-otp-title { color: #215835 !important; font-size: 11.5px !important; }
+.ax-otp-title i { color: #2E6B41 !important; }
+.ax-otp-sub { color: var(--c-text3, #6B5F50) !important; font-size: 11.5px !important; }
+.ax-otp-boxes { gap: 6px !important; max-width: 348px; }
+.ax-otp-box { height: 44px !important; line-height: 44px !important; font-size: 19px !important; color: #17472B !important; background: #fff !important; border: 1.5px solid #BFD7C3 !important; border-radius: 9px !important; box-shadow: none !important; }
+.ax-otp-box:focus { border-color: #2E6B41 !important; box-shadow: 0 0 0 3px rgba(46,107,65,.12) !important; }
+.ax-otp-status { margin-top: 7px !important; font-size: 11.5px !important; }
+.ax-otp-status.err { color: #B42336 !important; } .ax-otp-status.ok { color: #176B3A !important; } .ax-otp-status.info { color: #526456 !important; }
+.ax-otp-resend { justify-content: flex-start !important; margin-top: 3px !important; padding: 3px 0 !important; color: #28613D !important; font-size: 11.5px !important; }
+body.ax-delivery-fs #deliverySheetOtp { border-radius: 0 !important; border-left: 0; border-right: 0; border-bottom: 0; padding: 12px 16px calc(13px + env(safe-area-inset-bottom, 0px)) !important; }
+
+/* Delivery dashboard / claim cards get a consistent operational hierarchy. */
+#deliveryEarningsSummary > *, #deliveryActivePanel, .ax-claims-open-btn, .ax-radius-card, .ax-claim-card {
+  box-shadow: var(--ax-op-shadow);
+}
+.ax-claims-open-btn { border-radius: 18px; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.ax-claims-open-btn:hover { transform: translateY(-2px); border-color: rgba(46,107,65,.45); box-shadow: 0 16px 30px rgba(31,48,37,.12); }
+.ax-radius-card { border-radius: 16px; border-color: rgba(46,107,65,.18); background: linear-gradient(135deg, #fff, #FAFCF9); }
+.ax-radius-row input:focus, #deliveryVehicleInput:focus { outline: none; border-color: #2E6B41; box-shadow: 0 0 0 3px rgba(46,107,65,.12); }
+.ax-claim-card { border-radius: 18px; transition: transform .18s ease, border-color .18s ease; }
+.ax-claim-card:hover { transform: translateY(-2px); border-color: rgba(46,107,65,.35); }
+.ax-journey-strip { border: 1px solid rgba(255,255,255,.10); box-shadow: 0 14px 32px rgba(12,31,24,.28); }
+
+/* The seller area now has the same premium summary → metrics → inventory flow. */
+#panel-shop .shop-hero-card { border-radius: 22px; overflow: hidden; box-shadow: var(--ax-op-shadow); }
+#panel-shop .shop-hero-card::before { opacity: .9; }
+#panel-shop .shop-hero-actions { gap: 10px; }
+#panel-shop .shop-hero-actions .btn-primary { box-shadow: 0 8px 16px rgba(46,107,65,.20); }
+#panel-shop .shop-section-label { display: flex; align-items: center; gap: 9px; margin: 25px 0 11px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--c-text3, #6B5F50); }
+#panel-shop .shop-section-label i { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 9px; background: #EDF4EF; color: #2E6B41; }
+#panel-shop .ax-analytics-tile { min-height: 94px; padding: 14px 12px; border-radius: 15px; box-shadow: 0 6px 16px rgba(31,48,37,.05); }
+#panel-shop #shopFeedbackList { border-radius: 0 0 18px 18px; }
+
+/* Keyboard users get the same clear affordance as pointer users. */
+#panel-track button:focus-visible, #panel-delivery button:focus-visible, #panel-shop button:focus-visible,
+#panel-track a:focus-visible, #panel-delivery a:focus-visible, #panel-shop a:focus-visible {
+  outline: 3px solid rgba(42,127,126,.45); outline-offset: 3px;
+}
+html[data-theme="dark"] #panel-track .page-header, html[data-theme="dark"] #panel-delivery .page-header, html[data-theme="dark"] #panel-shop .page-header { background: linear-gradient(115deg, #17231A, #132019); border-color: #2B4732; }
+html[data-theme="dark"] #panel-track > .form-section, html[data-theme="dark"] #panel-track #trackResultContent, html[data-theme="dark"] #panel-track #trackTimeline, html[data-theme="dark"] #panel-track > .section-card, html[data-theme="dark"] .ax-radius-card { background: #172019; border-color: #2B3A2E; }
+html[data-theme="dark"] #deliverySheetOtp { background: #18261B !important; border-color: #31543A; color: #EAF5ED !important; }
+html[data-theme="dark"] .ax-otp-title { color: #A9E6B8 !important; } html[data-theme="dark"] .ax-otp-sub { color: #AFC4B4 !important; }
+html[data-theme="dark"] .ax-otp-box { background: #101A12 !important; border-color: #426A4A !important; color: #E5F6E8 !important; }
+
+@media (max-width: 600px) {
+  #panel-track .page-header, #panel-delivery .page-header, #panel-shop .page-header { padding: 18px 16px; border-radius: 16px; }
+  #panel-track > .form-section { padding: 16px !important; border-radius: 16px; }
+  #panel-track #trackBtn { width: 100%; }
+  .ax-otp-boxes { max-width: none; }
+  .ax-otp-box { height: 42px !important; line-height: 42px !important; }
+  #panel-shop .shop-hero-card { border-radius: 18px; }
+}
+
+/* Surfaces that sit ON a dark page but were still light-tinted. */
+html[data-theme="dark"] .dash-banner-default,
+html[data-theme="dark"] .sell-how-card,
+html[data-theme="dark"] .prefill-banner,
+html[data-theme="dark"] .profile-banner,
+html[data-theme="dark"] .success-card,
+html[data-theme="dark"] .orders-empty,
+html[data-theme="dark"] .empty-state,
+html[data-theme="dark"] .ax-collapse-card,
+html[data-theme="dark"] .shop-hero-card,
+html[data-theme="dark"] .shop-about-block,
+html[data-theme="dark"] .shop-reviews-block,
+html[data-theme="dark"] .shop-feedback-form,
+html[data-theme="dark"] .pd-review-item,
+html[data-theme="dark"] .shop-product-mini,
+html[data-theme="dark"] .ax-comments-box,
+html[data-theme="dark"] .ax-composer-box {
+  background: var(--neutral-0);
+  border-color: var(--neutral-200);
+  color: var(--neutral-800);
+}
+/* The wave SVG edges on the dashboard banner were painted the light page
+   colour, leaving two bright bands in dark mode. */
+html[data-theme="dark"] .wave-edge svg path { fill: var(--neutral-25); }
+
+/* Inputs/textareas inside modals + the story caption field. */
+html[data-theme="dark"] #shopPrivateFeedback,
+html[data-theme="dark"] .ax-comments-inputrow input,
+html[data-theme="dark"] .ax-composer-box textarea {
+  background: var(--neutral-50) !important;
+  color: var(--neutral-900) !important;
+  border-color: var(--neutral-300) !important;
+}
+html[data-theme="dark"] .ax-comments-inputrow input::placeholder,
+html[data-theme="dark"] .ax-composer-box textarea::placeholder { color: var(--neutral-600); }
+
+/* Login screen — was a bright white card on an otherwise dark app. */
+html[data-theme="dark"] .login-card { background: var(--neutral-0); color: var(--neutral-800); }
+html[data-theme="dark"] .login-card h1,
+html[data-theme="dark"] .login-card h2,
+html[data-theme="dark"] .login-stat-num { color: var(--neutral-900); }
+html[data-theme="dark"] .email-form-input { background: var(--neutral-50); color: var(--neutral-900); }
+
+/* Scrollbars + form controls follow the theme instead of staying light. */
+html[data-theme="dark"] { scrollbar-color: var(--neutral-300) var(--neutral-25); }
+html[data-theme="dark"] input[type="checkbox"],
+html[data-theme="dark"] input[type="radio"],
+html[data-theme="dark"] input[type="date"],
+html[data-theme="dark"] select { accent-color: var(--c-leaf, #2E6B41); color-scheme: dark; }
+
+/* ═══════════ LANGUAGE SELECTOR (Phase 2 — i18n) ═══════════ */
+.ax-lang-opts { display: flex; gap: 6px; margin-left: auto; background: rgba(20,48,38,.06); border-radius: 999px; padding: 3px; }
+html[data-theme="dark"] .ax-lang-opts { background: var(--neutral-50); }
+.ax-lang-opt {
+  border: none; background: none; border-radius: 999px; padding: 6px 12px;
+  font-size: 12.5px; font-weight: 800; color: var(--c-text3); cursor: pointer; font-family: inherit; min-width: 40px;
+}
+.ax-lang-opt.active { background: var(--c-leaf, #2E6B41); color: #fff; }
+html[data-theme="dark"] .ax-lang-opt { color: var(--neutral-700); }
+html[data-theme="dark"] .ax-lang-opt.active { background: var(--c-leaf, #2E6B41); color: #fff; }
+
+/* ═══════════ PWA install chip (Phase 2) ═══════════ */
+.ax-install-chip {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(72px + env(safe-area-inset-bottom)); z-index: 4500;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--c-forest, #143026); color: #fff;
+  border-radius: 999px; padding: 10px 12px 10px 16px;
+  box-shadow: 0 12px 30px rgba(12,31,24,.35); max-width: calc(100vw - 24px);
+  animation: axInstallUp .3s ease;
+}
+@keyframes axInstallUp { from { transform: translate(-50%, 20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+.ax-install-chip > i { color: #7FD199; font-size: 16px; }
+.ax-install-chip > span { font-size: 13px; font-weight: 700; white-space: nowrap; }
+.ax-install-go {
+  border: none; background: var(--c-leaf2, #3E9159); color: #fff; border-radius: 999px;
+  padding: 6px 14px; font-size: 12.5px; font-weight: 800; cursor: pointer; font-family: inherit;
+}
+.ax-install-x { border: none; background: none; color: rgba(255,255,255,.7); font-size: 15px; cursor: pointer; padding: 4px; }
+
+/* ═══════════ SELLER ANALYTICS (Phase 2) ═══════════ */
+.ax-analytics { margin-bottom: var(--s4, 16px); }
+.ax-analytics-loading { padding: 20px; text-align: center; color: var(--c-text3); }
+.ax-analytics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+@media (max-width: 560px) { .ax-analytics-grid { grid-template-columns: repeat(2, 1fr); } }
+.ax-analytics-tile {
+  background: var(--c-white, #fff); border: 1px solid var(--c-border); border-radius: 14px;
+  padding: 14px 10px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+html[data-theme="dark"] .ax-analytics-tile { background: var(--neutral-0); border-color: var(--neutral-200); }
+.ax-analytics-tile > i { font-size: 18px; color: var(--c-leaf2); margin-bottom: 3px; }
+.ax-analytics-tile > i.pos { color: #16A34A; } .ax-analytics-tile > i.warn { color: #E0872B; }
+.ax-analytics-tile > i.gold { color: #C7993A; } .ax-analytics-tile > i.red { color: #E1435A; }
+.ax-analytics-tile b { font-size: 18px; font-weight: 800; color: var(--c-earth); }
+.ax-analytics-tile span { font-size: 10.5px; font-weight: 600; color: var(--c-text3); }
+.ax-analytics-split { display: flex; gap: 14px; justify-content: center; margin-top: 10px; font-size: 12.5px; font-weight: 700; color: var(--c-text3); }
+.ax-analytics-split i { color: var(--c-leaf2); }
+.ax-analytics-top { margin-top: 14px; background: var(--c-white, #fff); border: 1px solid var(--c-border); border-radius: 14px; padding: 12px 14px; }
+html[data-theme="dark"] .ax-analytics-top { background: var(--neutral-0); border-color: var(--neutral-200); }
+.ax-analytics-top-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--c-text3); margin-bottom: 8px; }
+.ax-analytics-top-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-top: 1px dashed var(--c-border); }
+.ax-analytics-top-row:first-of-type { border-top: none; }
+.ax-analytics-top-row span { font-size: 13.5px; font-weight: 700; color: var(--c-earth); }
+.ax-analytics-top-row small { font-size: 11px; color: var(--c-text3); white-space: nowrap; }
+.ax-analytics-top-row small i { color: var(--c-leaf2); }
+
+/* ═══════════ DELIVERY / TRACK REDESIGN (strip · map · contacts) ═══════════ */
+
+/* ── Strip avatar: real DP photo, else a colored initial circle ── */
+.ax-journey-avatar { overflow: hidden; padding: 0; }
+.ax-ava-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+.ax-ava-fallback {
+  width: 100%; height: 100%; border-radius: 50%;
+  display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 17px;
+}
+
+/* Give the importer/product NAME room: tighter gaps + slightly smaller icon
+   buttons so "Parag Lakhadive" shows in full instead of "Para…", and keep the
+   eyebrow on one line. */
+.ax-journey-main { gap: 8px; }
+.ax-journey-main .ax-strip-icon-btn {
+  width: 38px; height: 38px; min-width: 38px; min-height: 38px; font-size: 13px;
+}
+.ax-journey-label { white-space: nowrap; }
+
+/* ── Colored call / message icon-buttons on the strip's top row ── */
+.ax-strip-icon-call { background: var(--c-leaf2, #3E9159); border-color: transparent; }
+.ax-strip-icon-msg  { background: #2A7F7E; border-color: transparent; }
+.ax-strip-icon-call:active { background: #367f4d; }
+.ax-strip-icon-msg:active  { background: #236866; }
+
+/* ── Pause moved out of the chips row onto its own line (was squishing the
+      ₹ chip). Hidden when the strip is collapsed. ── */
+.ax-journey-actions { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.ax-journey-actions .ax-journey-pause-btn { margin-left: auto; }
+.ax-journey-strip.collapsed .ax-journey-actions,
+.ax-journey-strip.collapsed .ax-strip-contacts { display: none; }
+
+/* Navigate (turn-by-turn) button on the delivery strip */
+.ax-nav-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--c-leaf2, #3E9159); color: #fff;
+  border-radius: 999px; padding: 9px 16px; font-size: 12.5px; font-weight: 800;
+  text-decoration: none; border: none; cursor: pointer;
+}
+.ax-nav-btn:active { background: #367f4d; }
+
+/* Contact meta line (driver rating + vehicle, pickup city) */
+.ax-contact-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 3px; }
+.ax-cmeta { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: rgba(255, 255, 255, .72); }
+.ax-cmeta .fa-star { color: var(--c-gold, #C7993A); }
+
+/* Proof-of-delivery: capture control (delivery boy) + proof image (importer) */
+.ax-pod-add {
+  display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 12px;
+  border: 1.5px dashed var(--c-border, #E3DAC8); border-radius: 12px; cursor: pointer;
+  font-size: 13px; font-weight: 600; color: var(--c-text3, #8A7E6E);
+}
+.ax-pod-thumb {
+  width: 34px; height: 34px; border-radius: 8px; background: var(--c-mist, #EDF4EF);
+  display: grid; place-items: center; color: var(--c-leaf2, #3E9159); overflow: hidden; flex-shrink: 0;
+}
+.ax-pod-thumb img { width: 100%; height: 100%; object-fit: cover; }
+html[data-theme="dark"] .ax-pod-add { border-color: var(--neutral-200); color: var(--neutral-700); }
+html[data-theme="dark"] .ax-pod-thumb { background: var(--neutral-50); }
+#deliveryPickedUpBtn.ax-picked { border-color: var(--c-leaf2, #3E9159); color: var(--c-leaf2, #3E9159); background: rgba(62, 145, 89, .08); }
+.ax-pod-proof { margin-top: 14px; }
+.ax-pod-proof small { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--c-text3); margin-bottom: 6px; }
+.ax-pod-proof small i { color: var(--c-leaf2, #3E9159); }
+.ax-pod-proof img { width: 100%; max-width: 260px; border-radius: 12px; border: 1px solid var(--c-border); display: block; }
+html[data-theme="dark"] .ax-pod-proof img { border-color: var(--neutral-200); }
+
+/* ── Track/contact rows: circular call + in-app message buttons (no more
+      text "Call" pill). ── */
+.ax-contact-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.ax-contact-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: none; cursor: pointer; font-size: 14px; text-decoration: none; color: #fff;
+  transition: filter .15s ease;
+}
+.ax-contact-btn:active { filter: brightness(1.15); }
+.ax-contact-btn-call { background: var(--c-leaf2, #3E9159); }
+.ax-contact-btn-msg  { background: #2A7F7E; }
+.ax-contact-btn-na   { background: rgba(255, 255, 255, .1); color: rgba(255, 255, 255, .5); cursor: default; }
+
+/* ── Clean icon-only fullscreen toggle sitting on the map (was an unreadable
+      white text pill over the map / white card). ── */
+.ax-map-fs-btn {
+  /* Top-LEFT of the map (moved from top-right) so the fullscreen toggle sits
+     opposite the zoom/recenter cluster and is always the first control the eye
+     lands on. */
+  position: absolute; top: 14px; left: 14px; z-index: 1000;
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(13, 22, 15, .9); color: #fff; border: 1px solid rgba(255,255,255,.14); cursor: pointer;
+  font-size: 17px; box-shadow: 0 6px 18px rgba(0, 0, 0, .4);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.ax-map-fs-btn:active { background: rgba(20, 48, 38, .96); }
+
+/* ═══════════ OTP COMPLETION — full-bleed green patch + 6 boxes ═══════════
+   The delivery-completion block reads as one confident green call-to-action:
+   a solid green patch, six single-digit boxes that auto-advance and
+   auto-submit, and a quiet resend link. Full-bleed in the fullscreen sheet. */
+#deliverySheetOtp {
+  background: linear-gradient(165deg, #1F7A44 0%, #135029 100%);
+  color: #fff; border-radius: 16px; padding: 16px 16px 18px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+.ax-otp-head { display: flex; flex-direction: column; gap: 3px; margin-bottom: 14px; }
+.ax-otp-title {
+  font-size: 12.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+  color: #fff; display: inline-flex; align-items: center; gap: 8px;
+}
+.ax-otp-title i { color: #9FE6B6; }
+.ax-otp-sub { font-size: 12px; color: rgba(255,255,255,.82); line-height: 1.35; }
+
+.ax-otp-boxes { display: flex; gap: 8px; width: 100%; }
+.ax-otp-box {
+  flex: 1 1 0; min-width: 0; height: 54px; padding: 0;
+  text-align: center; font-size: 23px; font-weight: 800; line-height: 54px;
+  font-variant-numeric: tabular-nums; color: #0F3B22;
+  background: rgba(255,255,255,.94);
+  border: 2px solid rgba(255,255,255,.55); border-radius: 12px;
+  caret-color: #1E7A44; box-shadow: 0 2px 8px rgba(0,0,0,.14);
+  transition: border-color .14s ease, box-shadow .14s ease, transform .1s ease, background .14s ease;
+  -webkit-appearance: none; appearance: none;
+}
+.ax-otp-box::placeholder { color: rgba(15,59,34,.28); }
+.ax-otp-box:focus {
+  outline: none; background: #fff; border-color: #CFF6DC;
+  box-shadow: 0 0 0 4px rgba(207,246,220,.35), 0 4px 12px rgba(0,0,0,.2);
+  transform: translateY(-1px);
+}
+.ax-otp-box.filled { background: #fff; border-color: #7FD199; }
+.ax-otp-box:disabled { opacity: .8; }
+@media (max-width: 360px) { .ax-otp-box { height: 48px; line-height: 48px; font-size: 20px; gap: 6px; } }
+
+.ax-otp-status { min-height: 15px; margin-top: 11px; font-size: 12px; font-weight: 700; }
+.ax-otp-status.err  { color: #FFD7D7; }
+.ax-otp-status.ok   { color: #C9F6D6; }
+.ax-otp-status.info { color: rgba(255,255,255,.85); font-weight: 600; }
+
+/* Resend is a quiet one-line text link (not a button) beneath the boxes. */
+.ax-otp-resend {
+  margin-top: 10px; width: 100%; border: none; background: transparent;
+  color: rgba(255,255,255,.92); cursor: pointer; font-family: inherit;
+  font-size: 12.5px; font-weight: 700; padding: 6px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px;
+}
+.ax-otp-resend i { text-decoration: none; }
+.ax-otp-resend:active { color: #fff; }
+.ax-otp-resend[disabled] { opacity: .55; cursor: default; text-decoration: none; }
+
+/* Legacy single-row OTP styles kept harmless for any non-fullscreen fallback. */
+.ax-otp-go { background: var(--c-leaf, #2E6B41); }
+
+/* ── Cancel-delivery button (in the advanced tray): clearly red. ── */
+.ax-cancel-delivery-btn {
+  border: 1px solid rgba(217,54,68,.5) !important;
+  color: #D93644 !important; background: rgba(217,54,68,.06) !important;
+  font-weight: 700;
+}
+.ax-cancel-delivery-btn:active { background: rgba(217,54,68,.14) !important; }
+html[data-theme="dark"] .ax-cancel-delivery-btn { color: #FF8A97 !important; border-color: rgba(255,138,151,.45) !important; background: rgba(255,138,151,.08) !important; }
+
+/* ── Styled cancel confirmation (replaces browser confirm()) ── */
+.ax-confirm-overlay {
+  position: fixed; inset: 0; z-index: 100010; display: flex;
+  align-items: center; justify-content: center; padding: 22px;
+  background: rgba(10,18,13,.6); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  animation: axJbIn .16s ease;
+}
+.ax-confirm-box {
+  width: min(360px, 100%); background: var(--color-surface-raised, #fff);
+  border-radius: 20px; padding: 22px 20px; text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,.4);
+}
+html[data-theme="dark"] .ax-confirm-box { background: #1B231D; color: #ECF3EE; }
+.ax-confirm-icon {
+  width: 54px; height: 54px; margin: 0 auto 12px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 24px;
+  background: rgba(217,54,68,.12); color: #D93644;
+}
+.ax-confirm-title { margin: 0 0 8px; font-size: 18px; font-weight: 800; font-family: var(--f-display, Georgia, serif); }
+.ax-confirm-text { margin: 0 0 18px; font-size: 13.5px; line-height: 1.55; color: var(--c-text3, #7A6E60); }
+html[data-theme="dark"] .ax-confirm-text { color: #AFB8AC; }
+.ax-confirm-text b { color: #D93644; }
+.ax-confirm-actions { display: flex; flex-direction: column; gap: 10px; }
+.ax-confirm-keep, .ax-confirm-danger {
+  width: 100%; padding: 13px; border-radius: 12px; font-size: 14px; font-weight: 700;
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.ax-confirm-keep { border: 1px solid var(--c-border, #E3DAC8); background: transparent; color: var(--c-earth, #1C160D); }
+html[data-theme="dark"] .ax-confirm-keep { color: #ECF3EE; border-color: #2C382E; }
+.ax-confirm-danger { border: none; background: linear-gradient(135deg, #E24457, #C4293B); color: #fff; }
+.ax-confirm-danger:active { transform: scale(.98); }
+
+/* ── Track amount / payment card (replaces the old duplicate product card) ── */
+.ax-track-amount {
+  background: var(--color-surface-raised, #fff); border: 1px solid var(--c-border, #E3DAC8);
+  border-radius: 14px; padding: 14px 16px; margin-bottom: var(--s3, 12px);
+}
+html[data-theme="dark"] .ax-track-amount { background: var(--neutral-0); border-color: var(--neutral-200); }
+.ax-tam-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ax-tam-label { font-size: 12.5px; font-weight: 700; color: var(--c-text3, #8A7E6E); display: inline-flex; align-items: center; gap: 7px; }
+.ax-tam-label i { color: var(--c-leaf2, #3E9159); }
+.ax-tam-value { font-family: var(--f-display, Georgia, serif); font-size: 22px; font-weight: 800; color: var(--c-earth, #1C160D); white-space: nowrap; }
+html[data-theme="dark"] .ax-tam-value { color: var(--neutral-900); }
+.ax-tam-badge {
+  display: inline-flex; align-items: center; gap: 7px; margin-top: 10px;
+  padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 800;
+}
+.ax-tam-cod { background: rgba(199, 153, 58, .15); color: #8A6B2E; }
+html[data-theme="dark"] .ax-tam-cod { background: rgba(199, 153, 58, .22); color: #E4B761; }
+.ax-tam-paid { background: rgba(62, 145, 89, .15); color: #2E6B41; }
+html[data-theme="dark"] .ax-tam-paid { background: rgba(62, 145, 89, .22); color: #7FD199; }
+.ax-tam-details { margin-top: 10px; }
+.ax-tam-details > summary { cursor: pointer; font-size: 12px; font-weight: 700; color: var(--c-text3); list-style: none; }
+.ax-tam-details > summary::-webkit-details-marker { display: none; }
+.ax-tam-brow { display: flex; justify-content: space-between; font-size: 12.5px; padding: 5px 0; border-top: 1px dashed var(--c-border); color: var(--c-text2, #66766C); }
+.ax-tam-brow:first-of-type { margin-top: 6px; }
+
+/* ── Track timeline: vertical stepper with connector line + timestamps ── */
+.ax-tl { padding: 4px 2px; }
+.ax-tl-step { position: relative; display: flex; gap: 12px; padding: 0 0 18px; }
+.ax-tl-step:last-child { padding-bottom: 0; }
+.ax-tl-step::before {
+  content: ""; position: absolute; left: 13px; top: 26px; bottom: -2px; width: 2px;
+  background: var(--c-border, #E3DAC8);
+}
+.ax-tl-step:last-child::before { display: none; }
+.ax-tl-step.done::before { background: var(--c-leaf2, #3E9159); }
+.ax-tl-dot {
+  flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 11px; z-index: 1;
+  background: var(--c-mist, #EDF4EF); color: var(--c-text3, #8A7E6E);
+  border: 2px solid var(--c-border, #E3DAC8);
+}
+.ax-tl-step.done .ax-tl-dot { background: var(--c-leaf2, #3E9159); color: #fff; border-color: var(--c-leaf2, #3E9159); }
+.ax-tl-dot i.fa-circle { font-size: 6px; }
+.ax-tl-body { display: flex; flex-direction: column; padding-top: 3px; }
+.ax-tl-body b { font-size: 13.5px; font-weight: 700; color: var(--c-earth, #1C160D); }
+.ax-tl-step:not(.done) .ax-tl-body b { color: var(--c-text3, #8A7E6E); font-weight: 600; }
+.ax-tl-body small { font-size: 11.5px; color: var(--c-text3, #8A7E6E); margin-top: 1px; }
+html[data-theme="dark"] .ax-tl-body b { color: var(--neutral-900); }
+html[data-theme="dark"] .ax-tl-dot { background: var(--neutral-50); border-color: var(--neutral-200); }
+html[data-theme="dark"] .ax-tl-step::before { background: var(--neutral-200); }
+html[data-theme="dark"] .ax-tl-step.done::before { background: var(--c-leaf2); }
+
+/* ── Full-bleed on mobile: strip, map and the Active-Delivery controls all
+      touch the screen edges with no border, no rounded corners, no side gap. ── */
+@media (max-width: 768px) {
+  #deliveryActivePanel {
+    padding: 0 !important; border: none !important; background: none !important;
+    box-shadow: none !important; border-radius: 0 !important;
+  }
+  #deliveryActivePanel > .form-section-title,
+  #deliveryBuyerInfo { padding-left: 16px; padding-right: 16px; }
+
+  .ax-delivery-controls {
+    width: 100vw; max-width: 100vw;
+    margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
+    border: none; border-radius: 0; padding: 16px;
+  }
+  #deliveryMapWrap, #trackMapWrap {
+    width: 100vw; max-width: 100vw;
+    margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
+    border: none !important; border-radius: 0 !important; box-shadow: none !important;
+  }
+}
+/* Kill the last rounded corners + the pale wrapper background that peeked as a
+   thin "white line" above the map on dark theme (the wrap's inline
+   background:#F5F0E8 was showing through before tiles painted). */
+#deliveryMapWrap, #trackMapWrap { border: none !important; box-shadow: none !important; }
+#deliveryMapCanvas, #trackMapCanvas { border-radius: 0 !important; }
+html[data-theme="dark"] #deliveryMapWrap,
+html[data-theme="dark"] #trackMapWrap,
+html[data-theme="dark"] #deliveryMapCanvas,
+html[data-theme="dark"] #trackMapCanvas { background: #0c110d !important; }
+
+/* ═══════════ DELIVERY FULLSCREEN SHEET — collapse to OTP-only ═══════════
+   In fullscreen the controls card becomes a bottom sheet. Default = collapsed:
+   only the grip handle + Importer-OTP bar show, so the live map keeps almost
+   the whole screen. Tapping the handle expands ARN / Mark Picked Up / tracking
+   key / delivery-photo; tapping again collapses back. */
+#deliverySheetHandle { display: none; }        /* handle only exists in fullscreen */
+
+/* Non-fullscreen (pre-journey) order: ARN + Start Journey first, OTP last —
+   the natural claim → start → … → complete flow. Fullscreen flips this. */
+.ax-delivery-controls { display: flex; flex-direction: column; }
+#deliverySheetExtra { order: 1; }
+#deliverySheetOtp   { order: 2; margin-top: 14px; }
+
+body.ax-delivery-fs #deliveryMapControlsOverlay {
+  display: flex !important;
+  flex-direction: column;
+  /* Full bleed: zero side/bottom padding so the green OTP patch touches all
+     edges and covers the footer. Each inner section owns its own padding. */
+  padding: 0 !important;
+  border-radius: 18px 18px 0 0 !important;
+  max-height: 74vh;
+  overflow: auto;
+  box-shadow: 0 -12px 34px rgba(0, 0, 0, .4);
+}
+body.ax-delivery-fs #deliverySheetHandle {
+  order: 0; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer; padding: 8px 0 8px; width: 100%;
+  color: var(--c-text3, #8A7E6E);
+}
+/* Extras sit above the OTP patch; the OTP patch is the full-bleed green hero
+   pinned at the very bottom (covers the footer edge-to-edge). */
+body.ax-delivery-fs #deliverySheetExtra { order: 1; margin-top: 0; padding: 4px 16px 14px; }
+body.ax-delivery-fs #deliverySheetOtp {
+  order: 2; margin-top: 0; width: 100%; border-radius: 0;
+  padding: 16px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+}
+.ax-sheet-grip-bar {
+  width: 44px; height: 5px; border-radius: 999px;
+  background: var(--c-border2, #ccc); display: block;
+}
+html[data-theme="dark"] .ax-sheet-grip-bar { background: var(--neutral-300, #3a4034); }
+.ax-sheet-handle-label {
+  font-size: 12px; font-weight: 800; letter-spacing: .02em;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 14px; border-radius: 999px;
+  background: var(--c-mist, #EDF4EF); color: var(--c-leaf, #2E6B41);
+}
+html[data-theme="dark"] .ax-sheet-handle-label { background: rgba(127,209,153,.14); color: #7FD199; }
+
+/* Collapsed: hide the extras, shrink the sheet to just the OTP bar. */
+body.ax-delivery-fs #deliveryMapControlsOverlay.ax-sheet-collapsed { max-height: none; overflow: visible; }
+body.ax-delivery-fs #deliveryMapControlsOverlay.ax-sheet-collapsed #deliverySheetExtra { display: none; }
+
+/* Full name + status-bar/notch clearance on the pinned top strip. */
+body.ax-delivery-fs #deliveryInfoCard,
+body.ax-track-fs #axTrackStrip {
+  padding-top: max(14px, env(safe-area-inset-top, 0px)) !important;
+}
+
+/* Exit-fullscreen now lives INSIDE the right-side map controls stack (the
+   compress icon above recenter / + / −), so the separate floating exit button
+   is hidden — it used to sit top-left and cover the strip's name. */
+body.ax-delivery-fs .ax-fs-exit-btn,
+body.ax-track-fs .ax-fs-exit-btn { display: none !important; }
+/* The fullscreen toggle sitting in the controls stack: a hair brighter than the
+   zoom buttons and separated by a thin divider so it reads as the fullscreen
+   control, not a third zoom button. */
+.ax-fs-toggle-in-controls {
+  background: rgba(30, 111, 60, .92) !important;
+  margin-bottom: 2px; position: relative;
+}
+.ax-fs-toggle-in-controls::after {
+  content: ""; position: absolute; left: 8px; right: 8px; bottom: -5px;
+  height: 1px; background: rgba(255, 255, 255, .18);
+}
+html[data-theme="dark"] .ax-fs-toggle-in-controls { background: rgba(46, 107, 65, .9) !important; }
+
+/* Both bottom banners (delivery journey + importer track) get out of the way of
+   a fullscreen map — they'd otherwise float over it. */
+body.ax-delivery-fs .ax-importer-banner,
+body.ax-track-fs .ax-journey-banner,
+body.ax-track-fs .ax-importer-banner { display: none !important; }
+
+/* Start Journey is redundant once the journey is live — hide it. */
+#panel-delivery.ax-journey-active #deliveryStartBtn { display: none; }
+
+/* ═══════════ BOTTOM STACK — coordinated floating layer ═══════════
+   One shared spacing system so the "delivery in progress" banner, the cart
+   FAB and the back-to-top button never sit on top of each other, and all of
+   them slide as one when the bottom nav auto-hides on scroll.
+
+   Vertical order, ground → up:  [ bottom nav ] → [ banner ] → [ cart + scroll-top ]
+
+   --ax-nav-h    height the bottom nav reserves (0 on desktop; collapses to just
+                 the safe-area inset once the nav auto-hides on scroll).
+   --ax-banner-h height a bottom banner reserves (0 when none is showing).       */
+body {
+  --ax-safe-b: env(safe-area-inset-bottom, 0px);
+  --ax-nav-h: 0px;
+  --ax-banner-h: 0px;
+  --ax-stack-gap: 12px;
+}
+@media (max-width: 768px) {
+  body.is-signed-in { --ax-nav-h: calc(60px + var(--ax-safe-b)); }
+  /* Nav slid off-screen on scroll → banner drops down to take its place. */
+  body.is-signed-in.ax-chrome-hidden { --ax-nav-h: var(--ax-safe-b); }
+}
+/* A bottom banner is present → cart + scroll-top lift above it. */
+body.ax-has-bottom-banner { --ax-banner-h: 60px; }
+
+/* ═══════════ JOURNEY-ACTIVE BANNER (above bottom nav) ═══════════
+   Persistent "delivery in progress → open live map" bar shown anywhere in the
+   app while a journey runs. Hidden while the map is already fullscreen. */
+.ax-journey-banner {
+  position: fixed; left: 12px; right: 12px;
+  bottom: calc(var(--ax-nav-h) + var(--ax-stack-gap));
+  z-index: 4300; display: flex; align-items: center; gap: 12px;
+  padding: 11px 14px; border-radius: 16px; color: #fff;
+  background: linear-gradient(135deg, #1E6F3C, #16532E);
+  box-shadow: 0 12px 30px rgba(6, 34, 20, .45);
+  animation: axJbIn .3s cubic-bezier(.2,.8,.2,1);
+  transition: bottom .3s cubic-bezier(.33, 0, .2, 1);
+}
+@keyframes axJbIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.ax-jb-dot { width: 10px; height: 10px; border-radius: 50%; background: #7FD199; flex: 0 0 auto; animation: axJbPulse 1.4s ease-in-out infinite; }
+@keyframes axJbPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(127,209,153,.6); } 70% { box-shadow: 0 0 0 8px rgba(127,209,153,0); } }
+.ax-jb-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
+.ax-jb-txt b { font-size: 13.5px; font-weight: 800; }
+.ax-jb-txt small { font-size: 11px; color: rgba(255,255,255,.75); }
+.ax-jb-btn {
+  flex: 0 0 auto; border: none; cursor: pointer;
+  background: rgba(255,255,255,.16); color: #fff;
+  font-size: 12.5px; font-weight: 800; padding: 9px 14px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.ax-jb-btn:active { background: rgba(255,255,255,.28); }
+body.ax-delivery-fs .ax-journey-banner { display: none !important; }
+
+/* Map loading / error placeholders were hardcoded light — match dark theme so
+   there's no white flash on the night-mode map. */
+html[data-theme="dark"] #deliveryMapLoading,
+html[data-theme="dark"] #deliveryMapError,
+html[data-theme="dark"] #trackMapLoading,
+html[data-theme="dark"] #trackMapError {
+  background: linear-gradient(135deg, #161D0F 0%, #1D2614 100%) !important;
+}
+
+/* ═══════════ TRACK PANEL — edge-to-edge cards on mobile ═══════════
+   Order Lookup, order-amount, timeline, OTP banner and Need-Help all touch the
+   screen edges with square corners (matching the journey strip look). */
+@media (max-width: 768px) {
+  #panel-track .form-section,
+  #panel-track #trackResultContent,
+  #panel-track .ax-track-amount,
+  #panel-track #trackTimeline,
+  #panel-track #trackOtpBanner,
+  #panel-track > .section-card {
+    width: 100vw !important; max-width: 100vw !important;
+    margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw);
+    border-radius: 0 !important;
+    border-left: none !important; border-right: none !important;
+  }
+  /* the Track button inside the flush Order-Lookup card goes full width */
+  #panel-track .form-section > #trackBtn { width: 100%; }
+}
+
+/* ═══════════ ARRIVED STATE (strip chips) ═══════════
+   When the partner is at the door the chips flip to a green "Arrived / Doorstep"
+   look and the trailing "away" / "ETA" words are dropped. */
+.ax-journey-strip.ax-arrived .ax-chip-suf { display: none; }
+.ax-journey-strip.ax-arrived .ax-journey-chip {
+  background: rgba(127, 209, 153, .22);
+}
+.ax-journey-strip.ax-arrived .ax-journey-chip:first-child b { color: #B8F0C6; }
+
+/* ═══════════ DESTINATION MARKER — pulsing ring ═══════════ */
+.ax-dest-mark {
+  position: relative; width: 34px; height: 34px;
+  display: flex; align-items: flex-end; justify-content: center;
+  color: #E23B4E; font-size: 30px; line-height: 1;
+}
+.ax-dest-mark i { position: relative; z-index: 2; filter: drop-shadow(0 2px 4px rgba(0,0,0,.4)); }
+.ax-dest-pulse {
+  position: absolute; left: 50%; bottom: 3px; width: 16px; height: 16px;
+  transform: translate(-50%, 0); border-radius: 50%;
+  background: rgba(226, 59, 78, .45); z-index: 1;
+  animation: axDestPulse 1.8s ease-out infinite;
+}
+@keyframes axDestPulse {
+  0%   { transform: translate(-50%, 0) scale(.6); opacity: .8; }
+  70%  { transform: translate(-50%, 0) scale(2.6); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* ═══════════ FULLSCREEN MAP NAV CONTROLS (recenter + zoom) ═══════════
+   Hidden normally; shown only when the map is fullscreen, stacked on the
+   right edge, clear of the top strip and the bottom OTP sheet. */
+.ax-map-fs-controls { display: none; }
+#deliveryMapWrap.fullscreen .ax-map-fs-controls,
+#trackMapWrap.fullscreen .ax-map-fs-controls {
+  display: flex; flex-direction: column; gap: 8px;
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  z-index: 1001;
+}
+.ax-map-fs-controls button {
+  width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(20, 48, 38, .82); color: #fff; font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .3);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.ax-map-fs-controls button:active { background: rgba(20, 48, 38, .96); }
+html[data-theme="dark"] .ax-map-fs-controls button { background: rgba(10, 20, 16, .85); }
+
+/* ═══════════ TWO-LEG MINI PROGRESS (pickup → drop) ═══════════ */
+.ax-leg-progress {
+  display: flex; align-items: center; gap: 8px; margin-top: 12px;
+}
+.ax-leg {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 700; letter-spacing: .01em;
+  color: rgba(255, 255, 255, .5);
+}
+.ax-leg i { font-size: 12px; }
+.ax-leg.active { color: #fff; }
+.ax-leg.done { color: #7FD199; }
+.ax-leg-line {
+  flex: 1 1 auto; height: 2px; border-radius: 2px;
+  background: rgba(255, 255, 255, .2);
+}
+.ax-leg-line.done { background: #7FD199; }
+
+/* ═══════════ NAV ICON OPTICAL SIZING ═══════════
+   All nav SVGs share a 24×24 box, but the artwork inside fills it by different
+   amounts, so some read bigger than others. Normalise the two the user flagged:
+   the Delivery ring fills the whole box (looks big) → scale down; the Trade bag
+   sits inset (looks small) → scale up. Applies to both line + fill variants and
+   to sidebar + bottom nav. */
+.nav-anim-icon[data-icon-key="delivery"] svg { transform: scale(0.80); }
+.nav-anim-icon[data-icon-key="trade"] svg    { transform: scale(1.12); }
+.nav-anim-icon[data-icon-key="shop"] svg      { transform: scale(1.04); }
+
+/* ═══════════ MOBILE MENU DRAWER — options only, fit without scrolling ═══════════
+   The profile card (avatar/name/email) is dropped here — that identity block now
+   lives in the profile sheet. The menu shows just the navigation options in a
+   tidy 2-column grid that fits the drawer, with no horizontal scroll. */
+@media (max-width: 768px) {
+  .portal-sidebar { overflow-x: hidden !important; }
+  .portal-sidebar .sidebar-profile-card { display: none !important; }
+  /* Give the drawer a slim grip area at the top instead of the profile card. */
+  .portal-sidebar .sidebar-nav {
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 12px 4px !important;
+    gap: 4px 10px !important;
+  }
+  .portal-sidebar .sidebar-section-title {
+    margin: 8px 0 2px !important; font-size: 10.5px !important; letter-spacing: .12em !important;
+  }
+  .portal-sidebar .sidebar-nav-item {
+    padding: 10px 12px !important; font-size: 13.5px !important;
+    border-radius: 12px !important; min-width: 0; box-sizing: border-box; width: 100%;
+    gap: 10px;
+  }
+  .portal-sidebar .sidebar-nav-item > span:not(.sidebar-nav-badge) {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+  }
+  .portal-sidebar .nav-icon { flex: 0 0 auto; }
+  .portal-sidebar .sidebar-bottom { padding: 8px 12px calc(12px + env(safe-area-inset-bottom, 0px)) !important; }
+  .portal-sidebar .sidebar-logout-btn { width: 100%; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DELIVERY SYSTEM — TASK 2 UPDATES
+   Triangle legs · claim card layout · location warning · fullscreen
+   header suppression · triangle overlay improvements · typography fixes
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Colour-coded 3-leg distance row on claim cards ──
+   Each leg mirrors the triangle SVG node colour:
+     Green  (#2E6B41) → You → Shop
+     Amber  (#C7993A) → Shop → Importer
+     Teal   (#2A7F7E) → Importer → You                                   */
+.ax-tri-legs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.ax-tri-leg {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: rgba(0, 0, 0, .04);
+  border-radius: 999px;
+  padding: 3px 9px 3px 7px;
+  white-space: nowrap;
+}
+.ax-tri-leg i { font-size: 10px; flex-shrink: 0; }
+.ax-tri-leg b { font-variant-numeric: tabular-nums; }
+
+/* Dark mode */
+html[data-theme="dark"] .ax-tri-leg {
+  background: rgba(255, 255, 255, .07);
+}
+
+/* ── Triangle (△) icon-only button on the claim card ── */
+.ax-tri-open-btn {
+  width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 14px !important;
+  flex-shrink: 0;
+  color: #2A7F7E !important;
+  border-color: rgba(42, 127, 126, .35) !important;
+  background: rgba(42, 127, 126, .07) !important;
+}
+.ax-tri-open-btn:hover {
+  background: rgba(42, 127, 126, .14) !important;
+  border-color: rgba(42, 127, 126, .6) !important;
+}
+html[data-theme="dark"] .ax-tri-open-btn {
+  color: #4EC9C8 !important;
+  border-color: rgba(78, 201, 200, .35) !important;
+  background: rgba(42, 127, 126, .14) !important;
+}
+
+/* ── Soft location warning — amber (missing importer address)
+      and info (missing delivery-boy GPS)                       ── */
+.ax-loc-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0 4px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+  /* Amber — importer address missing */
+  background: rgba(199, 153, 58, .12);
+  border: 1px solid rgba(199, 153, 58, .35);
+  color: #7A5E1A;
+}
+.ax-loc-warn i { flex-shrink: 0; margin-top: 1px; color: #C7993A; }
+/* Info variant — GPS not yet shared */
+.ax-loc-warn.ax-loc-warn--info {
+  background: rgba(42, 127, 126, .09);
+  border-color: rgba(42, 127, 126, .28);
+  color: #1A5F60;
+}
+.ax-loc-warn.ax-loc-warn--info i { color: #2A7F7E; }
+
+html[data-theme="dark"] .ax-loc-warn {
+  background: rgba(199, 153, 58, .16);
+  border-color: rgba(199, 153, 58, .4);
+  color: #E4B761;
+}
+html[data-theme="dark"] .ax-loc-warn i { color: #E4B761; }
+html[data-theme="dark"] .ax-loc-warn.ax-loc-warn--info {
+  background: rgba(42, 127, 126, .18);
+  border-color: rgba(78, 201, 200, .35);
+  color: #4EC9C8;
+}
+html[data-theme="dark"] .ax-loc-warn.ax-loc-warn--info i { color: #4EC9C8; }
+
+/* ── Claim card: image thumbnail instead of plain icon ── */
+.ax-claim-card-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
+
+/* ── Claim card actions row: triangle btn + Skip + Claim aligned right ── */
+.ax-claim-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+/* Make Skip and Claim fill nicely on small screens */
+@media (max-width: 380px) {
+  .ax-claim-card-actions { flex-wrap: nowrap; }
+  .ax-claim-card-actions .btn-primary,
+  .ax-claim-card-actions .btn-sm-outline { flex: 1 1 0; justify-content: center; }
+}
+
+/* ── Claim card: disabled Claim button styling ── */
+.ax-claim-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Triangle overlay: legend + rows improvements ── */
+.ax-triangle-legend {
+  gap: 8px;
+}
+.ax-triangle-legend > div {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.ax-triangle-legend > div span[style] {
+  /* the opacity:.7 spans (address-source labels) */
+  font-size: 11px;
+  color: var(--c-text3, #8A7E6E);
+}
+html[data-theme="dark"] .ax-triangle-legend > div span[style] {
+  color: var(--neutral-600);
+}
+
+/* Rows: icon + coloured right value */
+.ax-triangle-rows > div span i {
+  margin-right: 6px;
+}
+.ax-triangle-rows > div b {
+  font-variant-numeric: tabular-nums;
+  min-width: 48px;
+  text-align: right;
+}
+
+/* ── Fullscreen mode: suppress the journey strip's name/address row so the
+      map gets maximum vertical space.  The OTP bar + minimal status remain. ──
+
+   body.ax-delivery-fs is added by toggleDeliveryFullscreen()
+   (portal-enhancements.js) and is patched in ax-delivery-ux.js to also
+   call axSyncDeliveryFsHeader(), which adds .ax-fs-strip to the strip.    */
+body.ax-delivery-fs #deliveryInfoCard.ax-fs-strip .ax-journey-label,
+body.ax-delivery-fs #deliveryInfoCard.ax-fs-strip .ax-journey-addr,
+body.ax-delivery-fs #deliveryInfoCard.ax-fs-strip .ax-journey-actions,
+body.ax-delivery-fs #deliveryInfoCard.ax-fs-strip .ax-strip-contacts,
+body.ax-delivery-fs #deliveryInfoCard.ax-fs-strip .ax-leg-progress {
+  display: none !important;
+}
+/* Tighten the strip padding in fullscreen to give back 8-10px of map. */
+body.ax-delivery-fs #deliveryInfoCard.ax-fs-strip {
+  padding: 8px 14px !important;
+}
+/* Keep the name + chips row visible (minimal status at a glance). */
+body.ax-delivery-fs #deliveryInfoCard.ax-fs-strip .ax-journey-main { gap: 6px; }
+body.ax-delivery-fs #deliveryInfoCard.ax-fs-strip .ax-journey-stats { margin-top: 6px; }
+
+/* ── Triangle scale note: amber when approximate ── */
+.ax-triangle-scale[style*="color:#C7993A"],
+.ax-triangle-scale[style*="color: #C7993A"] {
+  background: rgba(199, 153, 58, .08);
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-top: 4px;
+}
+html[data-theme="dark"] .ax-triangle-scale[style*="color:#C7993A"],
+html[data-theme="dark"] .ax-triangle-scale[style*="color: #C7993A"] {
+  background: rgba(199, 153, 58, .14);
+}
+
+/* ── Triangle overlay dark mode ── */
+html[data-theme="dark"] .ax-triangle-box {
+  background: var(--neutral-0);
+  color: var(--neutral-800);
+}
+html[data-theme="dark"] .ax-triangle-rows > div {
+  color: var(--neutral-700);
+}
+html[data-theme="dark"] .ax-triangle-rows b {
+  color: #7FD199;
+}
+
+/* ── Radius card: tighter note text; rule already exists but reinforce ── */
+.ax-radius-note {
+  line-height: 1.55;
+}
+
+/* ── Track strip: colour-code the distance chips to match triangle palette ──
+   Once the journey is active the km-remaining chip takes the same green
+   the "You → Shop" leg uses.  ETA chip takes the teal.               */
+.ax-journey-strip .ax-journey-chip:nth-child(1) b { color: #7FD199; } /* km  */
+.ax-journey-strip .ax-journey-chip:nth-child(2) b { color: #82D4D3; } /* ETA */
+
+/* ── Contact rows on the Track strip: address-source sub-label ──
+   When the address-source context is shown under a contact's label
+   (e.g. "permanent address", "order address") keep it visually quiet. */
+.ax-contact-text .ax-addr-src {
+  font-size: 10px;
+  color: rgba(255, 255, 255, .45);
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+
+/* ── Typography tightening across claim + track cards ── */
+.ax-claim-card-info strong {
+  font-size: 14px;
+  line-height: 1.25;
+  color: var(--c-text, #16120C);
+}
+.ax-claim-card-info small {
+  font-size: 11.5px;
+  color: var(--c-text3, #6B5F50);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+.ax-claim-card-earn {
+  line-height: 1.15;
+}
+html[data-theme="dark"] .ax-claim-card-info strong { color: var(--neutral-900); }
+html[data-theme="dark"] .ax-claim-card-info small  { color: var(--neutral-600); }

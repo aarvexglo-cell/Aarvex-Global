@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 512 512">
+  <!-- Generator: Adobe Illustrator 30.6.0, SVG Export Plug-In . SVG Version: 2.1.4 Build 109)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #d4ed6b;
+      }
+    </style>
+    <filter id="ds" x="-50%" y="-50%" width="200%" height="200%">
+      <feOffset dx="0" dy="6" result="offOut" />
+      <feGaussianBlur in="offOut" stdDeviation="6" result="blurOut" />
+      <feColorMatrix in="blurOut" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.4 0" result="shadow"/>
+      <feBlend in="SourceGraphic" in2="shadow" mode="normal"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" ry="112" fill="#000000"/>
+  <g filter="url(#ds)">
+    <path class="st0" d="M332.05,342.37h0s16.34,34.04,16.34,34.04c1.06,2.21,3.29,3.61,5.74,3.61h47.92c4.69,0,7.77-4.9,5.74-9.13l-112.93-235.31c-1.06-2.21-3.29-3.61-5.74-3.61h-66.24c-2.45,0-4.68,1.41-5.74,3.61l-112.93,235.31c-2.03,4.23,1.05,9.13,5.74,9.13h47.92c2.45,0,4.68-1.41,5.74-3.61l16.34-34.03h0s24.51-51.08,24.51-51.08l43.76-91.2c1.06-2.21,3.29-3.62,5.74-3.62h4.06c2.45,0,4.68,1.41,5.74,3.62l43.76,91.2,24.51,51.07Z"/>
+    <path class="st0" d="M253.97,285.21h4.06c2.45,0,4.68,1.41,5.74,3.62l39.38,82.07c2.03,4.23-1.05,9.13-5.74,9.13h-82.83c-4.69,0-7.77-4.9-5.74-9.13l39.38-82.07c1.06-2.21,3.29-3.62,5.74-3.62Z"/>
+  </g>
+</svg>

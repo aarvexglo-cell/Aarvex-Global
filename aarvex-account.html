@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0A120D">
+<title>Aarvex — Account, Menu & Notifications</title>
+<!-- Command Center telemetry (client health → admin) -->
+<script>window.LAMBDA_URL='https://j1yound90m.execute-api.ap-southeast-1.amazonaws.com';window.AX_TAB_HINT='account';</script>
+<script src="ax-telemetry.js?v=3"></script>
+<script src="ax-error-log.js?v=3"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deepest:#0A120D; --bg-page:#0D1712; --bg-panel:#121F18; --bg-panel-raised:#16261D;
+    --line-hairline:#233326; --accent-mint:#3EB489; --accent-mint-dim:#2A8564; --accent-gold:#C9A227;
+    --text-primary:#EAF2ED; --text-secondary:#9FB3A6; --text-muted:#5E7266; --danger:#D2665A; --pink:#E8637C; --info:#6FA8C9;
+    --radius-card:16px; --radius-ctrl:10px;
+    --font-display:'Fraunces', serif; --font-alt-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif; --font-mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{color:var(--text-primary); font-family:var(--font-body); line-height:1.6;
+    display:flex; align-items:center; justify-content:center; min-height:100vh;
+    background:radial-gradient(circle at 30% 0%, #10241a, #06100b 60%);}
+  .ic{display:inline-block; vertical-align:middle; flex-shrink:0;}
+  .phone{width:390px; height:844px; max-height:100vh; background:var(--bg-page);
+    border-radius:38px; border:1px solid var(--line-hairline); overflow:hidden;
+    display:flex; flex-direction:column; position:relative; box-shadow:0 40px 80px -24px rgba(0,0,0,0.7);}
+  @media (max-width:430px){ body{background:var(--bg-page);}
+    .phone{width:100vw; height:100vh; max-height:none; border-radius:0; border:none; box-shadow:none;} }
+  .statusbar{height:38px; display:flex; align-items:center; justify-content:space-between; padding:6px 22px 0 26px; font-family:var(--font-mono); font-size:12px; color:var(--text-secondary); flex-shrink:0;}
+  .scroll{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; min-height:0;} .scroll::-webkit-scrollbar{width:0;}
+
+  /* ===== HOME BACKDROP ===== */
+  .home{position:absolute; inset:0; top:38px; display:flex; flex-direction:column;}
+  .home-hero{height:180px; position:relative; background:linear-gradient(160deg,#7a1f1f,#3a1414); overflow:hidden; flex-shrink:0;}
+  .home-hero::after{content:""; position:absolute; inset:0; background:radial-gradient(circle at 30% 30%,rgba(200,40,40,.5),transparent 60%),radial-gradient(circle at 70% 60%,rgba(180,30,30,.5),transparent 55%); filter:blur(6px);}
+  .home-hero .veil{position:absolute; inset:0; background:linear-gradient(180deg,transparent,var(--bg-page)); z-index:1;}
+  .topbar{position:absolute; top:0; left:0; right:0; z-index:3; display:flex; align-items:center; gap:12px; padding:14px 18px;}
+  .tb-btn{width:42px; height:42px; border-radius:14px; background:rgba(10,18,13,.55); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; color:#EAF2ED; cursor:pointer; border:1px solid rgba(255,255,255,.06);}
+  .tb-spacer{flex:1;}
+  .tb-btn.bell{position:relative;} .tb-btn .dot{position:absolute; top:8px; right:9px; width:9px; height:9px; border-radius:50%; background:var(--pink); border:2px solid #0A120D;}
+  .tb-avatar{width:42px; height:42px; border-radius:14px; cursor:pointer; overflow:hidden; border:1px solid rgba(255,255,255,.12);}
+  .home-body{flex:1; overflow-y:auto; padding:0 20px 24px; margin-top:-40px; position:relative; z-index:2;}
+  .home-body::-webkit-scrollbar{width:0;}
+  .greet-card{background:var(--bg-panel); border:1px solid var(--line-hairline); border-radius:20px; padding:18px; margin-bottom:16px;}
+  .greet-card .g-eyebrow{font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent-mint); margin-bottom:6px;}
+  .greet-card h2{font-family:var(--font-display); font-size:22px; font-weight:600;}
+  .greet-card p{font-size:13px; color:var(--text-secondary); margin-top:4px;}
+  .quick-row{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px;}
+  .quick{background:var(--bg-panel); border:1px solid var(--line-hairline); border-radius:16px; padding:14px 6px; text-align:center; cursor:pointer;}
+  .quick .qic{width:38px; height:38px; margin:0 auto 7px; border-radius:12px; background:var(--bg-panel-raised); display:flex; align-items:center; justify-content:center; color:var(--accent-mint);}
+  .quick span{font-size:11px; color:var(--text-secondary);}
+  .hint{font-size:12px; color:var(--text-muted); text-align:center; padding:14px; font-family:var(--font-mono);}
+
+  /* ===== DRAWERS / SCREENS ===== */
+  .scrim{position:absolute; inset:0; background:rgba(5,10,7,.72); backdrop-filter:blur(2px); opacity:0; pointer-events:none; transition:.25s; z-index:20;}
+  .scrim.show{opacity:1; pointer-events:auto;}
+  .drawer{position:absolute; top:0; bottom:0; width:86%; max-width:340px; background:var(--bg-panel); z-index:25; transition:transform .3s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column;}
+  .drawer.left{left:0; transform:translateX(-105%); border-right:1px solid var(--line-hairline);}
+  .drawer.left.open{transform:translateX(0);}
+  .drawer.right{right:0; top:44px; bottom:auto; max-height:calc(100% - 60px); width:90%; max-width:352px; border-radius:20px; border:1px solid var(--line-hairline); transform:translateX(115%); box-shadow:0 30px 60px -20px rgba(0,0,0,.7); overflow:hidden;}
+  .drawer.right.open{transform:translateX(0);}
+
+  .screen{position:absolute; inset:0; top:38px; display:flex; flex-direction:column; background:var(--bg-page); transform:translateX(100%); transition:transform .28s cubic-bezier(.4,0,.2,1); z-index:30;}
+  .screen.open{transform:translateX(0);}
+  .scr-head{display:flex; align-items:center; gap:10px; padding:10px 16px 12px; border-bottom:1px solid var(--line-hairline); flex-shrink:0;}
+  .scr-head .back{color:var(--text-secondary); cursor:pointer; display:flex; padding:4px;}
+  .scr-head h1{font-family:var(--font-display); font-size:19px; font-weight:600; flex:1;}
+  .scr-head .h-act{color:var(--accent-mint); cursor:pointer; display:flex; padding:6px;}
+
+  /* ===== PROFILE DRAWER ===== */
+  .pd-header{display:flex; align-items:center; gap:14px; padding:22px 20px 18px; border-bottom:1px solid var(--line-hairline);}
+  .pd-header .grip{position:absolute; top:8px; left:50%; transform:translateX(-50%); width:38px; height:4px; border-radius:2px; background:var(--line-hairline);}
+  .pd-avatar{width:58px; height:58px; border-radius:18px; overflow:hidden; border:2px solid var(--accent-mint-dim); flex-shrink:0;}
+  .pd-avatar img{width:100%; height:100%; object-fit:cover;}
+  .pd-name{font-family:var(--font-display); font-size:18px; font-weight:600;}
+  .pd-email{font-size:12.5px; color:var(--text-secondary); font-family:var(--font-mono);}
+  .pd-list{padding:10px 12px; flex:1; overflow-y:auto;} .pd-list::-webkit-scrollbar{width:0;}
+  .pd-item{display:flex; align-items:center; gap:14px; padding:15px 12px; border-radius:14px; cursor:pointer; transition:.12s;}
+  .pd-item:active{background:var(--bg-panel-raised);}
+  .pd-item .pd-ic{width:40px; height:40px; border-radius:12px; background:var(--bg-panel-raised); display:flex; align-items:center; justify-content:center; color:var(--accent-mint); flex-shrink:0;}
+  .pd-item .pd-tx{flex:1;} .pd-item .pd-tx b{font-size:14.5px; font-weight:600; display:block;} .pd-item .pd-tx span{font-size:11.5px; color:var(--text-muted);}
+  .pd-item .chev{color:var(--text-muted); display:flex;}
+  .pd-item.danger .pd-ic{background:#2a1717; color:var(--danger);} .pd-item.danger b{color:var(--danger);}
+
+  /* ===== MENU DRAWER ===== */
+  .md-scroll{flex:1; overflow-y:auto; padding-bottom:10px;} .md-scroll::-webkit-scrollbar{width:0;}
+  .md-user{display:flex; align-items:center; gap:12px; padding:20px 18px 16px;}
+  .md-user .mu-av{width:48px; height:48px; border-radius:14px; overflow:hidden;} .md-user .mu-av img{width:100%;height:100%;object-fit:cover;}
+  .md-user b{font-size:15px; display:block;} .md-user span{font-size:12px; color:var(--text-muted);}
+  .md-sell{margin:0 16px 16px; display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:16px; background:linear-gradient(135deg,var(--accent-mint-dim),#1c4a38); color:#EAF9F1; cursor:pointer;}
+  .md-sell .ic{color:#EAF9F1;} .md-sell b{font-size:15px; display:block;} .md-sell span{font-size:11.5px; opacity:.85;}
+  .md-label{font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-muted); padding:6px 20px 8px;}
+  .md-grid{display:grid; grid-template-columns:1fr 1fr; gap:2px 10px; padding:0 12px;}
+  .md-item{display:flex; align-items:center; gap:12px; padding:13px 10px; border-radius:12px; cursor:pointer; font-size:14px;}
+  .md-item:active{background:var(--bg-panel-raised);} .md-item .ic{color:var(--accent-mint);} .md-item.wide{grid-column:1/-1;}
+  .md-item .tog{margin-left:auto;}
+  .toggle{width:44px; height:25px; border-radius:999px; background:var(--accent-mint); position:relative; flex-shrink:0; cursor:pointer; transition:.2s;}
+  .toggle::after{content:""; position:absolute; top:2.5px; right:2.5px; width:20px; height:20px; border-radius:50%; background:#062017; transition:.2s;}
+  .toggle.off{background:var(--line-hairline);} .toggle.off::after{right:auto; left:2.5px; background:var(--text-muted);}
+  .md-signout{display:flex; align-items:center; gap:12px; padding:16px 20px; border-top:1px solid var(--line-hairline); color:var(--text-primary); cursor:pointer; font-size:14px; font-weight:500;}
+  .md-signout .ic{color:var(--danger);}
+  .order-bar{margin:0; display:flex; align-items:center; gap:12px; padding:14px 16px; background:linear-gradient(135deg,#1c6b4f,#134a37); flex-shrink:0;}
+  .order-bar .ob-dot{width:10px; height:10px; border-radius:50%; background:#5DF2A0; box-shadow:0 0 0 4px rgba(93,242,160,.2); animation:pulse 1.6s infinite;}
+  @keyframes pulse{50%{box-shadow:0 0 0 8px rgba(93,242,160,0);}}
+  .order-bar b{flex:1; font-size:13.5px; color:#EAF9F1;}
+  .order-bar .ob-track{display:flex; align-items:center; gap:6px; background:rgba(255,255,255,.14); padding:8px 12px; border-radius:999px; font-size:12.5px; font-weight:600; cursor:pointer; color:#fff;}
+
+  /* ===== NOTIFICATIONS ===== */
+  .nt-hero{height:120px; background:linear-gradient(160deg,#7a1f1f,#3a1414); position:relative; flex-shrink:0; overflow:hidden;}
+  .nt-hero::after{content:""; position:absolute; inset:0; background:radial-gradient(circle at 40% 40%,rgba(200,40,40,.5),transparent 60%); filter:blur(5px);}
+  .nt-hero .veil{position:absolute; inset:0; background:linear-gradient(180deg,transparent,var(--bg-page));}
+  .nt-hero .back{position:absolute; top:14px; left:16px; z-index:2; color:#EAF2ED; cursor:pointer; width:40px; height:40px; border-radius:12px; background:rgba(10,18,13,.5); display:flex; align-items:center; justify-content:center;}
+  .nt-body{flex:1; overflow-y:auto; margin-top:-30px; position:relative; z-index:2;} .nt-body::-webkit-scrollbar{width:0;}
+  .nt-top{padding:0 20px;}
+  .nt-eyebrow{display:inline-flex; align-items:center; gap:7px; font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-mint); background:var(--bg-panel-raised); border:1px solid var(--line-hairline); padding:6px 12px; border-radius:999px; margin-bottom:12px;}
+  .nt-top h1{font-family:var(--font-display); font-size:26px; font-weight:600;}
+  .nt-top p{font-size:13px; color:var(--text-secondary); margin:4px 0 16px;}
+  .seg{display:flex; gap:10px; margin-bottom:12px;}
+  .seg-btn{flex:1; display:flex; align-items:center; justify-content:center; gap:7px; padding:11px; border-radius:14px; background:var(--bg-panel-raised); border:1px solid var(--line-hairline); color:var(--text-secondary); font-size:13.5px; font-weight:600; cursor:pointer;}
+  .seg-btn.active{background:var(--accent-mint); color:#062017; border-color:var(--accent-mint);}
+  .nt-actions{display:flex; gap:10px; margin-bottom:14px;}
+  .nt-act{display:flex; align-items:center; gap:7px; padding:9px 14px; border-radius:999px; background:var(--bg-panel-raised); border:1px solid var(--line-hairline); font-size:12.5px; color:var(--text-secondary); cursor:pointer;}
+  .nt-list{padding:0 16px 24px;}
+  .nt-card{display:flex; gap:12px; background:var(--bg-panel); border:1px solid var(--line-hairline); border-left:3px solid var(--line-hairline); border-radius:16px; padding:14px; margin-bottom:11px; position:relative;}
+  .nt-card.unread{border-left-color:var(--accent-mint); background:var(--bg-panel-raised);}
+  .nt-card .nc-ic{width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:#16261D; color:var(--accent-mint);}
+  .nt-card.t-delivery .nc-ic{color:var(--info);} .nt-card.t-order .nc-ic{color:var(--accent-mint);} .nt-card.t-review .nc-ic{color:var(--accent-gold);}
+  .nt-card.t-kyc .nc-ic{color:var(--accent-mint);} .nt-card.t-lead .nc-ic{color:var(--pink);} .nt-card.t-admin .nc-ic{color:var(--accent-gold);}
+  .nc-main{flex:1; min-width:0;} .nc-main .nc-title{font-size:14px; font-weight:600; margin-bottom:3px; padding-right:20px;}
+  .nc-main .nc-body{font-size:12.5px; color:var(--text-secondary); line-height:1.5;}
+  .nc-chip{display:inline-flex; align-items:center; gap:6px; margin-top:9px; font-family:var(--font-mono); font-size:11px; color:var(--accent-mint); background:rgba(62,180,137,.1); border:1px dashed var(--accent-mint-dim); padding:5px 10px; border-radius:8px;}
+  .nc-open{display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:var(--accent-mint); color:#062017; font-size:12.5px; font-weight:600; padding:8px 16px; border-radius:999px; cursor:pointer;}
+  .nc-time{font-family:var(--font-mono); font-size:10.5px; color:var(--text-muted); margin-top:8px;}
+  .nc-del{position:absolute; top:12px; right:12px; color:var(--text-muted); cursor:pointer; display:flex;}
+  .nc-unread-dot{position:absolute; top:16px; right:34px; width:8px; height:8px; border-radius:50%; background:var(--accent-mint);}
+
+  /* ===== FORM / SUBPAGE COMMON ===== */
+  .form-wrap{padding:18px 20px 30px;}
+  .sec{background:var(--bg-panel); border:1px solid var(--line-hairline); border-radius:18px; padding:16px; margin-bottom:16px;}
+  .sec-title{display:flex; align-items:center; gap:9px; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:14px;}
+  .sec-title .ic{color:var(--accent-mint);}
+  .sec-title .badge{margin-left:auto; font-size:10.5px; font-family:var(--font-mono); padding:4px 9px; border-radius:999px;}
+  .badge.ok{background:rgba(62,180,137,.15); color:var(--accent-mint);} .badge.pend{background:rgba(201,162,39,.15); color:var(--accent-gold);} .badge.none{background:rgba(210,102,90,.15); color:var(--danger);}
+  .field{margin-bottom:14px;} .field:last-child{margin-bottom:0;}
+  .field label{display:block; font-size:12px; color:var(--text-secondary); margin-bottom:6px; font-weight:500;}
+  .field label .req{color:var(--danger);}
+  .field input, .field textarea, .field select{width:100%; background:var(--bg-panel-raised); border:1px solid var(--line-hairline); border-radius:var(--radius-ctrl); padding:12px 14px; font-size:14px; color:var(--text-primary); font-family:var(--font-body); outline:none; transition:.15s;}
+  .field input:focus, .field textarea:focus{border-color:var(--accent-mint); box-shadow:0 0 0 3px rgba(62,180,137,.12);}
+  .field input::placeholder{color:var(--text-muted);}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .role-row{display:flex; gap:8px; margin-bottom:14px;}
+  .role-opt{flex:1; text-align:center; padding:11px 6px; border-radius:12px; border:1px solid var(--line-hairline); background:var(--bg-panel-raised); font-size:12.5px; font-weight:600; color:var(--text-secondary); cursor:pointer;}
+  .role-opt.active{border-color:var(--accent-mint); background:rgba(62,180,137,.12); color:var(--accent-mint);}
+  .upload{display:flex; align-items:center; gap:11px; background:var(--bg-panel-raised); border:1px dashed var(--line-hairline); border-radius:12px; padding:12px 14px; cursor:pointer; margin-bottom:10px;}
+  .upload.done{border-style:solid; border-color:var(--accent-mint-dim);}
+  .upload .u-ic{color:var(--accent-mint); display:flex;} .upload .u-tx{flex:1;} .upload .u-tx b{font-size:13px; display:block;} .upload .u-tx span{font-size:11px; color:var(--text-muted);}
+  .upload .u-status{font-size:11px; color:var(--text-muted);} .upload.done .u-status{color:var(--accent-mint);}
+  .save-bar{display:flex; gap:10px; margin-top:4px;}
+  .btn{flex:1; text-align:center; padding:13px; border-radius:14px; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;}
+  .btn.primary{background:var(--accent-mint); color:#062017;} .btn.ghost{border:1px solid var(--line-hairline); color:var(--text-primary);} .btn.danger{background:#2a1717; color:var(--danger);}
+  .meter{height:8px; border-radius:4px; background:var(--bg-panel-raised); overflow:hidden; margin:10px 0 6px;} .meter i{display:block; height:100%; background:linear-gradient(90deg,var(--accent-gold),var(--accent-mint)); border-radius:4px; transition:width .4s;}
+  .meter-label{font-size:11px; color:var(--text-muted);}
+
+  .set-row{display:flex; align-items:center; gap:13px; padding:14px 0; border-top:1px solid var(--line-hairline); cursor:pointer;}
+  .sec .set-row:first-of-type{border-top:none;}
+  .set-row .s-ic{width:22px; color:var(--accent-mint); display:flex; justify-content:center;}
+  .set-row .s-tx{flex:1;} .set-row .s-tx b{font-size:14px; font-weight:600; display:block;} .set-row .s-tx small{font-size:11.5px; color:var(--text-muted);}
+  .set-row .chev{color:var(--text-muted); display:flex;}
+  .lang-opts{display:flex; gap:6px;} .lang-opt{padding:6px 11px; border-radius:8px; border:1px solid var(--line-hairline); font-size:12px; color:var(--text-secondary); cursor:pointer; font-weight:600;} .lang-opt.active{background:var(--accent-mint); color:#062017; border-color:var(--accent-mint);}
+  .seg-choice{display:flex; gap:6px; background:var(--bg-panel-raised); border:1px solid var(--line-hairline); border-radius:10px; padding:3px; margin-top:6px;}
+  .seg-choice button{flex:1; padding:8px; border-radius:8px; background:none; border:none; color:var(--text-secondary); font-size:12px; font-weight:600; cursor:pointer; font-family:var(--font-body);} .seg-choice button.active{background:var(--accent-mint); color:#062017;}
+
+  /* public profile preview */
+  .pp-cover{height:100px; background:linear-gradient(135deg,#1F3A2C,#16261D); border-radius:16px; position:relative; margin-bottom:44px;}
+  .pp-avatar{position:absolute; left:16px; bottom:-30px; width:72px; height:72px; border-radius:22px; background:#1F3A2C; color:var(--accent-mint); display:flex; align-items:center; justify-content:center; font-family:var(--font-alt-display); font-size:26px; border:4px solid var(--bg-page);}
+  .pp-name{font-family:var(--font-display); font-size:20px; font-weight:600; display:flex; align-items:center; gap:7px;} .pp-handle{font-family:var(--font-mono); font-size:12px; color:var(--text-muted); margin-bottom:14px;}
+  .pp-stats{display:flex; gap:9px; margin-bottom:16px;} .pp-stat{flex:1; background:var(--bg-panel-raised); border-radius:14px; padding:12px 4px; text-align:center;} .pp-stat b{display:block; font-size:17px; font-family:var(--font-alt-display);} .pp-stat span{font-size:10px; color:var(--text-muted); text-transform:uppercase;}
+  .blk-row{display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid var(--line-hairline);} .sec .blk-row:first-of-type{border-top:none;}
+  .blk-row .avatar{width:40px; height:40px; border-radius:12px; background:var(--bg-panel-raised); display:flex; align-items:center; justify-content:center; font-family:var(--font-alt-display); font-weight:600; font-size:14px; color:var(--text-secondary);}
+  .blk-row .nm{flex:1;} .blk-row .nm b{font-size:14px; display:block;} .blk-row .nm span{font-size:11px; color:var(--text-muted);}
+  .blk-btn{padding:7px 14px; border-radius:8px; border:1px solid var(--line-hairline); color:var(--accent-mint); font-size:12px; font-weight:600; cursor:pointer;}
+
+  /* policy */
+  .policy-toc{display:flex; gap:8px; overflow-x:auto; padding:0 20px 12px; flex-shrink:0;} .policy-toc::-webkit-scrollbar{height:0;}
+  .toc-chip{white-space:nowrap; padding:7px 13px; border-radius:999px; background:var(--bg-panel-raised); border:1px solid var(--line-hairline); font-size:12px; color:var(--text-secondary); cursor:pointer;}
+  .policy-body{padding:4px 20px 30px;}
+  .policy-body h3{font-family:var(--font-display); font-size:17px; font-weight:600; margin:20px 0 8px; scroll-margin-top:10px;}
+  .policy-body p{font-size:13.5px; color:var(--text-secondary); margin-bottom:10px; line-height:1.65;}
+  .policy-body .upd{font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-bottom:8px;}
+  .policy-body ul{margin:0 0 12px 18px; color:var(--text-secondary); font-size:13px;} .policy-body li{margin-bottom:5px;}
+
+  /* modal */
+  .modal-scrim{position:absolute; inset:0; background:rgba(5,10,7,.8); display:none; align-items:center; justify-content:center; z-index:60; backdrop-filter:blur(3px);}
+  .modal-scrim.show{display:flex; animation:fade .2s;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal{background:var(--bg-panel); border:1px solid var(--line-hairline); border-radius:22px; width:84%; max-width:320px; padding:24px; text-align:center; animation:pop .22s;}
+  @keyframes pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal .m-ic{width:56px; height:56px; border-radius:18px; background:#2a1717; color:var(--danger); display:flex; align-items:center; justify-content:center; margin:0 auto 14px;}
+  .modal h3{font-family:var(--font-display); font-size:19px; font-weight:600; margin-bottom:6px;} .modal p{font-size:13px; color:var(--text-secondary); margin-bottom:18px;}
+  .modal .m-btns{display:flex; gap:10px;}
+
+  .toast{position:absolute; bottom:40px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--bg-panel-raised); border:1px solid var(--line-hairline); color:var(--text-primary); font-size:13px; padding:11px 18px; border-radius:999px; opacity:0; transition:.25s; z-index:80; pointer-events:none; box-shadow:0 10px 24px -8px rgba(0,0,0,.6); max-width:80%; text-align:center;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);} .toast.success{border-color:var(--accent-mint);} .toast.error{border-color:var(--danger);}
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <div class="statusbar"><span>9:41</span><span>●●●●</span></div>
+
+  <!-- ===== HOME ===== -->
+  <div class="home" id="home">
+    <div class="home-hero"><div class="veil"></div>
+      <div class="topbar">
+        <div class="tb-btn" onclick="openMenu()" data-ic="menu" data-size="22"></div>
+        <div class="tb-spacer"></div>
+        <div class="tb-btn bell" onclick="openScreen('notifs')"><span data-ic="bell" data-size="21"></span><span class="dot"></span></div>
+        <div class="tb-avatar" onclick="openProfileDrawer()"><img id="tbAv" alt=""></div>
+      </div>
+    </div>
+    <div class="home-body">
+      <div class="greet-card">
+        <div class="g-eyebrow">Namaste 🌾</div>
+        <h2>Radhe Krishna</h2>
+        <p>Aaj mandi mein 3 naye leads aur 1 order active hai. Neeche se explore karein.</p>
+      </div>
+      <div class="quick-row">
+        <div class="quick" onclick="openMenu()"><div class="qic" data-ic="leaf"></div><span>Sell</span></div>
+        <div class="quick" onclick="openScreen('notifs')"><div class="qic" data-ic="bell"></div><span>Alerts</span></div>
+        <div class="quick" onclick="openScreen('kyc')"><div class="qic" data-ic="id-card"></div><span>KYC</span></div>
+        <div class="quick" onclick="openProfileDrawer()"><div class="qic" data-ic="user"></div><span>Account</span></div>
+      </div>
+      <div class="hint">☰ menu &nbsp;·&nbsp; 🔔 notifications &nbsp;·&nbsp; ▢ avatar = account pages<br>Sab professional green theme mein — tap karke dekho</div>
+    </div>
+  </div>
+
+  <!-- ===== SCRIM ===== -->
+  <div class="scrim" id="scrim" onclick="closeAll()"></div>
+
+  <!-- ===== MENU DRAWER (left) ===== -->
+  <div class="drawer left" id="menuDrawer">
+    <div class="md-scroll">
+      <div class="md-user"><div class="mu-av"><img id="muAv" alt=""></div><div><b>Radhe Krishna</b><span>Verified seller · Nagpur</span></div></div>
+      <div class="md-sell" onclick="toast('Sell Produce form khulega')"><span data-ic="leaf" data-size="24"></span><div><b>Sell Produce</b><span>List your crop — buyers milenge</span></div></div>
+      <div class="md-label">Account</div>
+      <div class="md-grid">
+        <div class="md-item" onclick="openProfileDrawer();closeMenuOnly()"><span data-ic="user"></span> My Profile</div>
+        <div class="md-item" onclick="toast('My Products')"><span data-ic="box"></span> My Products</div>
+        <div class="md-item" onclick="toast('Track Order — live map')"><span data-ic="crosshair"></span> Track Order</div>
+        <div class="md-item" onclick="toast('Account & History')"><span data-ic="wallet"></span> Account &amp; History</div>
+        <div class="md-item" onclick="toast('Negotiations / RFQ')"><span data-ic="chat"></span> Negotiations</div>
+        <div class="md-item" onclick="toast('Refer &amp; Earn')"><span data-ic="gift"></span> Refer &amp; Earn</div>
+      </div>
+      <div class="md-label">More</div>
+      <div class="md-grid">
+        <div class="md-item wide"><span data-ic="moon"></span> Light Mode <div class="tog"><div class="toggle" onclick="event.stopPropagation();this.classList.toggle('off');toast('Theme toggled')"></div></div></div>
+        <div class="md-item wide" onclick="toast('WhatsApp support chat')"><span data-ic="whatsapp"></span> WhatsApp Support</div>
+        <div class="md-item wide" onclick="toast('Back to website')"><span data-ic="globe"></span> Back to Website</div>
+      </div>
+    </div>
+    <div class="md-signout" onclick="confirmSignout()"><span data-ic="logout"></span> Sign out</div>
+    <div class="order-bar">
+      <span class="ob-dot"></span>
+      <b>Your order is on the way</b>
+      <div class="ob-track" onclick="toast('Live tracking khul raha hai')"><span data-ic="crosshair" data-size="15"></span> Track live</div>
+    </div>
+  </div>
+
+  <!-- ===== PROFILE DRAWER (right) ===== -->
+  <div class="drawer right" id="profileDrawer">
+    <div class="pd-header"><div class="grip"></div>
+      <div class="pd-avatar"><img id="pdAv" alt=""></div>
+      <div><div class="pd-name">Radhe Krishna</div><div class="pd-email">paragla21@gmail.com</div></div>
+    </div>
+    <div class="pd-list">
+      <div class="pd-item" onclick="openScreen('kyc')"><div class="pd-ic" data-ic="id-card"></div><div class="pd-tx"><b>My Profile &amp; KYC</b><span>Details, documents &amp; verification</span></div><span class="chev" data-ic="chevron"></span></div>
+      <div class="pd-item" onclick="openScreen('settings')"><div class="pd-ic" data-ic="gear"></div><div class="pd-tx"><b>Account Settings</b><span>Appearance, notifications, account</span></div><span class="chev" data-ic="chevron"></span></div>
+      <div class="pd-item" onclick="openScreen('public')"><div class="pd-ic" data-ic="user"></div><div class="pd-tx"><b>My Public Profile</b><span>How buyers &amp; sellers see you</span></div><span class="chev" data-ic="chevron"></span></div>
+      <div class="pd-item" onclick="openScreen('privacy')"><div class="pd-ic" data-ic="user-shield"></div><div class="pd-tx"><b>Privacy &amp; Blocking</b><span>Who can reach you, blocked list</span></div><span class="chev" data-ic="chevron"></span></div>
+      <div class="pd-item" onclick="openScreen('policy')"><div class="pd-ic" data-ic="shield"></div><div class="pd-tx"><b>Privacy &amp; Policy</b><span>How we handle your data</span></div><span class="chev" data-ic="chevron"></span></div>
+      <div class="pd-item danger" onclick="confirmSignout()"><div class="pd-ic" data-ic="logout"></div><div class="pd-tx"><b>Sign out</b><span>Log out of this device</span></div></div>
+    </div>
+  </div>
+
+  <!-- ===== NOTIFICATIONS ===== -->
+  <div class="screen" id="notifs">
+    <div class="nt-hero"><div class="veil"></div><div class="back" onclick="closeScreen('notifs')" data-ic="back" data-size="22"></div></div>
+    <div class="nt-body">
+      <div class="nt-top">
+        <div class="nt-eyebrow"><span data-ic="bell" data-size="13"></span> Alerts</div>
+        <h1>Notifications</h1>
+        <p>Leads, reviews, KYC updates, and admin messages.</p>
+        <div class="seg">
+          <div class="seg-btn active" data-seg="general" onclick="setSeg('general')"><span data-ic="bell" data-size="16"></span> General</div>
+          <div class="seg-btn" data-seg="feed" onclick="setSeg('feed')"><span data-ic="heart" data-size="16"></span> Feed</div>
+        </div>
+        <div class="nt-actions">
+          <div class="nt-act" onclick="markAllRead()"><span data-ic="checks" data-size="15"></span> Mark all as read</div>
+          <div class="nt-act" onclick="clearRead()"><span data-ic="trash" data-size="15"></span> Clear read</div>
+        </div>
+      </div>
+      <div class="nt-list" id="ntList"></div>
+    </div>
+  </div>
+
+  <!-- ===== MY PROFILE & KYC ===== -->
+  <div class="screen" id="kyc">
+    <div class="scr-head"><span class="back" onclick="closeScreen('kyc')" data-ic="back" data-size="24"></span><h1>My Profile &amp; KYC</h1></div>
+    <div class="scroll"><div class="form-wrap">
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="user"></span> Personal Information</div>
+        <div class="field"><label>Full name <span class="req">*</span></label><input value="Radhe Krishna"></div>
+        <div class="grid2">
+          <div class="field"><label>Phone</label><input value="+91 98765 43210"></div>
+          <div class="field"><label>Date of birth</label><input value="1990-06-15" type="date"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>City</label><input value="Nagpur"></div>
+          <div class="field"><label>Pincode</label><input value="440001"></div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="building"></span> Business Information</div>
+        <div class="field"><label>Company / Business name <span class="req">*</span> <small style="color:var(--text-muted);font-weight:400">(Individual ok)</small></label><input value="Krishna Agro Traders"></div>
+        <div class="field"><label>GST number <small style="color:var(--text-muted);font-weight:400">(optional — for B2B)</small></label><input placeholder="27ABCDE1234F1Z5"></div>
+      </div>
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="id-card"></span> KYC Verification <span class="badge pend" id="kycBadge">Pending review</span></div>
+        <div class="meter"><i style="width:70%"></i></div>
+        <div class="meter-label">Profile 70% complete — upload signature to finish</div>
+        <div style="height:14px"></div>
+        <label style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;display:block;font-weight:500">I am registering as</label>
+        <div class="role-row">
+          <div class="role-opt active" onclick="pickRole(this)">Shop owner</div>
+          <div class="role-opt" onclick="pickRole(this)">Delivery partner</div>
+          <div class="role-opt" onclick="pickRole(this)">Both</div>
+        </div>
+        <div class="field"><label>Full legal name</label><input value="Radhe Krishna Sharma"></div>
+        <div class="grid2">
+          <div class="field"><label>Aadhaar number</label><input value="XXXX XXXX 4821" inputmode="numeric"></div>
+          <div class="field"><label>PAN (optional)</label><input placeholder="ABCDE1234F" style="text-transform:uppercase"></div>
+        </div>
+        <div class="field"><label>Name exactly as on Aadhaar</label><input value="RADHE KRISHNA SHARMA"></div>
+        <div style="height:6px"></div>
+        <div class="upload done" onclick="doUpload(this)"><span class="u-ic" data-ic="id-card"></span><div class="u-tx"><b>Aadhaar Front</b><span>JPG/PNG, max 2MB</span></div><span class="u-status">Uploaded ✓</span></div>
+        <div class="upload done" onclick="doUpload(this)"><span class="u-ic" data-ic="id-card"></span><div class="u-tx"><b>Aadhaar Back</b><span>JPG/PNG, max 2MB</span></div><span class="u-status">Uploaded ✓</span></div>
+        <div class="upload" onclick="doUpload(this)"><span class="u-ic" data-ic="cloud-upload"></span><div class="u-tx"><b>Signature</b><span>On white paper</span></div><span class="u-status">Upload</span></div>
+      </div>
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="bank"></span> Bank Details <small style="color:var(--text-muted);font-weight:400">(for payouts)</small></div>
+        <div class="field"><label>Account holder name</label><input value="Radhe Krishna Sharma"></div>
+        <div class="grid2">
+          <div class="field"><label>Bank name</label><input value="State Bank of India"></div>
+          <div class="field"><label>IFSC code</label><input value="SBIN0001234" style="text-transform:uppercase"></div>
+        </div>
+        <div class="field"><label>Account number</label><input value="XXXXXXXX8821" inputmode="numeric"></div>
+      </div>
+      <div class="save-bar">
+        <div class="btn ghost" onclick="closeScreen('kyc')">Cancel</div>
+        <div class="btn primary" onclick="toast('Profile & KYC saved','success')"><span data-ic="check" data-size="17"></span> Save &amp; submit</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ===== ACCOUNT SETTINGS ===== -->
+  <div class="screen" id="settings">
+    <div class="scr-head"><span class="back" onclick="closeScreen('settings')" data-ic="back" data-size="24"></span><h1>Account Settings</h1></div>
+    <div class="scroll"><div class="form-wrap">
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="palette"></span> Appearance</div>
+        <div class="set-row"><span class="s-ic" data-ic="moon"></span><div class="s-tx"><b>Dark Mode</b><small>Easy on the eyes at night</small></div><div class="toggle" onclick="this.classList.toggle('off')"></div></div>
+        <div class="set-row"><span class="s-ic" data-ic="sun"></span><div class="s-tx"><b>Sunlight Mode</b><small>High contrast for bright outdoor use</small></div><div class="toggle off" onclick="this.classList.toggle('off')"></div></div>
+        <div class="set-row" style="cursor:default"><span class="s-ic" data-ic="globe"></span><div class="s-tx"><b>Language</b><small>Choose the app language</small></div>
+          <div class="lang-opts"><div class="lang-opt active" onclick="pickLang(this)">EN</div><div class="lang-opt" onclick="pickLang(this)">हिं</div><div class="lang-opt" onclick="pickLang(this)">मर</div></div></div>
+      </div>
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="user"></span> My Account</div>
+        <div class="set-row" onclick="toast('Account & History')"><span class="s-ic" data-ic="wallet"></span><div class="s-tx"><b>Account &amp; History</b><small>Earnings, payouts, orders &amp; transactions</small></div><span class="chev" data-ic="chevron"></span></div>
+        <div class="set-row" onclick="openScreen('kyc')"><span class="s-ic" data-ic="id-card"></span><div class="s-tx"><b>Profile &amp; KYC</b><small>Your details, documents &amp; cover photo</small></div><span class="chev" data-ic="chevron"></span></div>
+        <div class="set-row" onclick="toast('My Products & Orders')"><span class="s-ic" data-ic="box"></span><div class="s-tx"><b>My Products &amp; Orders</b><small>Everything you've bought or listed</small></div><span class="chev" data-ic="chevron"></span></div>
+        <div class="set-row" onclick="toast('Track order')"><span class="s-ic" data-ic="crosshair"></span><div class="s-tx"><b>Track an Order</b><small>Live location, ETA &amp; distance triangle</small></div><span class="chev" data-ic="chevron"></span></div>
+        <div class="set-row" onclick="toast('Favourites')"><span class="s-ic" data-ic="heart"></span><div class="s-tx"><b>Favourites</b><small>Saved products &amp; shops</small></div><span class="chev" data-ic="chevron"></span></div>
+      </div>
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="bell"></span> Notifications</div>
+        <div class="set-row"><span class="s-ic" data-ic="heart"></span><div class="s-tx"><b>Feed activity</b><small>Reactions &amp; comments on your posts</small></div><div class="toggle" onclick="this.classList.toggle('off')"></div></div>
+        <div class="set-row"><span class="s-ic" data-ic="user-plus"></span><div class="s-tx"><b>Followers &amp; stories</b><small>New followers and story replies</small></div><div class="toggle" onclick="this.classList.toggle('off')"></div></div>
+        <div class="set-row"><span class="s-ic" data-ic="receipt"></span><div class="s-tx"><b>Order updates</b><small>Confirmation, payment &amp; status changes</small></div><div class="toggle" onclick="this.classList.toggle('off')"></div></div>
+        <div class="set-row"><span class="s-ic" data-ic="truck"></span><div class="s-tx"><b>Delivery alerts</b><small>Claimed, out for delivery &amp; arriving soon</small></div><div class="toggle" onclick="this.classList.toggle('off')"></div></div>
+        <div class="set-row"><span class="s-ic" data-ic="chat"></span><div class="s-tx"><b>In-app popups</b><small>Show a popup card for new alerts</small></div><div class="toggle off" onclick="this.classList.toggle('off')"></div></div>
+      </div>
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="user-shield"></span> Privacy &amp; Social</div>
+        <div class="set-row"><span class="s-ic" data-ic="users"></span><div class="s-tx"><b>Followers-only posts</b><small>New posts start restricted instead of public</small></div><div class="toggle off" onclick="this.classList.toggle('off')"></div></div>
+        <div class="set-row" onclick="openScreen('privacy')"><span class="s-ic" data-ic="user-shield"></span><div class="s-tx"><b>Privacy &amp; Blocking</b><small>Who can message &amp; see you</small></div><span class="chev" data-ic="chevron"></span></div>
+      </div>
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="user-shield"></span> Account</div>
+        <div class="set-row"><span class="s-ic" data-ic="snow"></span><div class="s-tx"><b>Freeze my account</b><small>Pauses shop &amp; hides products</small></div><div class="toggle off" onclick="this.classList.toggle('off')"></div></div>
+      </div>
+      <div class="save-bar"><div class="btn primary" onclick="toast('Settings saved','success')"><span data-ic="check" data-size="17"></span> Save Settings</div></div>
+    </div></div>
+  </div>
+
+  <!-- ===== MY PUBLIC PROFILE ===== -->
+  <div class="screen" id="public">
+    <div class="scr-head"><span class="back" onclick="closeScreen('public')" data-ic="back" data-size="24"></span><h1>My Public Profile</h1><span class="h-act" onclick="toast('Preview as buyer')" data-ic="eye"></span></div>
+    <div class="scroll"><div class="form-wrap">
+      <div style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono);margin-bottom:12px">HOW BUYERS &amp; SELLERS SEE YOU</div>
+      <div class="pp-cover"><div class="pp-avatar">R</div></div>
+      <div class="pp-name">Radhe Krishna <span style="color:var(--accent-mint)" data-ic="verified" data-size="18"></span></div>
+      <div class="pp-handle">@radhekrishna</div>
+      <div class="pp-stats"><div class="pp-stat"><b>18</b><span>Products</span></div><div class="pp-stat"><b>240</b><span>Followers</span></div><div class="pp-stat"><b>32</b><span>Following</span></div></div>
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="shield"></span> Seller trust record</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <div style="background:var(--bg-panel-raised);border-radius:11px;padding:11px 5px;text-align:center"><b style="display:block;font-size:15px;color:var(--accent-mint);font-family:var(--font-mono)">156</b><span style="font-size:9.5px;color:var(--text-muted);text-transform:uppercase">Orders</span></div>
+          <div style="background:var(--bg-panel-raised);border-radius:11px;padding:11px 5px;text-align:center"><b style="display:block;font-size:15px;color:var(--accent-mint);font-family:var(--font-mono)">Yes</b><span style="font-size:9.5px;color:var(--text-muted);text-transform:uppercase">Verified</span></div>
+          <div style="background:var(--bg-panel-raised);border-radius:11px;padding:11px 5px;text-align:center"><b style="display:block;font-size:15px;font-family:var(--font-mono)">2024</b><span style="font-size:9.5px;color:var(--text-muted);text-transform:uppercase">Since</span></div>
+        </div>
+        <div class="meter"><i style="width:88%"></i></div>
+        <div class="meter-label">Trust score 88 — top-rated seller</div>
+      </div>
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="edit"></span> Bio</div>
+        <div class="field"><textarea rows="3" placeholder="Tell buyers about you / your farm / your shop...">Organic vegetables &amp; grains direct from Nagpur farms. Bulk supply for hotels &amp; retailers.</textarea></div>
+      </div>
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="eye"></span> What shows on your public profile</div>
+        <div class="set-row"><span class="s-ic" style="color:var(--pink)" data-ic="location"></span><div class="s-tx"><b>City</b></div><div class="toggle" onclick="this.classList.toggle('off')"></div></div>
+        <div class="set-row"><span class="s-ic" style="color:var(--pink)" data-ic="phone"></span><div class="s-tx"><b>Phone number</b></div><div class="toggle off" onclick="this.classList.toggle('off')"></div></div>
+        <div class="set-row"><span class="s-ic" style="color:var(--pink)" data-ic="mail"></span><div class="s-tx"><b>Email</b></div><div class="toggle off" onclick="this.classList.toggle('off')"></div></div>
+        <div class="set-row"><span class="s-ic" style="color:var(--pink)" data-ic="building"></span><div class="s-tx"><b>Business address</b></div><div class="toggle" onclick="this.classList.toggle('off')"></div></div>
+      </div>
+      <div class="save-bar"><div class="btn primary" onclick="toast('Public profile updated','success')"><span data-ic="check" data-size="17"></span> Save</div></div>
+    </div></div>
+  </div>
+
+  <!-- ===== PRIVACY & BLOCKING ===== -->
+  <div class="screen" id="privacy">
+    <div class="scr-head"><span class="back" onclick="closeScreen('privacy')" data-ic="back" data-size="24"></span><h1>Privacy &amp; Blocking</h1></div>
+    <div class="scroll"><div class="form-wrap">
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="chat"></span> Who can message me</div>
+        <div class="seg-choice"><button class="active" onclick="segPick(this)">Everyone</button><button onclick="segPick(this)">Followers</button><button onclick="segPick(this)">Nobody</button></div>
+      </div>
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="eye"></span> Who can see</div>
+        <div class="set-row"><span class="s-ic" data-ic="user"></span><div class="s-tx"><b>Last seen &amp; online</b></div><div class="seg-choice" style="margin:0;flex:0 0 auto"><button class="active" onclick="segPick(this)">Followers</button><button onclick="segPick(this)">Nobody</button></div></div>
+        <div class="set-row"><span class="s-ic" data-ic="user"></span><div class="s-tx"><b>Profile photo</b></div><div class="seg-choice" style="margin:0;flex:0 0 auto"><button class="active" onclick="segPick(this)">Everyone</button><button onclick="segPick(this)">Followers</button></div></div>
+        <div class="set-row"><span class="s-ic" data-ic="checks"></span><div class="s-tx"><b>Read receipts</b><small>Others see when you've read</small></div><div class="toggle" onclick="this.classList.toggle('off')"></div></div>
+      </div>
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="user-shield"></span> Blocked accounts <span class="badge none" id="blkCount">2</span></div>
+        <div class="blk-row"><div class="avatar">SP</div><div class="nm"><b>Spam Seller</b><span>@spamseller</span></div><div class="blk-btn" onclick="unblock(this)">Unblock</div></div>
+        <div class="blk-row"><div class="avatar">FK</div><div class="nm"><b>Fake Buyer 99</b><span>@fakebuyer99</span></div><div class="blk-btn" onclick="unblock(this)">Unblock</div></div>
+      </div>
+      <div class="sec">
+        <div class="sec-title"><span class="ic" data-ic="flag"></span> Safety</div>
+        <div class="set-row" onclick="toast('Report history')"><span class="s-ic" data-ic="flag"></span><div class="s-tx"><b>My reports</b><small>Reports you've filed</small></div><span class="chev" data-ic="chevron"></span></div>
+        <div class="set-row" onclick="toast('Restricted accounts')"><span class="s-ic" data-ic="user-shield"></span><div class="s-tx"><b>Restricted accounts</b><small>Limited without them knowing</small></div><span class="chev" data-ic="chevron"></span></div>
+      </div>
+      <div class="save-bar"><div class="btn primary" onclick="toast('Privacy saved','success')"><span data-ic="check" data-size="17"></span> Save</div></div>
+    </div></div>
+  </div>
+
+  <!-- ===== PRIVACY & POLICY ===== -->
+  <div class="screen" id="policy">
+    <div class="scr-head"><span class="back" onclick="closeScreen('policy')" data-ic="back" data-size="24"></span><h1>Privacy &amp; Policy</h1></div>
+    <div class="policy-toc">
+      <div class="toc-chip" onclick="gotoSec('p1')">Data we collect</div>
+      <div class="toc-chip" onclick="gotoSec('p2')">How we use it</div>
+      <div class="toc-chip" onclick="gotoSec('p3')">KYC &amp; payments</div>
+      <div class="toc-chip" onclick="gotoSec('p4')">Your rights</div>
+      <div class="toc-chip" onclick="gotoSec('p5')">Contact</div>
+    </div>
+    <div class="scroll"><div class="policy-body" id="policyBody">
+      <div class="upd">Last updated · 1 August 2026</div>
+      <p>Aarvex Global aapki privacy ko seriously leta hai. Ye policy batati hai ki hum kaunsa data collect karte hain aur usse kaise use karte hain.</p>
+      <h3 id="p1">1. Data we collect</h3>
+      <p>Account banate waqt aur platform use karte waqt hum ye information collect karte hain:</p>
+      <ul><li>Naam, email, phone number aur city</li><li>KYC documents (Aadhaar, PAN, bank details) — sirf verification ke liye</li><li>Orders, listings, chats aur delivery location</li><li>Device &amp; usage data (app improve karne ke liye)</li></ul>
+      <h3 id="p2">2. How we use it</h3>
+      <p>Aapka data sirf platform chalane ke liye use hota hai:</p>
+      <ul><li>Buyers aur sellers ko connect karna</li><li>Orders, payments aur delivery process karna</li><li>Fraud rokna aur trust score banana</li><li>Zaroori updates aur alerts bhejna</li></ul>
+      <p>Hum aapka personal data kisi third party ko bechte nahi hain.</p>
+      <h3 id="p3">3. KYC &amp; payments</h3>
+      <p>KYC documents encrypted store hote hain aur sirf verification team dekhti hai. Bank details sirf payouts ke liye use hoti hain aur payment partner ke through securely process hoti hain. Aap verification ke baad documents delete karne ki request kar sakte hain.</p>
+      <h3 id="p4">4. Your rights</h3>
+      <p>Aapke paas ye rights hain:</p>
+      <ul><li>Apna data dekhna aur download karna</li><li>Galat information correct karana</li><li>Account aur data delete karana</li><li>Marketing messages se opt-out karna</li></ul>
+      <h3 id="p5">5. Contact</h3>
+      <p>Privacy se related koi sawaal ho to hume <b style="color:var(--accent-mint)">privacy@aarvexglobal.com</b> pe email karein ya settings se support chat kholein.</p>
+      <div class="save-bar" style="margin-top:20px"><div class="btn ghost" onclick="toast('PDF download')"><span data-ic="download" data-size="16"></span> Download PDF</div><div class="btn primary" onclick="closeScreen('policy')">Got it</div></div>
+    </div></div>
+  </div>
+
+  <!-- sign out modal -->
+  <div class="modal-scrim" id="signoutModal">
+    <div class="modal">
+      <div class="m-ic" data-ic="logout" data-size="26"></div>
+      <h3>Sign out?</h3>
+      <p>Aapko dobara login karna hoga. Draft data safe rahega.</p>
+      <div class="m-btns"><div class="btn ghost" onclick="closeModal()">Cancel</div><div class="btn danger" onclick="closeModal();toast('Signed out')">Sign out</div></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ===================== ICONS ===================== */
+const ICONS={
+  menu:'<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>',
+  bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  back:'<polyline points="15 18 9 12 15 6"/>',
+  chevron:'<polyline points="9 18 15 12 9 6"/>',
+  user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  'user-plus':'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>',
+  'user-shield':'<path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M4 21v-1a6 6 0 0 1 8-5.66"/><path d="M18 22s3-1.5 3-4v-3l-3-1-3 1v3c0 2.5 3 4 3 4z"/>',
+  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  'id-card':'<rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="8" cy="10" r="2"/><path d="M5 16c0-1.7 1.3-3 3-3s3 1.3 3 3"/><line x1="14" y1="9" x2="19" y2="9"/><line x1="14" y1="13" x2="19" y2="13"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+  leaf:'<path d="M11 20A7 7 0 0 1 4 13C4 7 11 2 11 2s7 5 7 11a7 7 0 0 1-7 7z"/><line x1="11" y1="22" x2="11" y2="11"/>',
+  box:'<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+  crosshair:'<circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/><circle cx="12" cy="12" r="3"/>',
+  wallet:'<path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/>',
+  chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  gift:'<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
+  moon:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+  sun:'<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>',
+  whatsapp:'<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>',
+  globe:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.5 1-1a5.5 5.5 0 0 0 0-7.9z"/>',
+  building:'<rect x="4" y="2" width="16" height="20" rx="1.5"/><line x1="9" y1="7" x2="9" y2="7.01"/><line x1="15" y1="7" x2="15" y2="7.01"/><line x1="9" y1="11" x2="9" y2="11.01"/><line x1="15" y1="11" x2="15" y2="11.01"/><path d="M9 22v-4h6v4"/>',
+  bank:'<line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/>',
+  'cloud-upload':'<path d="M16 16l-4-4-4 4"/><path d="M12 12v9"/><path d="M20.4 18.4A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>',
+  receipt:'<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/>',
+  truck:'<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>',
+  palette:'<circle cx="13.5" cy="6.5" r="1.3"/><circle cx="17.5" cy="10.5" r="1.3"/><circle cx="8.5" cy="7.5" r="1.3"/><circle cx="6.5" cy="12.5" r="1.3"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.2-.8-.4-1-.3-.3-.4-.6-.4-1 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-4.4-4.5-8-10-8z"/>',
+  eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+  edit:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/>',
+  location:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+  phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22 6 12 13 2 6"/>',
+  flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>',
+  checks:'<polyline points="17 7 8 16 4 12"/><polyline points="22 7 13.5 15.5"/>',
+  trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>',
+  download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  snow:'<line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/>',
+  verified:'<circle cx="12" cy="12" r="10"/><polyline points="16 9.5 11 15 8 12" stroke="#062017" stroke-width="2.4"/>',
+  'arrow-up-right':'<line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/>',
+  'arrow-down-left':'<line x1="17" y1="7" x2="7" y2="17"/><polyline points="17 17 7 17 7 7"/>',
+  copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+};
+function ic(name,size){ size=size||20; return '<svg class="ic" viewBox="0 0 24 24" width="'+size+'" height="'+size+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[name]||'')+'</svg>'; }
+function hydrate(root){ (root||document).querySelectorAll('[data-ic]').forEach(function(el){ el.innerHTML=ic(el.dataset.ic, el.dataset.size?+el.dataset.size:20); el.removeAttribute('data-ic'); }); }
+
+/* ===================== NOTIFICATIONS DATA ===================== */
+const notifGeneral=[
+  {type:'delivery',icon:'truck',title:'Order cancelled by the delivery partner',body:"Your order ARN-2026-405867 for Sambhar was cancelled by the delivery partner before it reached you. The item is back in the seller's catalogue if you'd like to reorder — you have not been charged for this delivery.",order:'ARN-2026-405867',open:true,time:'1:38 PM · Today',unread:true},
+  {type:'order',icon:'receipt',title:'Order confirmed & payment received',body:'Your order ARN-2026-405901 (Tomatoes 50kg) is confirmed. Seller will dispatch within 24 hours.',order:'ARN-2026-405901',open:true,time:'11:12 AM · Today',unread:true},
+  {type:'lead',icon:'user-plus',title:'New buyer lead for your Tomatoes',body:'Ramesh Traders wants 100kg tomatoes — respond fast to win the deal.',open:true,time:'Yesterday',unread:false},
+  {type:'kyc',icon:'id-card',title:'KYC verified — shop unlocked',body:'Congratulations! Your KYC is approved. You can now list unlimited products and receive payouts.',open:false,time:'Jul 30',unread:false},
+  {type:'review',icon:'heart',title:'New 5★ review on Sambhar Masala',body:'"Best quality, fresh aur time pe mila." — verified buyer.',open:false,time:'Jul 29',unread:false},
+  {type:'admin',icon:'shield',title:'Aarvex: Festive payouts now weekly',body:'From August, seller payouts are processed every Monday. No action needed.',open:false,time:'Jul 28',unread:false},
+];
+const notifFeed=[
+  {type:'review',icon:'heart',title:'Ramesh liked your post',body:'"Fresh green chillies harvest 🌶️"',open:false,time:'2:10 PM · Today',unread:true},
+  {type:'lead',icon:'user-plus',title:'Sunita Farms started following you',body:'You have 240 followers now.',open:false,time:'Today',unread:true},
+  {type:'review',icon:'chat',title:'New comment on your post',body:'Kisan Mandi: "Rate kya hai bulk mein?"',open:true,time:'Yesterday',unread:false},
+];
+let curSeg='general';
+function renderNotifs(){
+  const arr=curSeg==='general'?notifGeneral:notifFeed;
+  const host=document.getElementById('ntList');
+  if(!arr.length){ host.innerHTML='<div style="text-align:center;padding:50px 20px;color:var(--text-muted)"><div style="width:60px;height:60px;border-radius:18px;background:var(--bg-panel-raised);display:flex;align-items:center;justify-content:center;color:var(--accent-mint);margin:0 auto 12px">'+ic('bell',24)+'</div>Sab clear hai — koi notification nahi</div>'; return; }
+  host.innerHTML=arr.map((n,i)=>'<div class="nt-card t-'+n.type+(n.unread?' unread':'')+'">'+
+    '<div class="nc-ic">'+ic(n.icon)+'</div>'+
+    '<div class="nc-main"><div class="nc-title">'+n.title+'</div><div class="nc-body">'+n.body+'</div>'+
+      (n.order?'<div class="nc-chip">'+ic('copy',13)+' Order ID · '+n.order+'</div>':'')+
+      (n.open?'<div><span class="nc-open" onclick="toast(\'Opening…\')">'+ic('arrow-up-right',15)+' Open</span></div>':'')+
+      '<div class="nc-time">'+n.time+'</div></div>'+
+    (n.unread?'<span class="nc-unread-dot"></span>':'')+
+    '<span class="nc-del" onclick="delNotif(\''+curSeg+'\','+i+')">'+ic('trash',16)+'</span>'+
+  '</div>').join('');
+  hydrate(host);
+}
+function setSeg(s){ curSeg=s; document.querySelectorAll('.seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.seg===s)); renderNotifs(); }
+function markAllRead(){ notifGeneral.forEach(n=>n.unread=false); notifFeed.forEach(n=>n.unread=false); document.querySelector('.tb-btn.bell .dot').style.display='none'; renderNotifs(); toast('All marked read','success'); }
+function clearRead(){ if(curSeg==='general'){ for(let i=notifGeneral.length-1;i>=0;i--) if(!notifGeneral[i].unread) notifGeneral.splice(i,1); } else { for(let i=notifFeed.length-1;i>=0;i--) if(!notifFeed[i].unread) notifFeed.splice(i,1); } renderNotifs(); toast('Read cleared'); }
+function delNotif(seg,i){ (seg==='general'?notifGeneral:notifFeed).splice(i,1); renderNotifs(); }
+
+/* ===================== NAV ===================== */
+function openMenu(){ document.getElementById('menuDrawer').classList.add('open'); document.getElementById('scrim').classList.add('show'); }
+function openProfileDrawer(){ document.getElementById('profileDrawer').classList.add('open'); document.getElementById('scrim').classList.add('show'); }
+function closeMenuOnly(){ document.getElementById('menuDrawer').classList.remove('open'); }
+function closeAll(){ document.getElementById('menuDrawer').classList.remove('open'); document.getElementById('profileDrawer').classList.remove('open'); document.getElementById('scrim').classList.remove('show'); }
+function openScreen(id){ closeAll(); const s=document.getElementById(id); s.classList.add('open'); if(id==='notifs') renderNotifs(); }
+function closeScreen(id){ document.getElementById(id).classList.remove('open'); }
+function confirmSignout(){ closeAll(); document.getElementById('signoutModal').classList.add('show'); }
+function closeModal(){ document.getElementById('signoutModal').classList.remove('show'); }
+
+/* interactions */
+function pickRole(el){ el.parentElement.querySelectorAll('.role-opt').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
+function pickLang(el){ el.parentElement.querySelectorAll('.lang-opt').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
+function segPick(el){ el.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
+function doUpload(el){ el.classList.add('done'); el.querySelector('.u-status').textContent='Uploaded ✓'; el.querySelector('.u-ic').innerHTML=ic('id-card',20); const meter=document.querySelector('#kyc .meter i'); if(meter)meter.style.width='100%'; const ml=document.querySelector('#kyc .meter-label'); if(ml)ml.textContent='Profile 100% complete — ready to submit'; toast('Uploaded'); }
+function unblock(el){ const row=el.closest('.blk-row'); row.style.opacity=.4; el.textContent='Unblocked'; el.style.pointerEvents='none'; const c=document.getElementById('blkCount'); c.textContent=Math.max(0,(+c.textContent)-1); toast('Unblocked'); }
+function gotoSec(id){ document.getElementById(id).scrollIntoView({behavior:'smooth'}); }
+let toastTimer=null;
+function toast(msg,type){ const t=document.getElementById('toast'); t.textContent=msg; t.className='toast show'+(type?' '+type:''); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),1900); }
+
+/* avatar (Radhe Krishna placeholder — inline SVG data URI) */
+const AV='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><defs><radialGradient id="g" cx="50%" cy="35%"><stop offset="0%" stop-color="#3EB489"/><stop offset="100%" stop-color="#12281d"/></radialGradient></defs><rect width="120" height="120" fill="url(%23g)"/><circle cx="60" cy="46" r="22" fill="#EAF9F1"/><path d="M28 104c0-20 14-32 32-32s32 12 32 32z" fill="#EAF9F1"/><text x="60" y="115" font-family="serif" font-size="13" fill="#C9A227" text-anchor="middle">ॐ</text></svg>');
+['tbAv','muAv','pdAv'].forEach(id=>document.getElementById(id).src=AV);
+
+hydrate(document);
+renderNotifs();
+</script>
+</body>
+</html>

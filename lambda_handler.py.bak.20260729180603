@@ -1,0 +1,3167 @@
+﻿"""
+=============================================================
+  AARVEX GLOBAL â€” Social Media AI Auto-Reply Bot
+  WhatsApp Business API + Instagram Direct + Facebook Messenger
+  (Native Meta Graph API webhooks)
+  AWS Lambda â€” Python 3.12
+=============================================================
+  Author  : Parag Lakhadive / Aarvex Global
+  Version : 5.0 â€” Full Working: Catalogue Buttons + Quote Flow + Rating + Social + Credentials
+=============================================================
+
+CHANGES IN v5.0:
+1. Catalogue â†’ interactive list with product buttons (no typing needed)
+2. Quote â†’ product button â†’ type qty only â†’ separate demand confirmation message
+3. Rating 1â€“5 stars automatically sent after every quote/demand request
+4. About Us â†’ fully formatted company credentials (GST, IEC, Udyam, PAN, RC)
+5. Every reply has TWO quick-action buttons: [Menu] + [ðŸŒ Social Connect]
+6. Social Connect â†’ interactive list of all 8 platforms with direct links
+7. _build_about_message bug fixed (format placeholders now properly filled)
+8. Rating flow integrated into _continue_flow
+9. All bugs reviewed and fixed
+"""
+
+import json
+import os
+import re
+import time
+import base64
+import hmac
+import hashlib
+import logging
+import urllib.request
+import urllib.parse
+import urllib.error
+from datetime import datetime, timezone
+
+import boto3
+from botocore.exceptions import ClientError
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+try:
+    from advanced_features import (
+        route_advanced_feature,
+        handle_razorpay_webhook,
+        handle_cashfree_webhook,
+        get_admin_api_handler,
+        handle_web_order,
+        handle_web_sell,
+        get_public_catalogue,
+        handle_portal_route,
+    )
+    ADVANCED_FEATURES_AVAILABLE = True
+except Exception as e:
+    ADVANCED_FEATURES_AVAILABLE = False
+    logger.error(f"[ADVANCED] advanced_features import failed: {e}", exc_info=True)
+
+    def route_advanced_feature(*args, **kwargs):
+        return None
+
+    def handle_razorpay_webhook(event):
+        return {"statusCode": 503, "body": "Advanced features unavailable"}
+
+    def handle_cashfree_webhook(event):
+        return {"statusCode": 503, "body": "Advanced features unavailable"}
+
+    def get_admin_api_handler(event):
+        return {"statusCode": 503, "body": "Advanced features unavailable"}
+
+    def handle_web_order(event):
+        return {"statusCode": 503, "body": "Advanced features unavailable"}
+
+    def handle_web_sell(event):
+        return {"statusCode": 503, "body": "Advanced features unavailable"}
+
+    def get_public_catalogue(event):
+        # Advanced module down â€” return an empty (but valid + CORS-safe) list.
+        # The website's loadCatalogue() JS already falls back to its own
+        # DEFAULT_PRODUCTS when it gets an empty products array, so visitors
+        # still see a catalogue instead of a broken page.
+        return {
+            "statusCode": 200,
+            "headers": {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
+            "body": json.dumps({"products": [], "total": 0}),
+        }
+
+    def handle_portal_route(event):
+        return None
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  ENV CONFIG
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+OPENROUTER_API_KEY  = os.environ.get("OPENROUTER_API_KEY", "")
+WEBHOOK_SECRET      = os.environ.get("WEBHOOK_SECRET", "")
+META_APP_SECRET     = os.environ.get("META_APP_SECRET", "")
+DYNAMODB_TABLE      = os.environ.get("DYNAMODB_TABLE", "aarvex-social-bot-state")
+COOLDOWN_MINUTES    = int(os.environ.get("COOLDOWN_MINUTES", "60"))
+OPENROUTER_MODEL    = os.environ.get("OPENROUTER_MODEL", "meta-llama/llama-3.1-8b-instruct")
+ALLOWED_ORIGINS     = os.environ.get("ALLOWED_ORIGINS", "*")  # configure to tighten CORS for admin routes
+ALLOWED_ORIGINS     = os.environ.get("ALLOWED_ORIGINS", "*")  # configure to tighten CORS for admin routes
+
+# WhatsApp Config
+WA_PHONE_NUMBER_ID  = os.environ.get("WA_PHONE_NUMBER_ID", "")
+WA_ACCESS_TOKEN     = os.environ.get("WA_ACCESS_TOKEN", "")
+
+# Facebook Messenger Config
+PAGE_ACCESS_TOKEN   = os.environ.get("PAGE_ACCESS_TOKEN", "")
+FACEBOOK_PAGE_ID    = os.environ.get("FACEBOOK_PAGE_ID", "")
+
+# Instagram Direct Config (separate token from Facebook; falls back to
+# PAGE_ACCESS_TOKEN automatically if INSTAGRAM_ACCESS_TOKEN is not set,
+# so nothing breaks for anyone still relying on the old shared-token setup)
+INSTAGRAM_ACCESS_TOKEN = os.environ.get("INSTAGRAM_ACCESS_TOKEN", "") or PAGE_ACCESS_TOKEN
+INSTAGRAM_PAGE_ID   = os.environ.get("INSTAGRAM_PAGE_ID", "")
+GRAPH_API_VERSION   = os.environ.get("GRAPH_API_VERSION", "v20.0")
+
+# Business / Catalogue Config
+PRODUCT_CATALOGUE   = os.environ.get(
+    "PRODUCT_CATALOGUE",
+    "Teja Lal Mirch,Kashmiri Mirch,Haldi,Jeera,Basmati Rice 1121,Wheat,Soybean,Onion,Garlic,Sesame",
+)
+COMPANY_PHONE       = os.environ.get("COMPANY_PHONE", "+91-8767205473")
+COMPANY_EMAIL       = os.environ.get("COMPANY_EMAIL", "aarvexglo@gmail.com")
+COMPANY_UPI         = os.environ.get("COMPANY_UPI", "aarvex@upi")
+COMPANY_GST         = os.environ.get("COMPANY_GST", "27AZJPL8251G1Z3")
+COMPANY_IEC         = os.environ.get("COMPANY_IEC", "AZJPL8251G")
+COMPANY_UDYAM       = os.environ.get("COMPANY_UDYAM", "UDYAM-MH-08-0090771")
+COMPANY_PAN         = os.environ.get("COMPANY_PAN", "AZJPL8251G")
+COMPANY_ADDRESS     = os.environ.get(
+    "COMPANY_ADDRESS",
+    "Voltas Sagar Colony, Warora, Chandrapur, Maharashtra â€” 442907",
+)
+COMPANY_WEBSITE     = os.environ.get("COMPANY_WEBSITE", "https://aarvexglobal.com")
+COMPANY_RC          = os.environ.get("COMPANY_RC", "AA270526178767H")
+CERT_UDYAM_URL      = os.environ.get("CERT_UDYAM_URL", "")
+CERT_IEC_URL        = os.environ.get("CERT_IEC_URL", "")
+CERT_RC_URL         = os.environ.get("CERT_RC_URL", "")
+
+# Social media â€” priority order for customer-facing list
+SOCIAL_LINKS = [
+    ("social_website", "website",  "ðŸŒ", "https://dskm35im55r5u.cloudfront.net/portal.html"),
+    ("social_instagram", "Instagram",  "ðŸ“¸", "https://www.instagram.com/aarvexglobal"),
+    ("social_facebook",  "Facebook",   "ðŸ“˜", "https://www.facebook.com/profile.php?id=61590539051710"),
+    ("social_whatsapp",  "WhatsApp",   "ðŸ’¬", "https://wa.link/o0a5u0"),
+    ("social_linkedin",  "LinkedIn",   "ðŸ’¼", "https://www.linkedin.com/in/aarvex-global-994305415/"),
+    ("social_x",         "X (Twitter)","âœ–ï¸", "https://x.com/aarvexglobal"),
+    ("social_telegram",  "Telegram",   "âœˆï¸", "https://t.me/aarvexglobal_bot"),
+    ("social_pinterest", "Pinterest",  "ðŸ“Œ", "https://in.pinterest.com/aarvexglobal/"),
+    ("social_threads",   "Threads",    "ðŸ§µ", "https://www.threads.com/@aarvexglobal"),
+]
+ADMIN_PASSWORD      = os.environ.get("ADMIN_PASSWORD", "")
+# === CHANGE 3: TOTP 2FA â€” New env vars for admin access control ===
+ADMIN_TOTP_SECRET   = os.environ.get("ADMIN_TOTP_SECRET", "")      # Base32 string, Google Authenticator compatible
+ADMIN_WHATSAPP_NUMBER = os.environ.get("ADMIN_WHATSAPP_NUMBER", "") # Admin's WhatsApp number (with country code, e.g. 918767205473)
+SAMPLE_BASE_COST    = int(os.environ.get("SAMPLE_BASE_COST", "500"))
+COURIER_CHARGES     = int(os.environ.get("COURIER_CHARGES", "150"))
+QUOTE_VALID_HOURS   = int(os.environ.get("QUOTE_VALID_HOURS", "48"))
+
+# Zoho Desk (Sample tickets) + Zoho CRM (Quote leads)
+ZOHO_ACCESS_TOKEN   = os.environ.get("ZOHO_ACCESS_TOKEN", "")
+ZOHO_DESK_ORG_ID    = os.environ.get("ZOHO_DESK_ORG_ID", "")
+ZOHO_DESK_DEPARTMENT_ID = os.environ.get("ZOHO_DESK_DEPARTMENT_ID", "")
+ZOHO_API_DOMAIN     = os.environ.get("ZOHO_API_DOMAIN", "https://desk.zoho.in")
+ZOHO_CRM_DOMAIN     = os.environ.get("ZOHO_CRM_DOMAIN", "https://www.zohoapis.in")
+PRIVACY_POLICY_URL  = os.environ.get(
+    "PRIVACY_POLICY_URL",
+    "https://paragartbook-star.github.io/aarvex-global/privacy-policy.html",
+)
+
+DEFAULT_SYSTEM_PROMPT = os.environ.get(
+    "AI_SYSTEM_PROMPT",
+    (
+        # === CHANGE 1: SPELLING + GRAMMAR â€” Improved system prompt for professional, international tone ===
+        "You are a professional and warm customer support assistant for Aarvex Global, "
+        "a certified import-export company specialising in food and agricultural products, "
+        "based in Warora, Maharashtra, India. "
+        "Always be polite, helpful, and concise. "
+        "Do not use hashtags. Do not place quotes around your reply. "
+        "If a customer asks about pricing or rates, inform them that our team will reach out shortly with details. "
+        "Always reply in the same language the customer has used. "
+        "For English, use clear and simple language suitable for international buyers from the Middle East, Africa, Southeast Asia, and beyond. "
+        "For Hindi, use respectful and grammatically correct modern Hindi. "
+        "Keep all replies under 80 words."
+    ),
+)
+
+MENU_TRIGGERS = {
+    "hi", "hello", "help", "start", "menu", "hey", "hii", "hola", "namaste", "namaskar",
+    "à¤®à¥‡à¤¨à¥‚", "à¤®à¤¦à¤¦", "à¤¶à¥à¤°à¥‚", "help me",
+}
+SAMPLE_TRIGGERS = {
+    "sample", "sample chahiye", "namuna", "à¤¨à¤®à¥‚à¤¨à¤¾", "à¤¨à¤®à¥‚à¤¨à¤¾ à¤šà¤¾à¤¹à¤¿à¤", "à¤¸à¥ˆà¤‚à¤ªà¤²",
+    "sample request", "free sample",
+}
+SEPARATOR = "â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”"
+SUPPORTED_LANGS = ("en", "hi")
+
+# === CHANGE 2: MENU REORDER â€” New priority sequence for better business funnel ===
+# === CHANGE 1: SPELLING FIX â€” niryaat (was: niryat) throughout Hindi entries ===
+MENU_ROWS_I18N = {
+    "en": [
+        # Position 1: Primary CTA â€” most-clicked by buyers
+        {"id": "menu_catalogue", "title": "ðŸ“¦ Product Catalogue",  "description": "Browse & order export products"},
+        # Position 2: B2B exporters â€” second most important
+        {"id": "menu_export",    "title": "ðŸš¢ Export Services",    "description": "End-to-end international export"},
+        # Position 3: Trust building â€” new customers explore here
+        {"id": "menu_about",     "title": "ðŸ¢ About Us",           "description": "Company profile & credentials"},
+        # Position 4: Existing customers â€” feedback
+        {"id": "menu_feedback",  "title": "â­ Feedback",           "description": "Share your experience"},
+        {"id": "menu_track_order", "title": "ðŸ“¦ Track Order",       "description": "Check order status by ARN"},
+        # Position 5: Reference â€” rarely clicked but essential
+        {"id": "menu_terms",     "title": "ðŸ“‹ Terms & Policies",   "description": "Terms, MOQ & policies"},
+        # Remaining â€” utility & farmer segment
+        {"id": "menu_sell",      "title": "ðŸŒ¾ Sell Your Produce",  "description": "Farmers â€” sell via Aarvex"},
+        {"id": "menu_talk",      "title": "ðŸ“ž Talk to Team",       "description": "Speak with our team"},
+        {"id": "social_connect_menu", "title": "ðŸŒ Social Connect", "description": "Follow us on all platforms"},
+        {"id": "menu_language",  "title": "ðŸŒ Change Language",    "description": "Switch Hindi / English"},
+        # ============================================================
+        # [FUTURE - advanced_features.py] Order Tracking
+        # Customer apna ARN number dalega aur order status milega
+        # Yahan se route_advanced_feature() call hogi
+        # DO NOT implement here â€” will be added in Phase 2
+        # ============================================================
+        # ============================================================
+        # [FUTURE - advanced_features.py] Contact Us
+        # Direct agent se connect karne ka option
+        # Yahan se route_advanced_feature() call hogi
+        # DO NOT implement here â€” will be added in Phase 2
+        # ============================================================
+        # ============================================================
+        # [FUTURE - advanced_features.py] Broadcast / Updates
+        # Subscribers ko updates bhejne ka system
+        # Yahan se route_advanced_feature() call hogi
+        # DO NOT implement here â€” will be added in Phase 2
+        # ============================================================
+    ],
+    "hi": [
+        # Position 1: Primary CTA
+        {"id": "menu_catalogue", "title": "ðŸ“¦ à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤¸à¥‚à¤šà¥€",         "description": "à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤¦à¥‡à¤–à¥‡à¤‚ à¤µ à¤‘à¤°à¥à¤¡à¤° à¤•à¤°à¥‡à¤‚"},
+        # Position 2: à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤¸à¥‡à¤µà¤¾à¤à¤‚
+        {"id": "menu_export",    "title": "ðŸš¢ à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤¸à¥‡à¤µà¤¾à¤à¤‚",      "description": "à¤…à¤‚à¤¤à¤°à¥à¤°à¤¾à¤·à¥à¤Ÿà¥à¤°à¥€à¤¯ à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤¸à¤¹à¤¾à¤¯à¤¤à¤¾"},
+        # Position 3: About
+        {"id": "menu_about",     "title": "ðŸ¢ à¤¹à¤®à¤¾à¤°à¥‡ à¤¬à¤¾à¤°à¥‡ à¤®à¥‡à¤‚",      "description": "à¤•à¤‚à¤ªà¤¨à¥€ à¤ªà¥à¤°à¥‹à¤«à¤¾à¤‡à¤² à¤µ à¤ªà¥à¤°à¤®à¤¾à¤£-à¤ªà¤¤à¥à¤°"},
+        # Position 4: Feedback
+        {"id": "menu_feedback",  "title": "â­ à¤ªà¥à¤°à¤¤à¤¿à¤•à¥à¤°à¤¿à¤¯à¤¾",          "description": "à¤…à¤ªà¤¨à¤¾ à¤…à¤¨à¥à¤­à¤µ à¤¸à¤¾à¤à¤¾ à¤•à¤°à¥‡à¤‚"},
+        {"id": "menu_track_order", "title": "ðŸ“¦ à¤‘à¤°à¥à¤¡à¤° à¤Ÿà¥à¤°à¥ˆà¤• à¤•à¤°à¥‡à¤‚",    "description": "ARN à¤¸à¥‡ à¤‘à¤°à¥à¤¡à¤° à¤¸à¥à¤¥à¤¿à¤¤à¤¿ à¤¦à¥‡à¤–à¥‡à¤‚"},
+        # Position 5: Terms
+        {"id": "menu_terms",     "title": "ðŸ“‹ à¤¨à¤¿à¤¯à¤® à¤µ à¤¨à¥€à¤¤à¤¿à¤¯à¤¾à¤‚",       "description": "à¤¶à¤°à¥à¤¤à¥‡à¤‚, MOQ à¤µ à¤¨à¥€à¤¤à¤¿à¤¯à¤¾à¤‚"},
+        # Remaining
+        {"id": "menu_sell",      "title": "ðŸŒ¾ à¤…à¤ªà¤¨à¥€ à¤‰à¤ªà¤œ à¤¬à¥‡à¤šà¥‡à¤‚",      "description": "à¤•à¤¿à¤¸à¤¾à¤¨ â€” Aarvex à¤¸à¥‡ à¤œà¥à¤¡à¤¼à¥‡à¤‚"},
+        {"id": "menu_talk",      "title": "ðŸ“ž à¤Ÿà¥€à¤® à¤¸à¥‡ à¤¬à¤¾à¤¤ à¤•à¤°à¥‡à¤‚",     "description": "à¤¹à¤®à¤¾à¤°à¥€ à¤Ÿà¥€à¤® à¤¸à¥‡ à¤¸à¤‚à¤ªà¤°à¥à¤• à¤•à¤°à¥‡à¤‚"},
+        {"id": "social_connect_menu", "title": "ðŸŒ à¤¸à¥‹à¤¶à¤² à¤•à¤¨à¥‡à¤•à¥à¤Ÿ",     "description": "à¤¹à¤®à¥‡à¤‚ à¤¸à¤­à¥€ à¤ªà¥à¤²à¥‡à¤Ÿà¤«à¤¼à¥‰à¤°à¥à¤® à¤ªà¤° à¤«à¥‰à¤²à¥‹ à¤•à¤°à¥‡à¤‚"},
+        {"id": "menu_language",  "title": "ðŸŒ à¤­à¤¾à¤·à¤¾ à¤¬à¤¦à¤²à¥‡à¤‚",           "description": "Hindi / English"},
+        # ============================================================
+        # [FUTURE - advanced_features.py] Order Tracking
+        # Customer apna ARN number dalega aur order status milega
+        # DO NOT implement here â€” will be added in Phase 2
+        # ============================================================
+        # ============================================================
+        # [FUTURE - advanced_features.py] Contact Us
+        # Direct agent se connect karne ka option
+        # DO NOT implement here â€” will be added in Phase 2
+        # ============================================================
+        # ============================================================
+        # [FUTURE - advanced_features.py] Broadcast / Updates
+        # Subscribers ko updates bhejne ka system
+        # DO NOT implement here â€” will be added in Phase 2
+        # ============================================================
+    ],
+}
+
+TEXTS = {
+    "en": {
+        "lang_picker_body": (
+            "ðŸŒ¾ *AARVEX GLOBAL*\n"
+            f"{SEPARATOR}\n"
+            "Welcome! Please choose your language:\n"
+            "à¤¸à¥à¤µà¤¾à¤—à¤¤ à¤¹à¥ˆ! à¤…à¤ªà¤¨à¥€ à¤­à¤¾à¤·à¤¾ à¤šà¥à¤¨à¥‡à¤‚ ðŸ‘‡"
+        ),
+        "lang_set_hi": "âœ… à¤­à¤¾à¤·à¤¾ à¤¹à¤¿à¤‚à¤¦à¥€ à¤®à¥‡à¤‚ à¤¸à¥‡à¤Ÿ à¤¹à¥‹ à¤—à¤ˆà¥¤",
+        "lang_set_en": "âœ… Language set to English.",
+        "ai_fallback_error": (
+            "ðŸ™ Sorry, we're facing a temporary technical issue and could not process your message right now.\n"
+            "Please try again in a few minutes, or type *MENU* to browse our services.\n"
+            "Our team has been notified."
+        ),
+        "welcome_body": (
+            "ðŸŒ¾ *AARVEX GLOBAL*\n"
+            "*PREMIUM AGRI EXPORT HOUSE*\n"
+            "*Digital Â· AI-Powered Â· Social Â· Modern*\n"
+            f"{SEPARATOR}\n"
+            "Hello! ðŸ™\n"
+            "Welcome to Aarvex Global â€” India's trusted agricultural export partner.\n"
+            "ðŸ† Quality Assured | ðŸŒ Global Reach\n"
+            "ðŸ“¦ Farm to Port | âœ… Certified Exporter\n"
+            "ðŸ¤– Smart Support | ðŸ“± Socially Connected\n"
+            f"{SEPARATOR}\n"
+            "âœ… IEC Â· GST Â· Udyam MSME Registered\n"
+            "Please select an option below ðŸ‘‡"
+        ),
+        "menu_body": f"*Welcome to Aarvex Global!* ðŸŒ\n{SEPARATOR}\nWe are your trusted partners in international trade. Please explore our services and manage your export requirements by selecting the *'View Menu'* button below. ðŸ‘‡",
+        "view_menu_btn": "ðŸ“‹ View Menu",
+        "view_menu_hint": "Need something else? Tap below ðŸ‘‡",
+        "social_connect_btn": "ðŸŒ Social Connect",
+        "action_footer_hint": "What would you like to do next? ðŸ‘‡",
+        "action_list_button": "Choose an Option",
+        "action_list_section": "Quick Actions",
+        "social_list_header": "ðŸŒ *CONNECT WITH AARVEX GLOBAL*",
+        "social_list_body": "Select a platform â€” we'll share the direct link ðŸ‘‡",
+        "social_list_button": "Choose Platform",
+        "social_list_section": "Our Channels",
+        "social_link_body": (
+            "{emoji} *{name}*\n"
+            f"{SEPARATOR}\n"
+            "Tap the button below to connect with us ðŸ‘‡"
+        ),
+        "social_link_btn": "Open {name}",
+        "catalogue_header": "ðŸ“¦ *AARVEX GLOBAL â€” PRODUCT CATALOGUE*",
+        "catalogue_pick": "Tap a product below to view full details ðŸ‘‡",
+        "catalogue_list_btn": "Select Product",
+        "catalogue_list_section": "Export Products",
+        "quote_pick_header": "ðŸ’° *GET QUOTE / ORDER*",
+        "quote_pick_body": "Select a product â€” then enter quantity only ðŸ‘‡",
+        "quote_btn": "ðŸ’° Get Quote",
+        "sample_btn": "ðŸ§ª Sample",
+        "quote_ask_qty": (
+            "ðŸ’° *QUOTE REQUEST*\n"
+            f"{SEPARATOR}\n"
+            "ðŸ“¦ Product: *{product}*\n"
+            f"{SEPARATOR}\n"
+            "Please enter *quantity only*:\n"
+            "Example: 500 kg | 2 MT | 10 bags"
+        ),
+        "quote_qty_invalid": "âš ï¸ Please enter a valid quantity.\nExample: 500 kg or 2 MT",
+        "demand_header": "âœ… *DEMAND REQUEST REGISTERED*",
+        "rating_header": "â­ *RATE YOUR EXPERIENCE*",
+        "rating_body": "How was your experience with Aarvex Global?\nPlease select 1â€“5 stars ðŸ‘‡",
+        "rating_list_btn": "Rate Us",
+        "rating_list_section": "Your Rating",
+        "rating_thanks": "ðŸ™ Thank you for rating us *{stars}/5*! Your feedback helps us serve you better.",
+        "rating_row": "{stars} Star{plural}",
+        "quote_sample_hint": "ðŸ“ž Or tap *Sample* from product details",
+        "export_header": "ðŸš¢ *EXPORT SERVICES*",
+        "export_body": (
+            "Aarvex Global handles end-to-end export:\n"
+            "âœ… IEC registered exporter\n"
+            "âœ… Phytosanitary & COA documentation\n"
+            "âœ… Port logistics & customs support\n"
+            "âœ… Middle East, Africa & SE Asia markets"
+        ),
+        "sell_header": "ðŸŒ¾ *SELL YOUR PRODUCE*",
+        "sell_body": (
+            "Farmers & suppliers â€” partner with Aarvex:\n"
+            "â€¢ We connect you to international buyers\n"
+            "â€¢ Fair market-linked pricing\n"
+            "â€¢ Complete export documentation\n"
+            "â€¢ Flexible MOQ for new products\n"
+            f"{SEPARATOR}\n"
+            "Reply with crop name + quantity + location."
+        ),
+        "about_header": "ðŸ¢ *ABOUT AARVEX GLOBAL*",
+        "about_body": (
+            "*Premium Agri Export House*\n"
+            "Warora, Chandrapur, Maharashtra, India\n"
+            f"{SEPARATOR}\n"
+            "ðŸŒ *Digital Â· AI-Powered Â· Social Â· Modern*\n"
+            "Smart export support with certified documentation.\n"
+            f"{SEPARATOR}\n"
+            "ðŸ“‹ *REGISTERED CREDENTIALS*\n"
+            "ðŸ› GSTIN: {gst}\n"
+            "ðŸŒ IEC Code: {iec}\n"
+            "ðŸ­ Udyam MSME: {udyam}\n"
+            "ðŸ“„ PAN: {pan}\n"
+            "ðŸ“œ RC No.: {rc}\n"
+            f"{SEPARATOR}\n"
+            "âœ… *VERIFIED CERTIFICATES*\n"
+            "â€¢ Udyam Registration Certificate\n"
+            "â€¢ IEC (Import Export Code) Certificate\n"
+            "â€¢ RC / Registration Certificate\n"
+            "{cert_links}"
+            f"{SEPARATOR}\n"
+            "ðŸŒ¾ Spices Â· Grains Â· Pulses Â· Fresh Produce\n"
+            "ðŸŒ Trusted partner for global importers.\n"
+            f"{SEPARATOR}\n"
+            "ðŸ“ {address}\n"
+            "ðŸ“ž {phone} | âœ‰ï¸ {email}\n"
+            "ðŸŒ {website}"
+        ),
+        "cert_links_block": (
+            f"{SEPARATOR}\n"
+            "ðŸ“Ž *Certificate Downloads:*\n"
+            "{links}"
+        ),
+        "cert_on_request": "ðŸ“Ž Certificate copies available on request via email.",
+        "terms_header": "ðŸ“‹ *TERMS & POLICIES*",
+        "terms_body": (
+            "â€¢ Quotes valid {hours} hours\n"
+            "â€¢ Sample qty: 100g â€“ 1kg (paid + courier)\n"
+            "â€¢ MOQ varies by product â€” ask for details\n"
+            "â€¢ Payment: Advance for new buyers\n"
+            "â€¢ Quality: COA & inspection on request\n"
+            f"{SEPARATOR}\n"
+            "ðŸ“„ Privacy Policy:\n{privacy_url}\n"
+            f"{SEPARATOR}\n"
+            "Full terms on request via email."
+        ),
+        "talk_header": "ðŸ“ž *TALK TO OUR TEAM*",
+        "talk_body": (
+            "Our export team is ready to assist:\n"
+            "ðŸ“± WhatsApp/Call: {phone}\n"
+            "âœ‰ï¸ Email: {email}\n"
+            "â° Response within 24 hours\n"
+            f"{SEPARATOR}\n"
+            "Share your product & quantity â€” we'll call back!"
+        ),
+        "product_detail": (
+            "ðŸ“¦ *{product}*\n"
+            f"{SEPARATOR}\n"
+            "Premium grade export quality.\n"
+            "ðŸ’° Pricing: Market linked â€” request quote\n"
+            "ðŸ§ª Samples: 100gâ€“1kg available\n"
+            "ðŸ“‹ Docs: COA, Phytosanitary, Invoice\n"
+            f"{SEPARATOR}\n"
+            "Tap *Get Quote* below â€” enter quantity only.\n"
+            "Or tap *Sample* for sample request."
+        ),
+        "sample_header": "ðŸ§ª *SAMPLE REQUEST*",
+        "sample_products": "Available products for sample:",
+        "sample_reply": "Reply with *product name* (100g â€“ 1kg sample).",
+        "sample_invalid_product": "Please reply with a valid product name from the list.",
+        "sample_product_ok": "âœ… Product: *{product}*\n\nEnter sample quantity (100g â€“ 1kg):\nExample: 250g or 500g",
+        "sample_qty_invalid": "âš ï¸ Sample qty must be between 100g and 1kg. Example: 250g",
+        "sample_ask_address": "ðŸ“ Please share your *full delivery address* (with PIN code):",
+        "sample_address_invalid": "Please provide a complete address with PIN code.",
+        "sample_summary": (
+            "ðŸ§ª *SAMPLE ORDER SUMMARY*\n"
+            f"{SEPARATOR}\n"
+            "ðŸ“¦ Product: {product}\n"
+            "âš–ï¸ Qty: {qty}\n"
+            "ðŸ“ Address: {address}\n"
+            f"{SEPARATOR}\n"
+            "ðŸ’° Sample cost: â‚¹{sample_cost}\n"
+            "ðŸšš Courier: â‚¹{courier}\n"
+            "*Total: â‚¹{total}*\n"
+            f"{SEPARATOR}\n"
+            "ðŸ’³ Pay via UPI: *{upi}*\n"
+            "ðŸ”— Payment link:\n{upi_link}\n"
+            f"{SEPARATOR}\n"
+            "Send payment screenshot here. Team will dispatch within 48hrs."
+        ),
+        "quote_received": (
+            "ðŸ’° *QUOTE REQUEST RECEIVED*\n"
+            f"{SEPARATOR}\n"
+            "ðŸ“¦ Product: {product}\n"
+            "âš–ï¸ Quantity: {qty}\n"
+            "ðŸŒ Buyer: {buyer_type}\n"
+            f"{SEPARATOR}\n"
+            "Our team is preparing your {sym} quote.\n"
+            "â° Valid for *{hours} hours*.\n"
+            "You will receive pricing shortly.\n"
+            f"{SEPARATOR}\n"
+            "ðŸ“ž {phone} | âœ‰ï¸ {email}"
+        ),
+        "feedback_header": "â­ *FEEDBACK*",
+        "feedback_ask": "Please share your feedback. We value your opinion! ðŸ™",
+        "feedback_thanks": "ðŸ™ Thank you for your feedback! Our team will review it shortly.",
+        "list_button": "View Menu",
+        "list_section": "Aarvex Services",
+        "ai_lang_hint": "Always reply in English unless the customer writes in Hindi.",
+    },
+    "hi": {
+        "lang_picker_body": (
+            "ðŸŒ¾ *AARVEX GLOBAL*\n"
+            f"{SEPARATOR}\n"
+            "à¤¸à¥à¤µà¤¾à¤—à¤¤ à¤¹à¥ˆ! à¤•à¥ƒà¤ªà¤¯à¤¾ à¤­à¤¾à¤·à¤¾ à¤šà¥à¤¨à¥‡à¤‚:\n"
+            "Welcome! Please choose your language ðŸ‘‡"
+        ),
+        "lang_set_hi": "âœ… à¤­à¤¾à¤·à¤¾ à¤¹à¤¿à¤‚à¤¦à¥€ à¤®à¥‡à¤‚ à¤¸à¥‡à¤Ÿ à¤¹à¥‹ à¤—à¤ˆà¥¤",
+        "lang_set_en": "âœ… Language set to English.",
+        "ai_fallback_error": (
+            "ðŸ™ à¤®à¤¾à¤«à¤¼ à¤•à¥€à¤œà¤¿à¤, à¤…à¤­à¥€ à¤¹à¤®à¥‡à¤‚ à¤à¤• à¤¤à¤•à¤¨à¥€à¤•à¥€ à¤¸à¤®à¤¸à¥à¤¯à¤¾ à¤† à¤°à¤¹à¥€ à¤¹à¥ˆ à¤‡à¤¸à¤²à¤¿à¤ à¤†à¤ªà¤•à¤¾ à¤¸à¤‚à¤¦à¥‡à¤¶ process à¤¨à¤¹à¥€à¤‚ à¤¹à¥‹ à¤ªà¤¾à¤¯à¤¾à¥¤\n"
+            "à¤•à¥ƒà¤ªà¤¯à¤¾ à¤•à¥à¤› à¤®à¤¿à¤¨à¤Ÿ à¤¬à¤¾à¤¦ à¤¦à¥‹à¤¬à¤¾à¤°à¤¾ à¤•à¥‹à¤¶à¤¿à¤¶ à¤•à¤°à¥‡à¤‚, à¤¯à¤¾ *MENU* à¤Ÿà¤¾à¤‡à¤ª à¤•à¤°à¥‡à¤‚à¥¤\n"
+            "à¤¹à¤®à¤¾à¤°à¥€ à¤Ÿà¥€à¤® à¤•à¥‹ à¤¸à¥‚à¤šà¤¿à¤¤ à¤•à¤° à¤¦à¤¿à¤¯à¤¾ à¤—à¤¯à¤¾ à¤¹à¥ˆà¥¤"
+        ),
+        "welcome_body": (
+            "ðŸŒ¾ *AARVEX GLOBAL*\n"
+            "*à¤ªà¥à¤°à¥€à¤®à¤¿à¤¯à¤® à¤•à¥ƒà¤·à¤¿ à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤˜à¤°*\n"
+            "*Digital Â· AI Â· Social Â· Modern*\n"
+            f"{SEPARATOR}\n"
+            "à¤¨à¤®à¤¸à¥à¤¤à¥‡! ðŸ™\n"
+            "Aarvex Global à¤®à¥‡à¤‚ à¤†à¤ªà¤•à¤¾ à¤¸à¥à¤µà¤¾à¤—à¤¤ à¤¹à¥ˆ â€” à¤­à¤¾à¤°à¤¤ à¤•à¤¾ à¤­à¤°à¥‹à¤¸à¥‡à¤®à¤‚à¤¦ à¤•à¥ƒà¤·à¤¿ à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤¸à¤¾à¤¥à¥€à¥¤\n"
+            "ðŸ† à¤—à¥à¤£à¤µà¤¤à¥à¤¤à¤¾ | ðŸŒ à¤µà¥ˆà¤¶à¥à¤µà¤¿à¤• à¤ªà¤¹à¥à¤‚à¤š\n"
+            "ðŸ“¦ à¤–à¥‡à¤¤ à¤¸à¥‡ à¤¬à¤‚à¤¦à¤°à¤—à¤¾à¤¹ | âœ… à¤ªà¥à¤°à¤®à¤¾à¤£à¤¿à¤¤ à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤à¤•\n"
+            "ðŸ¤– Smart Support | ðŸ“± Socially Connected\n"
+            f"{SEPARATOR}\n"
+            "âœ… IEC Â· GST Â· Udyam MSME à¤ªà¤‚à¤œà¥€à¤•à¥ƒà¤¤\n"
+            "à¤¨à¥€à¤šà¥‡ à¤¸à¥‡ à¤µà¤¿à¤•à¤²à¥à¤ª à¤šà¥à¤¨à¥‡à¤‚ ðŸ‘‡"
+        ),
+        "menu_body": f"ðŸ“‹ *à¤®à¥à¤–à¥à¤¯ à¤®à¥‡à¤¨à¥‚*\n{SEPARATOR}\nà¤¨à¥€à¤šà¥‡ à¤¸à¥‡ à¤µà¤¿à¤•à¤²à¥à¤ª à¤šà¥à¤¨à¥‡à¤‚ ðŸ‘‡",
+        "view_menu_btn": "ðŸ“‹ à¤®à¥‡à¤¨à¥‚ à¤¦à¥‡à¤–à¥‡à¤‚",
+        "view_menu_hint": "à¤”à¤° à¤•à¥à¤› à¤šà¤¾à¤¹à¤¿à¤? à¤¨à¥€à¤šà¥‡ à¤Ÿà¥ˆà¤ª à¤•à¤°à¥‡à¤‚ ðŸ‘‡",
+        "social_connect_btn": "ðŸŒ Social Connect",
+        "action_footer_hint": "à¤†à¤—à¥‡ à¤•à¥à¤¯à¤¾ à¤•à¤°à¤¨à¤¾ à¤šà¤¾à¤¹à¥‡à¤‚à¤—à¥‡? ðŸ‘‡",
+        "action_list_button": "à¤µà¤¿à¤•à¤²à¥à¤ª à¤šà¥à¤¨à¥‡à¤‚",
+        "action_list_section": "à¤¤à¥à¤µà¤°à¤¿à¤¤ à¤µà¤¿à¤•à¤²à¥à¤ª",
+        "social_list_header": "ðŸŒ *AARVEX GLOBAL â€” CONNECT*",
+        "social_list_body": "à¤ªà¥à¤²à¥‡à¤Ÿà¤«à¤¼à¥‰à¤°à¥à¤® à¤šà¥à¤¨à¥‡à¤‚ â€” direct link à¤®à¤¿à¤²à¥‡à¤—à¤¾ ðŸ‘‡",
+        "social_list_button": "à¤ªà¥à¤²à¥‡à¤Ÿà¤«à¤¼à¥‰à¤°à¥à¤®",
+        "social_list_section": "à¤¹à¤®à¤¾à¤°à¥‡ à¤šà¥ˆà¤¨à¤²",
+        "social_link_body": (
+            "{emoji} *{name}*\n"
+            f"{SEPARATOR}\n"
+            "à¤¨à¥€à¤šà¥‡ à¤¦à¤¿à¤ à¤—à¤ à¤¬à¤Ÿà¤¨ à¤ªà¤° à¤Ÿà¥ˆà¤ª à¤•à¤°à¥‡à¤‚ ðŸ‘‡"
+        ),
+        "social_link_btn": "{name} à¤–à¥‹à¤²à¥‡à¤‚",
+        "catalogue_header": "ðŸ“¦ *AARVEX GLOBAL â€” à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤¸à¥‚à¤šà¥€*",
+        "catalogue_pick": "à¤µà¤¿à¤µà¤°à¤£ à¤•à¥‡ à¤²à¤¿à¤ à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤šà¥à¤¨à¥‡à¤‚ ðŸ‘‡",
+        "catalogue_list_btn": "à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤šà¥à¤¨à¥‡à¤‚",
+        "catalogue_list_section": "à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤‰à¤¤à¥à¤ªà¤¾à¤¦",
+        "quote_pick_header": "ðŸ’° *à¤•à¥‹à¤Ÿ / à¤‘à¤°à¥à¤¡à¤°*",
+        "quote_pick_body": "à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤šà¥à¤¨à¥‡à¤‚ â€” à¤«à¤¿à¤° à¤¸à¤¿à¤°à¥à¤« à¤®à¤¾à¤¤à¥à¤°à¤¾ à¤²à¤¿à¤–à¥‡à¤‚ ðŸ‘‡",
+        "quote_btn": "ðŸ’° à¤•à¥‹à¤Ÿ à¤®à¤¾à¤‚à¤—à¥‡à¤‚",
+        "sample_btn": "ðŸ§ª à¤¨à¤®à¥‚à¤¨à¤¾",
+        "quote_ask_qty": (
+            "ðŸ’° *à¤•à¥‹à¤Ÿ à¤…à¤¨à¥à¤°à¥‹à¤§*\n"
+            f"{SEPARATOR}\n"
+            "ðŸ“¦ à¤‰à¤¤à¥à¤ªà¤¾à¤¦: *{product}*\n"
+            f"{SEPARATOR}\n"
+            "à¤•à¥ƒà¤ªà¤¯à¤¾ *à¤¸à¤¿à¤°à¥à¤« à¤®à¤¾à¤¤à¥à¤°à¤¾* à¤­à¥‡à¤œà¥‡à¤‚:\n"
+            "à¤‰à¤¦à¤¾à¤¹à¤°à¤£: 500 kg | 2 MT | 10 bags"
+        ),
+        "quote_qty_invalid": "âš ï¸ à¤¸à¤¹à¥€ à¤®à¤¾à¤¤à¥à¤°à¤¾ à¤­à¥‡à¤œà¥‡à¤‚à¥¤\nà¤‰à¤¦à¤¾à¤¹à¤°à¤£: 500 kg à¤¯à¤¾ 2 MT",
+        "demand_header": "âœ… *à¤®à¤¾à¤‚à¤— à¤¦à¤°à¥à¤œ à¤¹à¥‹ à¤—à¤ˆ*",
+        "rating_header": "â­ *à¤…à¤ªà¤¨à¤¾ à¤…à¤¨à¥à¤­à¤µ à¤°à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚*",
+        "rating_body": "Aarvex Global à¤•à¤¾ à¤…à¤¨à¥à¤­à¤µ à¤•à¥ˆà¤¸à¤¾ à¤°à¤¹à¤¾?\n1â€“5 à¤¸à¤¿à¤¤à¤¾à¤°à¥‡ à¤šà¥à¤¨à¥‡à¤‚ ðŸ‘‡",
+        "rating_list_btn": "à¤°à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚",
+        "rating_list_section": "à¤†à¤ªà¤•à¥€ à¤°à¥‡à¤Ÿà¤¿à¤‚à¤—",
+        "rating_thanks": "ðŸ™ *{stars}/5* à¤°à¥‡à¤Ÿà¤¿à¤‚à¤— à¤•à¥‡ à¤²à¤¿à¤ à¤§à¤¨à¥à¤¯à¤µà¤¾à¤¦! à¤†à¤ªà¤•à¥€ à¤°à¤¾à¤¯ à¤¹à¤®à¤¾à¤°à¥‡ à¤²à¤¿à¤ à¤®à¤¹à¤¤à¥à¤µà¤ªà¥‚à¤°à¥à¤£ à¤¹à¥ˆà¥¤",
+        "rating_row": "{stars} à¤¸à¤¿à¤¤à¤¾à¤°{plural}",
+        "quote_sample_hint": "ðŸ“ž à¤¯à¤¾ à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤¸à¥‡ *à¤¨à¤®à¥‚à¤¨à¤¾* à¤šà¥à¤¨à¥‡à¤‚",
+        "export_header": "ðŸš¢ *à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤¸à¥‡à¤µà¤¾à¤à¤‚*",
+        "export_body": (
+            "Aarvex Global à¤ªà¥‚à¤°à¤¾ à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤¸à¤‚à¤­à¤¾à¤²à¤¤à¤¾ à¤¹à¥ˆ:\n"
+            "âœ… IEC à¤ªà¤‚à¤œà¥€à¤•à¥ƒà¤¤ à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤à¤•\n"
+            "âœ… à¤«à¤¾à¤‡à¤Ÿà¥‹à¤¸à¥ˆà¤¨à¤¿à¤Ÿà¤°à¥€ à¤µ COA à¤¦à¤¸à¥à¤¤à¤¾à¤µà¥‡à¤œà¤¼\n"
+            "âœ… à¤¬à¤‚à¤¦à¤°à¤—à¤¾à¤¹ à¤µ à¤¸à¥€à¤®à¤¾ à¤¶à¥à¤²à¥à¤• à¤¸à¤¹à¤¾à¤¯à¤¤à¤¾\n"
+            "âœ… à¤®à¤§à¥à¤¯ à¤ªà¥‚à¤°à¥à¤µ, à¤…à¤«à¥à¤°à¥€à¤•à¤¾ à¤µ SE Asia"
+        ),
+        "sell_header": "ðŸŒ¾ *à¤…à¤ªà¤¨à¥€ à¤‰à¤ªà¤œ à¤¬à¥‡à¤šà¥‡à¤‚*",
+        "sell_body": (
+            "à¤•à¤¿à¤¸à¤¾à¤¨ à¤”à¤° suppliers â€” Aarvex à¤¸à¥‡ à¤œà¥à¤¡à¤¼à¥‡à¤‚:\n"
+            "â€¢ à¤…à¤‚à¤¤à¤°à¥à¤°à¤¾à¤·à¥à¤Ÿà¥à¤°à¥€à¤¯ à¤–à¤°à¥€à¤¦à¤¾à¤°à¥‹à¤‚ à¤¸à¥‡ à¤œà¥‹à¤¡à¤¼à¤¤à¥‡ à¤¹à¥ˆà¤‚\n"
+            "â€¢ à¤‰à¤šà¤¿à¤¤ à¤¬à¤¾à¤œà¤¼à¤¾à¤°-à¤†à¤§à¤¾à¤°à¤¿à¤¤ à¤•à¥€à¤®à¤¤\n"
+            "â€¢ à¤ªà¥‚à¤°à¤¾ à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤¦à¤¸à¥à¤¤à¤¾à¤µà¥‡à¤œà¤¼\n"
+            "â€¢ à¤¨à¤ à¤‰à¤¤à¥à¤ªà¤¾à¤¦à¥‹à¤‚ à¤•à¥‡ à¤²à¤¿à¤ à¤²à¤šà¥€à¤²à¤¾ MOQ\n"
+            f"{SEPARATOR}\n"
+            "à¤«à¤¸à¤² + à¤®à¤¾à¤¤à¥à¤°à¤¾ + à¤¸à¥à¤¥à¤¾à¤¨ à¤­à¥‡à¤œà¥‡à¤‚à¥¤"
+        ),
+        "about_header": "ðŸ¢ *AARVEX GLOBAL â€” à¤ªà¤°à¤¿à¤šà¤¯*",
+        "about_body": (
+            "*à¤ªà¥à¤°à¥€à¤®à¤¿à¤¯à¤® à¤•à¥ƒà¤·à¤¿ à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤˜à¤°*\n"
+            "Warora, Chandrapur, Maharashtra, India\n"
+            f"{SEPARATOR}\n"
+            "ðŸŒ *Digital Â· AI Â· Social Â· Modern*\n"
+            "à¤ªà¥à¤°à¤®à¤¾à¤£à¤¿à¤¤ à¤¦à¤¸à¥à¤¤à¤¾à¤µà¥‡à¤œà¤¼ à¤•à¥‡ à¤¸à¤¾à¤¥ smart export supportà¥¤\n"
+            f"{SEPARATOR}\n"
+            "ðŸ“‹ *à¤ªà¤‚à¤œà¥€à¤•à¥ƒà¤¤ à¤µà¤¿à¤µà¤°à¤£*\n"
+            "ðŸ› GSTIN: {gst}\n"
+            "ðŸŒ IEC Code: {iec}\n"
+            "ðŸ­ Udyam MSME: {udyam}\n"
+            "ðŸ“„ PAN: {pan}\n"
+            "ðŸ“œ RC No.: {rc}\n"
+            f"{SEPARATOR}\n"
+            "âœ… *à¤ªà¥à¤°à¤®à¤¾à¤£à¤¿à¤¤ à¤ªà¥à¤°à¤®à¤¾à¤£à¤ªà¤¤à¥à¤°*\n"
+            "â€¢ Udyam Registration Certificate\n"
+            "â€¢ IEC (Import Export Code) Certificate\n"
+            "â€¢ RC / Registration Certificate\n"
+            "{cert_links}"
+            f"{SEPARATOR}\n"
+            "ðŸŒ¾ à¤®à¤¸à¤¾à¤²à¥‡ Â· à¤…à¤¨à¤¾à¤œ Â· à¤¦à¤¾à¤² Â· à¤¤à¤¾à¤œà¤¼à¥€ à¤‰à¤ªà¤œ\n"
+            "ðŸŒ à¤µà¥ˆà¤¶à¥à¤µà¤¿à¤• à¤†à¤¯à¤¾à¤¤à¤•à¥‹à¤‚ à¤•à¤¾ à¤­à¤°à¥‹à¤¸à¥‡à¤®à¤‚à¤¦ à¤¸à¤¾à¤¥à¥€à¥¤\n"
+            f"{SEPARATOR}\n"
+            "ðŸ“ {address}\n"
+            "ðŸ“ž {phone} | âœ‰ï¸ {email}\n"
+            "ðŸŒ {website}"
+        ),
+        "cert_links_block": (
+            f"{SEPARATOR}\n"
+            "ðŸ“Ž *à¤ªà¥à¤°à¤®à¤¾à¤£à¤ªà¤¤à¥à¤° à¤¡à¤¾à¤‰à¤¨à¤²à¥‹à¤¡:*\n"
+            "{links}"
+        ),
+        "cert_on_request": "ðŸ“Ž à¤ªà¥à¤°à¤®à¤¾à¤£à¤ªà¤¤à¥à¤° à¤•à¥€ copy email à¤ªà¤° à¤‰à¤ªà¤²à¤¬à¥à¤§à¥¤",
+        "terms_header": "ðŸ“‹ *à¤¨à¤¿à¤¯à¤® à¤µ à¤¨à¥€à¤¤à¤¿à¤¯à¤¾à¤‚*",
+        "terms_body": (
+            "â€¢ à¤•à¥‹à¤Ÿ {hours} à¤˜à¤‚à¤Ÿà¥‡ à¤¤à¤• à¤®à¤¾à¤¨à¥à¤¯\n"
+            "â€¢ à¤¨à¤®à¥‚à¤¨à¤¾: 100g â€“ 1kg (à¤¶à¥à¤²à¥à¤• + à¤•à¥‚à¤°à¤¿à¤¯à¤°)\n"
+            "â€¢ MOQ à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤•à¥‡ à¤…à¤¨à¥à¤¸à¤¾à¤° â€” à¤ªà¥‚à¤›à¥‡à¤‚\n"
+            "â€¢ à¤­à¥à¤—à¤¤à¤¾à¤¨: à¤¨à¤ à¤–à¤°à¥€à¤¦à¤¾à¤°à¥‹à¤‚ à¤¸à¥‡ à¤…à¤—à¥à¤°à¤¿à¤®\n"
+            "â€¢ à¤—à¥à¤£à¤µà¤¤à¥à¤¤à¤¾: COA à¤µ à¤¨à¤¿à¤°à¥€à¤•à¥à¤·à¤£ à¤‰à¤ªà¤²à¤¬à¥à¤§\n"
+            f"{SEPARATOR}\n"
+            "ðŸ“„ à¤—à¥‹à¤ªà¤¨à¥€à¤¯à¤¤à¤¾ à¤¨à¥€à¤¤à¤¿:\n{privacy_url}\n"
+            f"{SEPARATOR}\n"
+            "à¤ªà¥‚à¤°à¥€ à¤¶à¤°à¥à¤¤à¥‡à¤‚ à¤ˆà¤®à¥‡à¤² à¤ªà¤° à¤‰à¤ªà¤²à¤¬à¥à¤§à¥¤"
+        ),
+        "talk_header": "ðŸ“ž *à¤Ÿà¥€à¤® à¤¸à¥‡ à¤¬à¤¾à¤¤ à¤•à¤°à¥‡à¤‚*",
+        "talk_body": (
+            "à¤¹à¤®à¤¾à¤°à¥€ à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤Ÿà¥€à¤® à¤¤à¥ˆà¤¯à¤¾à¤° à¤¹à¥ˆ:\n"
+            "ðŸ“± WhatsApp/Call: {phone}\n"
+            "âœ‰ï¸ Email: {email}\n"
+            "â° 24 à¤˜à¤‚à¤Ÿà¥‡ à¤®à¥‡à¤‚ à¤œà¤µà¤¾à¤¬\n"
+            f"{SEPARATOR}\n"
+            "à¤‰à¤¤à¥à¤ªà¤¾à¤¦ + à¤®à¤¾à¤¤à¥à¤°à¤¾ à¤­à¥‡à¤œà¥‡à¤‚ â€” à¤¹à¤® à¤•à¥‰à¤² à¤•à¤°à¥‡à¤‚à¤—à¥‡!"
+        ),
+        "product_detail": (
+            "ðŸ“¦ *{product}*\n"
+            f"{SEPARATOR}\n"
+            "à¤ªà¥à¤°à¥€à¤®à¤¿à¤¯à¤® à¤¨à¤¿à¤°à¥à¤¯à¤¾à¤¤ à¤—à¥à¤°à¥‡à¤¡à¥¤\n"
+            "ðŸ’° à¤•à¥€à¤®à¤¤: à¤¬à¤¾à¤œà¤¼à¤¾à¤° à¤¸à¥‡ à¤œà¥à¤¡à¤¼à¥€ â€” à¤•à¥‹à¤Ÿ à¤®à¤¾à¤‚à¤—à¥‡à¤‚\n"
+            "ðŸ§ª à¤¨à¤®à¥‚à¤¨à¤¾: 100gâ€“1kg à¤‰à¤ªà¤²à¤¬à¥à¤§\n"
+            "ðŸ“‹ COA, Phytosanitary, Invoice\n"
+            f"{SEPARATOR}\n"
+            "à¤¨à¥€à¤šà¥‡ *à¤•à¥‹à¤Ÿ à¤®à¤¾à¤‚à¤—à¥‡à¤‚* â€” à¤¸à¤¿à¤°à¥à¤« à¤®à¤¾à¤¤à¥à¤°à¤¾ à¤²à¤¿à¤–à¥‡à¤‚à¥¤\n"
+            "à¤¯à¤¾ *à¤¨à¤®à¥‚à¤¨à¤¾* à¤Ÿà¥ˆà¤ª à¤•à¤°à¥‡à¤‚à¥¤"
+        ),
+        "sample_header": "ðŸ§ª *à¤¨à¤®à¥‚à¤¨à¤¾ à¤…à¤¨à¥à¤°à¥‹à¤§*",
+        "sample_products": "à¤¨à¤®à¥‚à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤‰à¤¤à¥à¤ªà¤¾à¤¦:",
+        "sample_reply": "*à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤•à¤¾ à¤¨à¤¾à¤®* à¤­à¥‡à¤œà¥‡à¤‚ (100g â€“ 1kg)à¥¤",
+        "sample_invalid_product": "à¤•à¥ƒà¤ªà¤¯à¤¾ à¤¸à¥‚à¤šà¥€ à¤¸à¥‡ à¤¸à¤¹à¥€ à¤‰à¤¤à¥à¤ªà¤¾à¤¦ à¤•à¤¾ à¤¨à¤¾à¤® à¤­à¥‡à¤œà¥‡à¤‚à¥¤",
+        "sample_product_ok": "âœ… à¤‰à¤¤à¥à¤ªà¤¾à¤¦: *{product}*\n\nà¤¨à¤®à¥‚à¤¨à¤¾ à¤®à¤¾à¤¤à¥à¤°à¤¾ (100g â€“ 1kg):\nà¤‰à¤¦à¤¾à¤¹à¤°à¤£: 250g à¤¯à¤¾ 500g",
+        "sample_qty_invalid": "âš ï¸ à¤¨à¤®à¥‚à¤¨à¤¾ 100g à¤¸à¥‡ 1kg à¤•à¥‡ à¤¬à¥€à¤š à¤¹à¥‹à¤¨à¤¾ à¤šà¤¾à¤¹à¤¿à¤à¥¤ à¤‰à¤¦à¤¾à¤¹à¤°à¤£: 250g",
+        "sample_ask_address": "ðŸ“ *à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾* à¤­à¥‡à¤œà¥‡à¤‚ (PIN code à¤¸à¤¹à¤¿à¤¤):",
+        "sample_address_invalid": "à¤•à¥ƒà¤ªà¤¯à¤¾ PIN code à¤¸à¤¹à¤¿à¤¤ à¤ªà¥‚à¤°à¤¾ à¤ªà¤¤à¤¾ à¤­à¥‡à¤œà¥‡à¤‚à¥¤",
+        "sample_summary": (
+            "ðŸ§ª *à¤¨à¤®à¥‚à¤¨à¤¾ à¤‘à¤°à¥à¤¡à¤° à¤¸à¤¾à¤°à¤¾à¤‚à¤¶*\n"
+            f"{SEPARATOR}\n"
+            "ðŸ“¦ à¤‰à¤¤à¥à¤ªà¤¾à¤¦: {product}\n"
+            "âš–ï¸ à¤®à¤¾à¤¤à¥à¤°à¤¾: {qty}\n"
+            "ðŸ“ à¤ªà¤¤à¤¾: {address}\n"
+            f"{SEPARATOR}\n"
+            "ðŸ’° à¤¨à¤®à¥‚à¤¨à¤¾: â‚¹{sample_cost}\n"
+            "ðŸšš à¤•à¥‚à¤°à¤¿à¤¯à¤°: â‚¹{courier}\n"
+            "*à¤•à¥à¤²: â‚¹{total}*\n"
+            f"{SEPARATOR}\n"
+            "ðŸ’³ UPI: *{upi}*\n"
+            "ðŸ”— à¤­à¥à¤—à¤¤à¤¾à¤¨ à¤²à¤¿à¤‚à¤•:\n{upi_link}\n"
+            f"{SEPARATOR}\n"
+            "à¤­à¥à¤—à¤¤à¤¾à¤¨ screenshot à¤­à¥‡à¤œà¥‡à¤‚à¥¤ 48 à¤˜à¤‚à¤Ÿà¥‡ à¤®à¥‡à¤‚ dispatchà¥¤"
+        ),
+        "quote_received": (
+            "ðŸ’° *à¤•à¥‹à¤Ÿ à¤…à¤¨à¥à¤°à¥‹à¤§ à¤ªà¥à¤°à¤¾à¤ªà¥à¤¤*\n"
+            f"{SEPARATOR}\n"
+            "ðŸ“¦ à¤‰à¤¤à¥à¤ªà¤¾à¤¦: {product}\n"
+            "âš–ï¸ à¤®à¤¾à¤¤à¥à¤°à¤¾: {qty}\n"
+            "ðŸŒ à¤–à¤°à¥€à¤¦à¤¾à¤°: {buyer_type}\n"
+            f"{SEPARATOR}\n"
+            "à¤¹à¤® à¤†à¤ªà¤•à¤¾ {sym} à¤•à¥‹à¤Ÿ à¤¤à¥ˆà¤¯à¤¾à¤° à¤•à¤° à¤°à¤¹à¥‡ à¤¹à¥ˆà¤‚à¥¤\n"
+            "â° *{hours} à¤˜à¤‚à¤Ÿà¥‡* à¤¤à¤• à¤®à¤¾à¤¨à¥à¤¯à¥¤\n"
+            "à¤œà¤²à¥à¤¦ à¤•à¥€à¤®à¤¤ à¤®à¤¿à¤²à¥‡à¤—à¥€à¥¤\n"
+            f"{SEPARATOR}\n"
+            "ðŸ“ž {phone} | âœ‰ï¸ {email}"
+        ),
+        "feedback_header": "â­ *à¤ªà¥à¤°à¤¤à¤¿à¤•à¥à¤°à¤¿à¤¯à¤¾*",
+        "feedback_ask": "à¤…à¤ªà¤¨à¥€ à¤ªà¥à¤°à¤¤à¤¿à¤•à¥à¤°à¤¿à¤¯à¤¾ à¤¸à¤¾à¤à¤¾ à¤•à¤°à¥‡à¤‚à¥¤ à¤¹à¤® à¤†à¤ªà¤•à¥€ à¤°à¤¾à¤¯ à¤•à¥€ à¤•à¤¦à¤° à¤•à¤°à¤¤à¥‡ à¤¹à¥ˆà¤‚! ðŸ™",
+        "feedback_thanks": "ðŸ™ à¤§à¤¨à¥à¤¯à¤µà¤¾à¤¦! à¤¹à¤®à¤¾à¤°à¥€ à¤Ÿà¥€à¤® à¤œà¤²à¥à¤¦ à¤¸à¤®à¥€à¤•à¥à¤·à¤¾ à¤•à¤°à¥‡à¤—à¥€à¥¤",
+        "list_button": "à¤®à¥‡à¤¨à¥‚ à¤¦à¥‡à¤–à¥‡à¤‚",
+        "list_section": "Aarvex à¤¸à¥‡à¤µà¤¾à¤à¤‚",
+        "ai_lang_hint": "à¤¹à¤®à¥‡à¤¶à¤¾ à¤¹à¤¿à¤‚à¤¦à¥€ à¤®à¥‡à¤‚ à¤œà¤µà¤¾à¤¬ à¤¦à¥‡à¤‚ à¤œà¤¬ à¤¤à¤• à¤—à¥à¤°à¤¾à¤¹à¤• à¤…à¤‚à¤—à¥à¤°à¥‡à¤œà¥€ à¤®à¥‡à¤‚ à¤¨ à¤²à¤¿à¤–à¥‡à¥¤",
+    },
+}
+
+dynamodb = boto3.resource("dynamodb")
+table    = dynamodb.Table(DYNAMODB_TABLE)
+
+if not WEBHOOK_SECRET:
+    logger.warning("[CONFIG] WEBHOOK_SECRET not set â€” GET webhook verification will always fail (403).")
+if not META_APP_SECRET:
+    logger.warning("[CONFIG] META_APP_SECRET not set â€” incoming POST requests will NOT be signature-verified.")
+if not INSTAGRAM_PAGE_ID:
+    logger.warning("[CONFIG] INSTAGRAM_PAGE_ID not set â€” Instagram replies may fall back to 'me' endpoint.")
+
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  LAMBDA ENTRYPOINT
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def lambda_handler(event, context):
+    logger.info("[LAMBDA] Event received")
+
+    http_method  = event.get("requestContext", {}).get("http", {}).get("method", "POST")
+    query_params = event.get("queryStringParameters") or {}
+    raw_path = (
+        event.get("rawPath")
+        or event.get("path")
+        or event.get("requestContext", {}).get("http", {}).get("path", "")
+    )
+    request_path = raw_path.split("?")[0]
+    for stage in ("/prod", "/dev", "/staging", "/$default"):
+        if request_path.startswith(stage + "/"):
+            request_path = request_path[len(stage):]
+            break
+    if request_path and not request_path.startswith("/"):
+        request_path = "/" + request_path
+    if request_path != "/" and request_path.endswith("/"):
+        request_path = request_path.rstrip("/")
+
+    logger.info(f"[ROUTE] {http_method} {request_path}")
+    if request_path == "/cashfree-webhook":
+        return handle_cashfree_webhook(event)
+    if request_path == "/razorpay-webhook":  # legacy â€” kept for old links
+        return handle_razorpay_webhook(event)
+
+    if request_path.startswith("/admin/api/"):
+        if http_method == "OPTIONS":
+            return {
+                "statusCode": 200,
+                "headers": {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Admin-Session",
+                    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+                },
+                "body": "",
+            }
+        return get_admin_api_handler(event)
+
+    if request_path == "/catalogue":
+        # Public, no-auth endpoint â€” read by the marketing website (index.html)
+        # to render live products from the DynamoDB catalogue. NOT a Meta
+        # webhook, so it must never go through _verify_meta_signature below.
+        if event.get("requestContext", {}).get("http", {}).get("method") == "OPTIONS":
+            return {
+                "statusCode": 200,
+                "headers": {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "Content-Type",
+                    "Access-Control-Allow-Methods": "GET,OPTIONS"
+                },
+                "body": ""
+            }
+        return get_public_catalogue(event)
+
+    if request_path == "/web/order":
+        # Browser-originated request from order-form.html â€” NOT a Meta webhook,
+        # so it must never go through _verify_meta_signature below.
+        if event.get("requestContext", {}).get("http", {}).get("method") == "OPTIONS":
+            return {
+                "statusCode": 200,
+                "headers": {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "Content-Type,Authorization",
+                    "Access-Control-Allow-Methods": "POST,OPTIONS"
+                },
+                "body": ""
+            }
+        return handle_web_order(event)
+
+    if request_path == "/web/sell":
+        # Browser-originated request from sell-form.html â€” NOT a Meta webhook,
+        # so it must never go through _verify_meta_signature below.
+        if event.get("requestContext", {}).get("http", {}).get("method") == "OPTIONS":
+            return {
+                "statusCode": 200,
+                "headers": {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "Content-Type,Authorization",
+                    "Access-Control-Allow-Methods": "POST,OPTIONS"
+                },
+                "body": ""
+            }
+        return handle_web_sell(event)
+
+    # â”€â”€ Marketplace / Portal routes (before Meta webhook signature check) â”€â”€
+    _portal_paths = (
+        "/kyc/submit", "/kyc/status",
+        "/shop/create", "/shop/update", "/shop/delete", "/shop/subscribe", "/shop/info", "/shop/toggle", "/shop/products",
+        "/account/summary", "/order/invoice",
+        "/rfq/create", "/rfq/message", "/rfq/list", "/rfq/get",
+        "/dispute/create", "/dispute/get", "/dispute/list",
+        "/alert/create", "/alert/list", "/alert/delete",
+        "/shop/public", "/shop/react", "/shop/like", "/shop/feedback",
+        "/shops/top", "/shop/list",
+        "/catalogue/sections", "/catalogue/search", "/favourites/products",
+        "/product/view", "/shop/analytics",
+        "/referral/code", "/referral/apply", "/referral/list",
+        "/listing/deal", "/listing/deal/preview",
+        "/shop/product/add", "/shop/product/edit", "/shop/product/delete", "/shop/product/pause",
+        "/review/submit", "/reviews",
+        "/notifications", "/notifications/read", "/notifications/delete",
+        "/banner/active", "/banner/upload", "/banner/remove",
+        "/category/images", "/category/image/upload", "/category/image/remove",
+        "/category/list", "/category/rename", "/category/delete",
+        "/feed", "/feed/post", "/feed/edit", "/feed/delete", "/feed/like", "/feed/likers",
+        "/feed/follow", "/feed/follow/stats",
+        "/story/create", "/story/list", "/story/view", "/story/like", "/story/reply", "/story/delete",
+        "/feed/comment", "/feed/comment/like", "/feed/comments", "/feed/view", "/feed/share",
+        "/user/profile", "/user/search", "/user/block", "/user/blocklist", "/user/report", "/privacy/update",
+        "/chat/send", "/chat/thread", "/chat/list", "/chat/read",
+        "/chat/conv", "/chat/message", "/chat/starred", "/chat/broadcast",
+        "/user/username", "/user/by-username", "/connect/request", "/chat/group/create",
+        "/call/start", "/call/incoming", "/call/signal", "/call/signals", "/call/end",
+        "/chat/e2e/register", "/chat/e2e/key",
+        "/delivery/record", "/delivery/release", "/shop/team", "/shop/team/add", "/shop/team/remove",
+        "/delivery/approve", "/delivery/reject-claim",
+        "/importer/verify",
+        "/order/detail",
+        "/geo/set",
+        "/geo/users",
+        "/profile/cover", "/shop/favourites",
+        "/favourites", "/favourites/toggle",
+        "/track", "/profile", "/profile/update",
+        "/order/cancel",
+        "/delivery/orders", "/delivery/claim", "/delivery/start",
+        "/delivery/location", "/delivery/complete", "/delivery/picked-up", "/delivery/send-otp", "/delivery/earnings",
+        "/delivery/rate", "/delivery/rating",
+        "/delivery/active", "/delivery/reject", "/delivery/review/submit",
+        "/delivery/my-claims", "/delivery/cancel",
+        "/address/list", "/address/save", "/address/delete",
+    )
+    if request_path in _portal_paths:
+        if http_method == "OPTIONS":
+            return {
+                "statusCode": 200,
+                "headers": {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Admin-Session",
+                    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+                },
+                "body": "",
+            }
+        if ADVANCED_FEATURES_AVAILABLE:
+            resp = handle_portal_route(event)
+            if resp is not None:
+                logger.info(f"[PORTAL] {request_path} â†’ {resp.get('statusCode', '?')}")
+                return resp
+        logger.error(f"[PORTAL] {request_path} â†’ 503 Marketplace unavailable")
+        return {"statusCode": 503, "headers": {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"}, "body": json.dumps({"error": "Marketplace unavailable"})}
+
+
+
+    if http_method == "GET":
+        return _handle_webhook_verification(query_params)
+
+    body_raw = event.get("body") or "{}"
+    if event.get("isBase64Encoded"):
+        raw_bytes = base64.b64decode(body_raw)
+        body_raw  = raw_bytes.decode("utf-8")
+    else:
+        raw_bytes = body_raw.encode("utf-8")
+
+    if not _verify_meta_signature(event, raw_bytes):
+        logger.error("[SECURITY] Signature verification failed â€” rejecting request")
+        return _response(403, "Invalid signature")
+
+    try:
+        payload = json.loads(body_raw)
+    except json.JSONDecodeError:
+        logger.error("[PARSE] Invalid JSON")
+        return _response(400, "Bad Request")
+
+    logger.info(f"[PAYLOAD] {json.dumps(payload)[:500]}")
+
+    if not isinstance(payload, dict):
+        logger.error(f"[PARSE] Unexpected payload type: {type(payload)}")
+        return _response(200, "Unexpected payload")
+
+    object_type = payload.get("object", "")
+
+    if object_type == "whatsapp_business_account":
+        return _handle_whatsapp(payload)
+
+    if object_type == "instagram":
+        return _handle_instagram(payload)
+
+    if object_type == "page":
+        return _handle_facebook(payload)
+
+    logger.warning(f"[ROUTE] Unknown object type: {object_type} â€” skipping")
+    return _response(200, "Unknown object type")
+
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  WEBHOOK VERIFICATION (GET)
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _handle_webhook_verification(params):
+    mode      = params.get("hub.mode")
+    token     = params.get("hub.verify_token")
+    challenge = params.get("hub.challenge")
+
+    if not WEBHOOK_SECRET:
+        logger.error("[VERIFY] WEBHOOK_SECRET not configured in env vars â€” cannot verify")
+        return _response(403, "Forbidden")
+
+    logger.info(f"[VERIFY] mode={mode} token_match={token == WEBHOOK_SECRET}")
+
+    if mode == "subscribe" and token == WEBHOOK_SECRET:
+        logger.info("[VERIFY] Webhook verified!")
+        return {
+            "statusCode": 200,
+            "body": challenge,
+            "headers": {"Content-Type": "text/plain"},
+        }
+
+    logger.error("[VERIFY] Verification FAILED â€” check WEBHOOK_SECRET env var")
+    return _response(403, "Forbidden")
+
+
+def _verify_meta_signature(event, raw_body: bytes) -> bool:
+    if not META_APP_SECRET:
+        return True
+
+    headers = event.get("headers") or {}
+    signature_header = headers.get("x-hub-signature-256") or headers.get("X-Hub-Signature-256", "")
+
+    if not signature_header or not signature_header.startswith("sha256="):
+        logger.error("[SECURITY] Missing or malformed X-Hub-Signature-256 header")
+        return False
+
+    expected_sig = signature_header.split("sha256=", 1)[1]
+    computed_sig = hmac.new(META_APP_SECRET.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
+
+    if not hmac.compare_digest(expected_sig, computed_sig):
+        logger.error("[SECURITY] Signature mismatch â€” possible spoofed request")
+        return False
+
+    return True
+
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  PRODUCT CATALOGUE HELPERS
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _get_products() -> list:
+    return [p.strip() for p in PRODUCT_CATALOGUE.split(",") if p.strip()]
+
+
+def _build_catalogue_message(lang: str = "en") -> str:
+    products = _get_products()
+    lines = "\n".join(f"â€¢ {p}" for p in products)
+    return (
+        f"{_t('catalogue_header', lang)}\n"
+        f"{SEPARATOR}\n"
+        f"{lines}\n"
+        f"{_t('catalogue_pricing', lang)}\n"
+        f"{_t('catalogue_reply', lang)}\n"
+        f"{SEPARATOR}"
+    )
+
+
+def _build_quote_prompt(lang: str = "en") -> str:
+    products = ", ".join(_get_products()[:5])
+    return (
+        f"{_t('quote_header', lang)}\n"
+        f"{SEPARATOR}\n"
+        f"{_t('quote_instr', lang)}\n\n"
+        f"{_t('quote_example', lang)}\n\n"
+        f"{_t('quote_available', lang)}: {products}...\n"
+        f"{_t('quote_sample_hint', lang)}"
+    )
+
+
+def _build_export_services_message(lang: str = "en") -> str:
+    return (
+        f"{_t('export_header', lang)}\n"
+        f"{SEPARATOR}\n"
+        f"{_t('export_body', lang)}\n"
+        f"{SEPARATOR}\n"
+        f"ðŸ“ž {COMPANY_PHONE} | âœ‰ï¸ {COMPANY_EMAIL}"
+    )
+
+
+def _build_sell_produce_message(lang: str = "en") -> str:
+    return f"{_t('sell_header', lang)}\n{SEPARATOR}\n{_t('sell_body', lang)}"
+
+
+def _build_about_message(lang: str = "en") -> str:
+    # Build certificate links block
+    cert_parts = []
+    if CERT_UDYAM_URL:
+        cert_parts.append(f"â€¢ Udyam: {CERT_UDYAM_URL}")
+    if CERT_IEC_URL:
+        cert_parts.append(f"â€¢ IEC: {CERT_IEC_URL}")
+    if CERT_RC_URL:
+        cert_parts.append(f"â€¢ RC: {CERT_RC_URL}")
+
+    if cert_parts:
+        links_str = "\n".join(cert_parts)
+        cert_links = _t("cert_links_block", lang, links=links_str) + "\n"
+    else:
+        cert_links = _t("cert_on_request", lang) + "\n"
+
+    about_body = _t(
+        "about_body", lang,
+        gst=COMPANY_GST,
+        iec=COMPANY_IEC,
+        udyam=COMPANY_UDYAM,
+        pan=COMPANY_PAN,
+        rc=COMPANY_RC,
+        cert_links=cert_links,
+        address=COMPANY_ADDRESS,
+        phone=COMPANY_PHONE,
+        email=COMPANY_EMAIL,
+        website=COMPANY_WEBSITE,
+    )
+    return f"{_t('about_header', lang)}\n{SEPARATOR}\n{about_body}"
+
+
+def _build_terms_message(lang: str = "en") -> str:
+    return (
+        f"{_t('terms_header', lang)}\n"
+        f"{SEPARATOR}\n"
+        f"{_t('terms_body', lang, hours=QUOTE_VALID_HOURS, privacy_url=PRIVACY_POLICY_URL)}"
+    )
+
+
+def _build_talk_to_team_message(lang: str = "en") -> str:
+    return _t("talk_body", lang, phone=COMPANY_PHONE, email=COMPANY_EMAIL)
+
+
+def _build_product_detail(product: str, phone: str, lang: str = "en") -> str:
+    sym = _currency_symbol(phone)
+    return _t("product_detail", lang, product=product, sym=sym)
+
+
+
+# === CHANGE 3: TOTP 2FA â€” Helper functions for admin authentication ===
+
+def _verify_totp(code: str) -> bool:
+    """
+    Verify 6-digit TOTP code against ADMIN_TOTP_SECRET (RFC 6238).
+    Tries pyotp first; falls back to manual RFC 6238 implementation.
+    Returns True only on valid code. Fails securely on any error.
+    """
+    secret = ADMIN_TOTP_SECRET
+    if not secret:
+        logger.error("[TOTP] ADMIN_TOTP_SECRET not configured â€” admin commands disabled")
+        return False
+
+    # Strategy 1: Use pyotp if available (preferred)
+    try:
+        import pyotp
+        totp = pyotp.TOTP(secret)
+        result = totp.verify(code, valid_window=1)
+        logger.info(f"[TOTP] pyotp verify result: {result}")
+        return result
+    except ImportError:
+        pass  # pyotp not installed â€” use manual implementation below
+    except Exception as e:
+        logger.error(f"[TOTP] pyotp exception: {e}")
+        return False
+
+    # Strategy 2: Manual RFC 6238 TOTP (HMAC-SHA1, 30s window, 6 digits)
+    try:
+        import base64
+        import hmac as _hmac
+        import hashlib
+        import struct
+
+        # Decode base32 secret (pad if needed)
+        padded = secret.upper()
+        pad_len = (8 - len(padded) % 8) % 8
+        padded += "=" * pad_len
+        secret_bytes = base64.b32decode(padded)
+
+        current_counter = int(time.time()) // 30
+
+        def _hotp(key: bytes, counter: int) -> str:
+            msg = struct.pack(">Q", counter)
+            h = _hmac.new(key, msg, hashlib.sha1).digest()
+            offset = h[-1] & 0x0F
+            code_int = struct.unpack(">I", h[offset:offset + 4])[0] & 0x7FFFFFFF
+            return str(code_int % 1_000_000).zfill(6)
+
+        # Check current window Â± 1 (3 windows total for clock skew tolerance)
+        for delta in (-1, 0, 1):
+            expected = _hotp(secret_bytes, current_counter + delta)
+            if _hmac.compare_digest(expected, str(code).zfill(6)):
+                return True
+
+        return False
+
+    except Exception as e:
+        logger.error(f"[TOTP] Manual TOTP exception: {e}")
+        return False
+
+
+def _is_admin_number(phone: str) -> bool:
+    """Check if the incoming WhatsApp number matches the configured admin number."""
+    if not ADMIN_WHATSAPP_NUMBER:
+        return False
+    # Normalise: strip all non-digits and compare
+    return re.sub(r"\D", "", phone) == re.sub(r"\D", "", ADMIN_WHATSAPP_NUMBER)
+
+
+def _get_admin_failed_attempts(phone: str) -> int:
+    """Return count of failed TOTP attempts in the last hour for this number."""
+    try:
+        resp = table.get_item(Key={"pk": f"ADMIN_FAIL#{phone}"})
+        item = resp.get("Item") or {}
+        return int(item.get("count", 0))
+    except ClientError:
+        return 0
+
+
+def _increment_admin_failed_attempts(phone: str):
+    """Increment failed TOTP attempts counter. TTL = 1 hour."""
+    try:
+        resp = table.get_item(Key={"pk": f"ADMIN_FAIL#{phone}"})
+        item = resp.get("Item") or {}
+        new_count = int(item.get("count", 0)) + 1
+        table.put_item(Item={
+            "pk":    f"ADMIN_FAIL#{phone}",
+            "count": new_count,
+            "ttl":   int(time.time()) + 3600,
+        })
+    except ClientError as e:
+        logger.error(f"[TOTP] Failed to increment attempt counter: {e}")
+
+
+def _clear_admin_failed_attempts(phone: str):
+    """Clear failed attempt counter on successful TOTP verification."""
+    try:
+        table.delete_item(Key={"pk": f"ADMIN_FAIL#{phone}"})
+    except ClientError as e:
+        logger.error(f"[TOTP] Failed to clear attempt counter: {e}")
+
+
+def _set_admin_verified(phone: str):
+    """Mark this admin session as verified in DynamoDB. TTL = 30 minutes."""
+    try:
+        table.put_item(Item={
+            "pk":           f"ADMIN_SESSION#{phone}",
+            "verified":     True,
+            "verified_at":  int(time.time()),
+            "ttl":          int(time.time()) + 1800,
+        })
+        logger.info(f"[TOTP] Admin session set for ...{phone[-4:]}")
+    except ClientError as e:
+        logger.error(f"[TOTP] Failed to set admin session: {e}")
+
+
+def _is_admin_verified(phone: str) -> bool:
+    """Check if admin session is active and not expired."""
+    if not _is_admin_number(phone):
+        return False
+    try:
+        resp = table.get_item(Key={"pk": f"ADMIN_SESSION#{phone}"})
+        item = resp.get("Item") or {}
+        if not item.get("verified"):
+            return False
+        # Extra time check â€” DynamoDB TTL may have up to 48h delay
+        verified_at = int(item.get("verified_at", 0))
+        if int(time.time()) - verified_at > 1800:
+            return False
+        return True
+    except ClientError:
+        return False
+
+
+def _build_admin_stats() -> str:
+    return (
+        f"ðŸ” *ADMIN PANEL*\n"
+        f"{SEPARATOR}\n"
+        f"Products: {len(_get_products())}\n"
+        f"Catalogue: {PRODUCT_CATALOGUE[:80]}...\n"
+        f"Cooldown: {COOLDOWN_MINUTES} min\n"
+        f"Model: {OPENROUTER_MODEL}\n"
+        f"Bot v5.0 running âœ…"
+    )
+
+
+def _send_admin_panel(to_number: str):
+    """
+    Admin login ke baad ya kisi bhi admin action ke baad
+    ek interactive list bhejta hai jisme sabhi admin options
+    as clickable rows hain â€” type karne ki zaroorat nahi.
+    """
+    ADMIN_DASHBOARD_URL = "https://d11r34jvtscrqz.cloudfront.net/admin_dashboard.html"
+    rows = [
+        {
+            "id": "admin_stats",
+            "title": "ðŸ“Š Bot Stats",
+            "description": "Products, model, cooldown info dekhein",
+        },
+        {
+            "id": "admin_dashboard",
+            "title": "ðŸ–¥ï¸ Admin Dashboard",
+            "description": "Orders, tickets, broadcast manage karein",
+        },
+        {
+            "id": "admin_stop_updates",
+            "title": "ðŸ”• Stop Updates",
+            "description": "Broadcast updates band karein",
+        },
+        {
+            "id": "admin_start_updates",
+            "title": "ðŸ”” Start Updates",
+            "description": "Broadcast updates shuru karein",
+        },
+    ]
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": to_number,
+        "type": "interactive",
+        "interactive": {
+            "type": "cta_url",  # <-- Yahan list se badalkar cta_url kiya
+            "body": {
+                "text": (
+                    "âœ… *Admin Login Successful!*\n"
+                    f"{SEPARATOR}\n"
+                    "ðŸ” You are now in Admin Mode *(Valid for 30 min)*\n"
+                    f"{SEPARATOR}\n"
+                    "Please click the button below to access your dashboard ðŸ‘‡"
+                )[:1024],
+            },
+            "action": {
+                "name": "cta_url",
+                "parameters": {
+                    "display_text": "Open Dashboard",  # <-- Button ke upar ye likha dikhega
+                    "url": ADMIN_DASHBOARD_URL,          # <-- Click karte hi ye link khulegi
+                },
+            },
+        },
+    }
+    _send_whatsapp_payload(to_number, payload)
+
+
+    text_lower = text.lower()
+    for product in _get_products():
+        if product.lower() in text_lower:
+            return product
+    return ""
+
+
+def _match_product_in_text(text: str) -> str:
+    """
+    Best-effort match of a known PRODUCT_CATALOGUE item inside free text.
+    Lets a customer type e.g. "Teja Lal Mirch 50kg" instead of tapping a button.
+    Returns the product name exactly as stored in PRODUCT_CATALOGUE, or "" if
+    nothing in the catalogue matches (e.g. menu/category titles, random text).
+
+    NOTE: this was previously called but never defined in this file â€” that
+    caused a NameError every time a message reached this point (including
+    catalogue category/product taps like "adv_cat_*"), which silently crashed
+    message processing before it could ever reach the advanced router.
+    """
+    if not text:
+        return ""
+    text_l = text.lower()
+    for product in _get_products():
+        if re.search(r"\b" + re.escape(product.lower()) + r"\b", text_l):
+            return product
+    return ""
+
+
+def _extract_quantity(text: str) -> str:
+    patterns = [
+        r"(\d+(?:\.\d+)?\s*(?:kg|g|ton|tons|mt|quintal|qtl|bag|bags|tonne|ltr|litre|liter)s?)",
+        r"(\d+(?:\.\d+)?)\s*(?:quintals?|quintals)",
+    ]
+    for pat in patterns:
+        m = re.search(pat, text, re.IGNORECASE)
+        if m:
+            return m.group(1).strip()
+    return ""
+
+
+def _is_indian_buyer(phone: str) -> bool:
+    digits = re.sub(r"\D", "", phone)
+    return digits.startswith("91") and len(digits) >= 12
+
+
+def _currency_symbol(phone: str) -> str:
+    return "â‚¹" if _is_indian_buyer(phone) else "$"
+
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  i18n â€” Language helpers
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _t(key: str, lang: str = "en", **kwargs) -> str:
+    lang = lang if lang in SUPPORTED_LANGS else "en"
+    text = TEXTS.get(lang, TEXTS["en"]).get(key, TEXTS["en"].get(key, key))
+    if kwargs:
+        return text.format(**kwargs)
+    return text
+
+
+def _get_lang(phone: str) -> str:
+    try:
+        resp = table.get_item(Key={"pk": f"CONTACT#WA#{phone}"})
+        item = resp.get("Item") or {}
+        lang = item.get("language", "")
+        return lang if lang in SUPPORTED_LANGS else ""
+    except ClientError:
+        return ""
+
+
+def _set_lang(phone: str, lang: str, name: str = ""):
+    if lang not in SUPPORTED_LANGS:
+        lang = "en"
+    try:
+        existing = table.get_item(Key={"pk": f"CONTACT#WA#{phone}"}).get("Item") or {}
+        table.put_item(Item={
+            "pk":            f"CONTACT#WA#{phone}",
+            "language":      lang,
+            "name":          name or existing.get("name", "Customer"),
+            "first_seen_ts": existing.get("first_seen_ts", int(time.time())),
+            "updated_at":    datetime.now(timezone.utc).isoformat(),
+        })
+    except ClientError as e:
+        logger.error(f"[DYNAMO] Set language error: {e}")
+
+
+def _needs_language(phone: str) -> bool:
+    return not _get_lang(phone)
+
+
+def _get_menu_rows(lang: str) -> list:
+    return MENU_ROWS_I18N.get(lang if lang in SUPPORTED_LANGS else "en", MENU_ROWS_I18N["en"])
+
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  WHATSAPP MESSAGE HANDLER
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _handle_whatsapp(payload):
+    try:
+        if not WA_ACCESS_TOKEN:
+            logger.error("[WA] WA_ACCESS_TOKEN not set in env variables!")
+            return _response(200, "Config error")
+
+        entry   = payload.get("entry", [])
+        if not entry:
+            return _response(200, "No entry")
+
+        changes = entry[0].get("changes", [])
+        if not changes:
+            return _response(200, "No changes")
+
+        value    = changes[0].get("value", {})
+        messages = value.get("messages", [])
+
+        if not messages:
+            statuses = value.get("statuses", [])
+            if statuses:
+                logger.info("[WA] Status update received â€” skipping")
+            else:
+                logger.info("[WA] No messages in payload â€” skipping")
+            return _response(200, "OK")
+
+        contacts     = value.get("contacts", [])
+        contact_name = contacts[0].get("profile", {}).get("name", "Customer") if contacts else "Customer"
+
+        for msg in messages:
+            try:
+                _process_whatsapp_message(msg, contact_name)
+            except Exception as e:
+                logger.error(f"[WA] Error processing one message: {e}", exc_info=True)
+                # FIX: pehle yahan sirf log hota tha â€” user ko WhatsApp pe kuch reply nahi
+                # jaata tha, isliye unko lagta tha bot "stuck" ho gaya / kuch process hi
+                # nahi hua. Ab ek generic fallback bhejte hain taaki user blank na rahe.
+                try:
+                    _send_whatsapp_text(
+                        msg.get("from", ""),
+                        "Good Luck ðŸ¤ž"
+                        #"ya 'menu' likh kar dobara shuru karein.",
+                    )
+                except Exception:
+                    pass
+
+        return _response(200, "OK")
+
+    except Exception as e:
+        logger.error(f"[WA] Unhandled exception: {e}", exc_info=True)
+        return _response(200, "OK")
+
+
+def _extract_whatsapp_input(msg: dict) -> tuple:
+    """Returns (user_text, interactive_id, msg_type)."""
+    msg_type = msg.get("type", "")
+
+    if msg_type == "text":
+        text = msg.get("text", {}).get("body", "").strip()
+        return text, "", "text"
+
+    if msg_type == "interactive":
+        interactive = msg.get("interactive", {})
+        itype = interactive.get("type", "")
+        if itype == "button_reply":
+            reply = interactive.get("button_reply", {})
+            return reply.get("title", "").strip(), reply.get("id", "").strip(), "interactive"
+        if itype == "list_reply":
+            reply = interactive.get("list_reply", {})
+            return reply.get("title", "").strip(), reply.get("id", "").strip(), "interactive"
+
+    return "", "", msg_type
+
+
+def _process_whatsapp_message(msg: dict, contact_name: str):
+    msg_type_raw = msg.get("type", "")
+    msg_id       = msg.get("id", "")
+
+    if msg_type_raw not in ("text", "interactive"):
+        logger.info(f"[WA] Non-text/interactive type: {msg_type_raw} â€” skipping")
+        return
+
+    from_number = msg.get("from", "")
+    user_text, interactive_id, msg_type = _extract_whatsapp_input(msg)
+    action_key = interactive_id or user_text
+    lang       = _get_lang(from_number) or "en"
+
+    if not action_key and not from_number:
+        logger.info("[WA] Empty input â€” skipping")
+        return
+
+    logger.info(f"[WA] Message from {from_number} ({contact_name}): {action_key[:100]}")
+
+    if _is_duplicate_message(msg_id):
+        logger.info(f"[WA] Duplicate message {msg_id} â€” skipping")
+        return
+
+    # === CHANGE 3: TOTP 2FA â€” Admin authentication gate ===
+    # Step 1: Check if message matches ADMIN <6-digit> pattern
+    # Sirf 6 digits â€” admin number se aaye to TOTP check, warna normal flow
+    _admin_totp_match = re.match(r'^(\d{6})$', (user_text or "").strip())
+    if _admin_totp_match and _is_admin_number(from_number):
+        # Step 3: Brute-force guard â€” block if 5+ failures in last hour
+        if _get_admin_failed_attempts(from_number) >= 5:
+            logger.warning(f"[TOTP] Brute-force block active for ...{from_number[-4:]} â€” silently ignoring")
+            _save_message_id(msg_id)
+            return
+        # Step 4: Verify TOTP code
+        totp_code = _admin_totp_match.group(1)
+        if _verify_totp(totp_code):
+            # SUCCESS â€” set session, clear fail counter, send WhatsApp confirmation
+            _set_admin_verified(from_number)
+            _clear_admin_failed_attempts(from_number)
+            logger.info(f"[TOTP] Admin verified successfully for ...{from_number[-4:]}")
+            _send_admin_panel(from_number)
+        else:
+            # FAILURE â€” increment counter, inform admin
+            _increment_admin_failed_attempts(from_number)
+            logger.error(f"[TOTP] Admin TOTP verification failed for ...{from_number[-4:]}")
+            attempts = _get_admin_failed_attempts(from_number)
+            remaining = max(0, 5 - attempts)
+            _send_whatsapp_text(from_number, (
+                "âŒ *Invalid OTP Code*\n\n"
+                "Google Authenticator ka code galat hai ya expire ho gaya.\n\n"
+                f"âš ï¸ Remaining attempts: *{remaining}/5*\n\n"
+                "_Naya 6-digit code generate karke dobara bhejein._"
+            ))
+        _save_message_id(msg_id)
+        return
+
+    # â”€â”€ Admin stats (legacy password-based) â”€â”€
+    if ADMIN_PASSWORD and user_text == f"ADMIN {ADMIN_PASSWORD}":
+        _send_admin_panel(from_number)
+        _save_message_id(msg_id)
+        return
+
+    # â”€â”€ Admin interactive panel buttons â”€â”€
+    if interactive_id and interactive_id.startswith("admin_") and _is_admin_number(from_number) and _is_admin_verified(from_number):
+        if interactive_id == "admin_stats":
+            _send_whatsapp_text(from_number, _build_admin_stats())
+            _send_admin_panel(from_number)
+            _save_message_id(msg_id)
+            return
+        if interactive_id == "admin_dashboard":
+            _send_whatsapp_text(
+                from_number,
+                "ðŸ–¥ï¸ *Admin Dashboard*\n"
+                f"{SEPARATOR}\n"
+                "Neeche diye link par click karke Admin Dashboard kholein:\n\n"
+                "ðŸ‘‰ http://aarvex-admin-dashboard-prod.s3-website-ap-southeast-1.amazonaws.com\n\n"
+                "_Dashboard mein orders, tickets, stats aur broadcast manage kar sakte hain._"
+            )
+            _send_admin_panel(from_number)
+            _save_message_id(msg_id)
+            return
+        if interactive_id == "admin_stop_updates":
+            _send_whatsapp_text(from_number, "âœ… *STOP UPDATES* command execute ho raha hai...")
+            # Admin khud opt-out nahi karta â€” yeh broadcast ke liye use hota hai
+            _send_whatsapp_text(from_number, "â„¹ï¸ STOP UPDATES customer ke liye hota hai, admin ke liye nahi.\nBroadcast list manage karne ke liye Dashboard use karein.")
+            _send_admin_panel(from_number)
+            _save_message_id(msg_id)
+            return
+        if interactive_id == "admin_start_updates":
+            _send_whatsapp_text(from_number, "âœ… *START UPDATES* command execute ho raha hai...")
+            _send_whatsapp_text(from_number, "â„¹ï¸ START UPDATES customer ke liye hota hai, admin ke liye nahi.\nBroadcast list manage karne ke liye Dashboard use karein.")
+            _send_admin_panel(from_number)
+            _save_message_id(msg_id)
+            return
+
+    # â”€â”€ Admin commands (text-based, TOTP session verified hone ke baad) â”€â”€
+    if _is_admin_number(from_number) and _is_admin_verified(from_number):
+        text_upper = user_text.strip().upper()
+        # ADMIN STATS
+        if text_upper == "ADMIN STATS":
+            _send_whatsapp_text(from_number, _build_admin_stats())
+            _send_admin_panel(from_number)
+            _save_message_id(msg_id)
+            return
+        # BROADCAST START
+        if user_text.strip().lower().startswith("broadcast_start "):
+            s3_key = user_text.strip().split(maxsplit=1)[1]
+            if ADVANCED_FEATURES_AVAILABLE:
+                try:
+                    from advanced_features import start_broadcast, send_whatsapp_text as _adv_wa
+                    batch_id = start_broadcast(s3_key, "")
+                    _adv_wa(from_number, f"ðŸ“Š *Broadcast Queued!*\n\nBatch ID: `{batch_id}`\nFile: {s3_key}")
+                except Exception as e:
+                    logger.error(f"[ADMIN] Broadcast error: {e}")
+                    _send_whatsapp_text(from_number, f"âŒ Broadcast failed: {e}")
+            else:
+                _send_whatsapp_text(from_number, "âŒ Advanced features unavailable.")
+            _send_admin_panel(from_number)
+            _save_message_id(msg_id)
+            return
+
+    # â”€â”€ Language selection (Hindi / English) â”€â”€
+    if interactive_id in ("lang_hi", "lang_en"):
+        lang = "hi" if interactive_id == "lang_hi" else "en"
+        _set_lang(from_number, lang, contact_name)
+        _send_whatsapp_text(from_number, _t("lang_set_hi" if lang == "hi" else "lang_set_en", lang))
+        _send_main_menu(from_number, lang, is_welcome=True)
+        _save_message_id(msg_id)
+        return
+
+    # â”€â”€ View Menu button (clears active flow) â”€â”€
+    if interactive_id == "menu_main":
+        _clear_flow_state(from_number)
+        lang = _get_lang(from_number) or "en"
+        _send_main_menu(from_number, lang, is_welcome=False)
+        _save_message_id(msg_id)
+        return
+
+    # â”€â”€ Social platform selected â†’ send link as a tappable CTA button â”€â”€
+    if interactive_id and interactive_id.startswith("social_"):
+        lang = _get_lang(from_number) or "en"
+        for sid, name, emoji, url in SOCIAL_LINKS:
+            if interactive_id == sid:
+                _send_social_link_cta(from_number, lang, emoji, name, url)
+                _save_message_id(msg_id)
+                return
+        # Unknown social id â€” just show connect list again
+        _send_social_connect_list(from_number, lang)
+        _save_message_id(msg_id)
+        return
+
+    # â”€â”€ Rating received â”€â”€
+    if interactive_id and interactive_id.startswith("rating_"):
+        lang = _get_lang(from_number) or "en"
+        stars = interactive_id.split("_")[-1]
+        _save_rating(from_number, stars)
+        _send_reply_with_menu(from_number, _t("rating_thanks", lang, stars=stars), lang)
+        _save_message_id(msg_id)
+        return
+
+    # â”€â”€ Change language from menu â”€â”€
+    if interactive_id == "menu_language":
+        _send_language_picker(from_number)
+        _save_message_id(msg_id)
+        return
+
+    # â”€â”€ No language yet â†’ show language picker first â”€â”€
+    # FIX: agar user ne already kisi interactive button/list par tap kiya hai
+    # (catalogue, quote, sample, prod_*, cat_*, menu_* etc.), to uska intent clear hai â€”
+    # language picker baar-baar dikhane se action block nahi karna chahiye.
+    # Sirf plain free-text (interactive_id empty) ke liye language-gate lagani hai,
+    # taaki bilkul naya user pehli baar "hi" type kare to use language choose karne ko mile.
+    # Also skip for opt-in/out commands â€” they are self-contained.
+    _opt_cmds = {"stop updates", "start updates"}
+    if _needs_language(from_number) and not interactive_id and user_text.lower().strip() not in _opt_cmds:
+        _send_language_picker(from_number)
+        _save_message_id(msg_id)
+        return
+
+    lang = _get_lang(from_number) or "en"
+    text_norm = user_text.lower().strip()
+
+    # â”€â”€ Menu keyword â†’ main menu (also cancels active flow) â”€â”€
+    if text_norm in MENU_TRIGGERS:
+        _clear_flow_state(from_number)
+        _send_main_menu(from_number, lang, is_welcome=False)
+        _save_message_id(msg_id)
+        return
+
+    # â”€â”€ Catalogue product tapped (detail mode) â”€â”€
+    if interactive_id and interactive_id.startswith("cat_detail_"):
+        try:
+            idx = int(interactive_id.split("_")[-1])
+            products = _get_products()
+            if 0 <= idx < len(products):
+                product_name = products[idx]
+                if ADVANCED_FEATURES_AVAILABLE:
+                    advanced_response = route_advanced_feature(
+                        message_type="interactive",
+                        message_body=product_name,
+                        wa_from=from_number,
+                        user_state={"language": lang, "contact_name": contact_name, "message_id": msg_id, "interactive_id": f"adv_catalogue_search_{product_name}"},
+                        message_data=msg,
+                    )
+                    if advanced_response is not None:
+                        _save_message_id(msg_id)
+                        return
+                _send_product_detail_with_buttons(from_number, product_name, from_number, lang)
+                _save_message_id(msg_id)
+                return
+        except (ValueError, IndexError):
+            pass
+
+    # â”€â”€ Product detail: Place Order button (env-var catalogue products) â”€â”€
+    if interactive_id and interactive_id.startswith("prod_quote_"):
+        _pq_safe_id = interactive_id[len("prod_quote_"):]
+        _pq_display = _pq_safe_id.replace("_", " ").strip()
+        _pq_url = ("https://aarvex-admin-dashboard-prod.s3.ap-southeast-1.amazonaws.com"
+                   "/order-form.html?product=" + _pq_safe_id.lower())
+        _pq_cta = {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": from_number,
+            "type": "interactive",
+            "interactive": {
+                "type": "cta_url",
+                "body": {
+                    "text": (
+                        "Place Order - " + _pq_display + "\n\n"
+                        "Neeche button tap karke order form bharo.\n"
+                        "Name, address, quantity sab ek jagah fill hoga."
+                    ),
+                },
+                "action": {
+                    "name": "cta_url",
+                    "parameters": {
+                        "display_text": "Place Order - " + _pq_display,
+                        "url": _pq_url,
+                    },
+                },
+            },
+        }
+        _send_whatsapp_payload(from_number, _pq_cta)
+        _save_message_id(msg_id)
+        return
+
+    # â”€â”€ Product detail: Sample button â”€â”€
+    if interactive_id and interactive_id.startswith("prod_sample_"):
+        product = interactive_id[len("prod_sample_"):]
+        data = {"product": product, "contact_name": contact_name, "lang": lang}
+        _save_flow_state(from_number, "sample", "quantity", data)
+        _send_whatsapp_text(from_number, _t("sample_product_ok", lang, product=product))
+        _save_message_id(msg_id)
+        return
+
+    # â”€â”€ Catalogue product tapped (quote mode) â”€â”€
+    if interactive_id and interactive_id.startswith("cat_quote_"):
+        try:
+            idx = int(interactive_id.split("_")[-1])
+            products = _get_products()
+            if 0 <= idx < len(products):
+                product = products[idx]
+                _save_flow_state(from_number, "quote", "quantity", {"product": product, "contact_name": contact_name, "lang": lang})
+                _send_whatsapp_text(from_number, _t("quote_ask_qty", lang, product=product))
+                _save_message_id(msg_id)
+                return
+        except (ValueError, IndexError):
+            pass
+
+    # â”€â”€ Interactive menu selection (always takes priority over a stale flow) â”€â”€
+    # FIX: pehle yahan flow-continuation check tha menu check se UPAR, jiski wajah se
+    # agar user ka koi purana active flow (quote/sample/feedback) DynamoDB me bacha hota
+    # tha, to naya menu tap (jaise "menu_catalogue") us purane flow me hijack ho jata tha â€”
+    # list_reply ka title text ("Product Catalogue") feedback/quote answer ban jata tha.
+    # Ab: explicit menu_* tap hamesha turant apna correct action chalayega, flow continuation
+    # sirf plain free-text input (interactive_id empty) ke liye hi try hogi.
+    if interactive_id and interactive_id.startswith("menu_"):
+        _clear_flow_state(from_number)
+        _handle_menu_selection(from_number, contact_name, interactive_id, msg_id, lang)
+        return
+
+    # â”€â”€ Active conversation flow (quote / sample / feedback / rating) â”€â”€
+    # FIX: flow-continuation ab SIRF plain free-text (interactive_id empty) ke liye chalegi.
+    # Pehle sirf "menu_main" ko exclude kiya gaya tha, jiski wajah se naye catalogue ke
+    # interactive taps â€” "adv_cat_*" (category), "adv_prod_*" (product), "adv_order_*" (order) â€”
+    # ek purane bache hue flow (quote/sample/feedback/sell) me hijack ho jaate the. Isi wajah se
+    # category tap ("Spices & Masale") wahi flow ka free-text jawab ban jata tha aur asli
+    # product-list handler kabhi call hi nahi hota tha â€” catalogue wahi par ruk jata tha.
+    # Saare flows (quote/sample/feedback/sell) sirf typed text expect karte hain, kisi button
+    # tap ka nahi, isliye yahan check "interactive_id bilkul na ho" tak sakht kar diya gaya hai.
+    flow = _get_flow_state(from_number)
+    if flow and not interactive_id:
+        handled = _continue_flow(from_number, contact_name, user_text, flow, msg_id, lang)
+        if handled:
+            return
+
+    # â”€â”€ Sample request trigger â”€â”€
+    if _is_sample_trigger(user_text):
+        _start_sample_flow(from_number, contact_name, msg_id, lang)
+        return
+
+    # â”€â”€ Quote request (product + quantity) â”€â”€
+    product  = _match_product_in_text(user_text)
+    quantity = _extract_quantity(user_text)
+    if product and quantity:
+        _handle_quote_request(from_number, contact_name, product, quantity, user_text, msg_id, lang)
+        return
+
+    # â”€â”€ Product name only â†’ details â”€â”€
+    if product and not quantity:
+        _send_product_detail_with_buttons(from_number, product, from_number, lang)
+        _save_message_id(msg_id)
+        return
+
+    # â”€â”€ Advanced features router (catalogue/order/tracking/broadcast opt-in) â”€â”€
+    if ADVANCED_FEATURES_AVAILABLE:
+        advanced_response = route_advanced_feature(
+            message_type=msg_type,
+            message_body=user_text,
+            wa_from=from_number,
+            user_state={
+                "language": lang,
+                "contact_name": contact_name,
+                "message_id": msg_id,
+                "interactive_id": interactive_id,
+            },
+            message_data=msg,
+        )
+        if advanced_response is not None:
+            _save_message_id(msg_id)
+            return
+
+    # â”€â”€ AI fallback (with cooldown) â”€â”€
+    if not user_text:
+        return
+
+    if _is_on_cooldown(f"WA#{from_number}"):
+        logger.info(f"[WA] Cooldown active for {from_number}")
+        return
+
+    ai_reply = _get_ai_reply(contact_name, user_text, user_text, "WhatsApp", lang)
+    if not ai_reply:
+        logger.error("[WA] AI reply generation failed â€” sending fallback message instead of staying silent")
+        _send_whatsapp_text(from_number, _t("ai_fallback_error", lang))
+        _save_message_id(msg_id)
+        return
+
+    logger.info(f"[WA] AI reply: {ai_reply[:200]}")
+    if _send_reply_with_menu(from_number, ai_reply, lang):
+        _save_state(f"WA#{from_number}", msg_id, "WhatsApp", ai_reply)
+        _save_message_id(msg_id)
+        logger.info(f"[WA] DONE â€” replied to {from_number}")
+
+
+def _is_sample_trigger(text: str) -> bool:
+    t = text.lower().strip()
+    return any(kw in t for kw in SAMPLE_TRIGGERS)
+
+
+def _send_product_detail_with_buttons(to_number: str, product: str, phone: str, lang: str = "en"):
+    """Send product detail text + 3 reply buttons: Place Order / Other Product / Go Back."""
+    detail_text = _build_product_detail(product, phone, lang)
+    _send_whatsapp_text(to_number, detail_text)
+
+    safe_id = re.sub(r"[^a-zA-Z0-9_]", "_", product)[:50]
+
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type":    "individual",
+        "to":                to_number,
+        "type":              "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": "What would you like to do?"},
+            "action": {
+                "buttons": [
+                    {"type": "reply", "reply": {
+                        "id":    "prod_quote_" + safe_id,
+                        "title": "Place Order",
+                    }},
+                    {"type": "reply", "reply": {
+                        "id":    "menu_catalogue",
+                        "title": "Other Product",
+                    }},
+                    {"type": "reply", "reply": {
+                        "id":    "menu_main",
+                        "title": "Go Back",
+                    }},
+                ],
+            },
+        },
+    }
+    _send_whatsapp_payload(to_number, payload)
+
+
+
+
+def _start_sell_flow(to_number: str, contact_name: str, lang: str = "en"):
+    """Start Sell Your Produce flow â€” CTA button + WhatsApp text option."""
+    _save_flow_state(to_number, "sell", "step1_crop", {"contact_name": contact_name, "lang": lang})
+    
+    form_url = "https://aarvex-admin-dashboard-prod.s3.ap-southeast-1.amazonaws.com/sell-form.html"
+    
+    sell_cta = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": to_number,
+        "type": "interactive",
+        "interactive": {
+            "type": "cta_url",
+            "body": {
+                "text": (
+                    "Sell Your Produce - Aarvex Global\n\n"
+                    "*Sell Your Produce - Aarvex Global*\n\n"
+                    "ðŸŒ¾ *English:* Tap the button below to list your crop.\n"
+                    "â±ï¸ The form takes *only 2 minutes* to submit.\n\n"
+                    "ðŸŒ¾ *à¤¹à¤¿à¤‚à¤¦à¥€:* à¤…à¤ªà¤¨à¥€ à¤«à¤¸à¤² à¤•à¥‹ à¤²à¤¿à¤¸à¥à¤Ÿ à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤¨à¥€à¤šà¥‡ à¤¦à¤¿à¤ à¤—à¤ à¤¬à¤Ÿà¤¨ à¤ªà¤° à¤Ÿà¥ˆà¤ª à¤•à¤°à¥‡à¤‚à¥¤\n"
+                    "â±ï¸ à¤«à¥‰à¤°à¥à¤® à¤¸à¤¬à¤®à¤¿à¤Ÿ à¤•à¤°à¤¨à¥‡ à¤®à¥‡à¤‚ *à¤¸à¤¿à¤°à¥à¤« 2 à¤®à¤¿à¤¨à¤Ÿ* à¤•à¤¾ à¤¸à¤®à¤¯ à¤²à¤—à¤¤à¤¾ à¤¹à¥ˆà¥¤"
+                ),
+            },
+            "action": {
+                "name": "cta_url",
+                "parameters": {
+                    "display_text": "List My Produce",
+                    "url": form_url,
+                },
+            },
+        },
+    }
+    _send_whatsapp_payload(to_number, sell_cta)
+    _send_whatsapp_text(
+        to_number,
+        "ðŸ“² *Alternatively, you can send these details in a single WhatsApp message:*\n"
+        "à¤¯à¤¾ à¤«à¤¿à¤°, à¤†à¤ª à¤¯à¤¹ à¤µà¤¿à¤µà¤°à¤£ à¤à¤• à¤¹à¥€ à¤µà¥à¤¹à¤¾à¤Ÿà¥à¤¸à¤à¤ª (WhatsApp) à¤¸à¤‚à¤¦à¥‡à¤¶ à¤®à¥‡à¤‚ à¤­à¥‡à¤œ à¤¸à¤•à¤¤à¥‡ à¤¹à¥ˆà¤‚:\n\n"
+        
+        "ðŸ“Œ *Format:*\n"
+        "â€¢ *CROP:* Name of your produce / à¤«à¤¸à¤² à¤•à¤¾ à¤¨à¤¾à¤®\n"
+        "â€¢ *QUANTITY:* Available quantity / à¤‰à¤ªà¤²à¤¬à¥à¤§ à¤®à¤¾à¤¤à¥à¤°à¤¾ (kg/MT)\n"
+        "â€¢ *PRICE:* Your expected price / à¤†à¤ªà¤•à¥€ à¤…à¤ªà¥‡à¤•à¥à¤·à¤¿à¤¤ à¤•à¥€à¤®à¤¤ (Rs/kg)\n\n"
+        
+        "ðŸ’¡ *Example / à¤‰à¤¦à¤¾à¤¹à¤°à¤£:*\n"
+        "CROP: Red Chili\n"
+        "QUANTITY: 500 kg\n"
+        "PRICE: 150"
+    )
+
+
+
+def _continue_sell_flow(to_number: str, contact_name: str, user_text: str, step: str, data: dict, msg_id: str, lang: str = "en") -> bool:
+    """Continue Sell Your Produce flow."""
+    import re as _re
+
+    def parse_kv(text):
+        result = {}
+        for line in text.strip().splitlines():
+            if ":" in line:
+                k, _, v = line.partition(":")
+                result[k.strip().lower()] = v.strip()
+        return result
+
+    if step == "step1_crop":
+        vals = parse_kv(user_text)
+        crop = vals.get("crop", "")
+        quantity = vals.get("quantity", "")
+        price = vals.get("price", "")
+        if not crop or not quantity:
+            _send_whatsapp_text(to_number, "âš ï¸ CROP aur QUANTITY zaroori hain. Kripya dobara bhejein.\nExample:\nCROP: Lal Mirch\nQUANTITY: 500 kg\nPRICE: 150")
+            return True
+        data.update({"crop": crop, "quantity_available_kg": quantity, "expected_price": price})
+        _save_flow_state(to_number, "sell", "step2_location", data)
+        _send_whatsapp_text(
+            to_number,
+            "ðŸŒ¾ *SELL YOUR PRODUCE â€” Step 2 of 3*\n"
+            f"{SEPARATOR}\n"
+            "Apni location details bhejein:\n\n"
+            "CITY: Aapka shehar\n"
+            "STATE: Aapka rajya\n"
+            "PINCODE: PIN code\n\n"
+            "*Example:*\n"
+            "CITY: Nagpur\n"
+            "STATE: Maharashtra\n"
+            "PINCODE: 440001"
+        )
+        return True
+
+    if step == "step2_location":
+        vals = parse_kv(user_text)
+        city = vals.get("city", "")
+        state = vals.get("state", "")
+        pincode = vals.get("pincode", "")
+        if not city or not state:
+            _send_whatsapp_text(to_number, "âš ï¸ CITY aur STATE zaroori hain. Kripya dobara bhejein.")
+            return True
+        data.update({"location_city": city, "location_state": state, "pincode": pincode})
+        _save_flow_state(to_number, "sell", "step3_contact", data)
+        _send_whatsapp_text(
+            to_number,
+            "ðŸŒ¾ *SELL YOUR PRODUCE â€” Step 3 of 3*\n"
+            f"{SEPARATOR}\n"
+            "Apni contact details bhejein:\n\n"
+            "NAME: Aapka poora naam\n"
+            "MOBILE: Mobile number\n"
+            "EMAIL: Email (optional)\n\n"
+            "*Example:*\n"
+            "NAME: Ramesh Patel\n"
+            "MOBILE: 9876543210\n"
+            "EMAIL: ramesh@email.com"
+        )
+        return True
+
+    if step == "step3_contact":
+        vals = parse_kv(user_text)
+        name = vals.get("name", contact_name)
+        mobile = _re.sub(r"[\s\-]", "", vals.get("mobile", to_number))
+        email = vals.get("email", "")
+        if not name or not mobile:
+            _send_whatsapp_text(to_number, "âš ï¸ NAME aur MOBILE zaroori hain. Kripya dobara bhejein.")
+            return True
+        data.update({"contact_name": name, "mobile": mobile, "email": email, "whatsapp_number": to_number})
+
+        # Save to DynamoDB as Exporter Ticket
+        try:
+            from advanced_features import create_exporter_ticket
+            ticket_id = create_exporter_ticket({
+                "contact_name": name,
+                "mobile": mobile,
+                "email": email,
+                "whatsapp_number": to_number,
+                "product_name": data.get("crop", ""),
+                "quantity_available_kg": data.get("quantity_available_kg", ""),
+                "expected_price": data.get("expected_price", ""),
+                "location_city": data.get("location_city", ""),
+                "location_state": data.get("location_state", ""),
+                "pincode": data.get("pincode", ""),
+                "status": "new",
+                "source": "whatsapp",
+            })
+            logger.info(f"[SELL] Exporter ticket created: {ticket_id}")
+        except Exception as e:
+            logger.error(f"[SELL] Ticket creation failed: {e}")
+            ticket_id = None
+
+        # Confirmation message
+        summary = (
+            "âœ… *SELL REQUEST REGISTERED!*\n"
+            f"{SEPARATOR}\n"
+            f"ðŸŒ¾ Crop: {data.get('crop')}\n"
+            f"âš–ï¸ Quantity: {data.get('quantity_available_kg')}\n"
+            f"ðŸ’° Expected Price: â‚¹{data.get('expected_price', 'N/A')}/kg\n"
+            f"ðŸ“ Location: {data.get('location_city')}, {data.get('location_state')}\n"
+            f"ðŸ‘¤ Name: {name}\n"
+            f"ðŸ“ž Mobile: {mobile}\n"
+            f"{SEPARATOR}\n"
+            "Our team will contact you within 24 hours.\n"
+            "ðŸ“ž +91-8767205473 | âœ‰ï¸ aarvexglo@gmail.com"
+        )
+        if ticket_id:
+            summary += f"\n\nðŸŽ« Reference ID: {ticket_id[:8].upper()}"
+
+        _send_reply_with_menu(to_number, summary, lang)
+        _clear_flow_state(to_number)
+        _save_message_id(msg_id)
+        return True
+
+    return False
+
+def _save_rating(phone: str, stars: str):
+    """Persist customer rating to DynamoDB."""
+    try:
+        table.put_item(Item={
+            "pk":         f"RATING#WA#{phone}",
+            "stars":      stars,
+            "phone":      phone,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "ttl":        int(time.time()) + 86400 * 90,
+        })
+        logger.info(f"[RATING] Saved {stars} stars for {phone}")
+    except ClientError as e:
+        logger.error(f"[DYNAMO] Save rating error: {e}")
+
+
+
+
+def _save_feedback(phone: str, name: str, message: str, lang: str = "en"):
+    """Persist customer text feedback to DynamoDB for admin dashboard."""
+    try:
+        import uuid as _uuid
+        feedback_id = str(_uuid.uuid4())
+        table.put_item(Item={
+            "pk":          f"FEEDBACK#{feedback_id}",
+            "feedback_id": feedback_id,
+            "phone":       phone,
+            "name":        name or "",
+            "message":     message[:2000],
+            "lang":        lang,
+            "status":      "unread",
+            "created_at":  datetime.now(timezone.utc).isoformat(),
+            "ttl":         int(time.time()) + 86400 * 365,
+        })
+        logger.info(f"[FEEDBACK] Saved feedback from {phone}")
+    except ClientError as e:
+        logger.error(f"[DYNAMO] Save feedback error: {e}")
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  WHATSAPP MENU & SEND HELPERS
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _send_language_picker(to_number: str):
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type":    "individual",
+        "to":                to_number,
+        "type":              "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": TEXTS["en"]["lang_picker_body"][:4096]},
+            "action": {
+                "buttons": [
+                    {"type": "reply", "reply": {"id": "lang_hi", "title": "ðŸ‡®ðŸ‡³ à¤¹à¤¿à¤‚à¤¦à¥€"}},
+                    {"type": "reply", "reply": {"id": "lang_en", "title": "ðŸ‡¬ðŸ‡§ English"}},
+                ],
+            },
+        },
+    }
+    return _send_whatsapp_payload(to_number, payload)
+
+
+def _send_main_menu(to_number: str, lang: str, is_welcome: bool = False):
+    body = _t("welcome_body", lang) if is_welcome else _t("menu_body", lang)
+    _send_whatsapp_list_menu(to_number, body, lang)
+
+
+def _send_whatsapp_list_menu(to_number: str, body_text: str, lang: str = "en"):
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type":    "individual",
+        "to":                to_number,
+        "type":              "interactive",
+        "interactive": {
+            "type":   "list",
+            "body":   {"text": body_text[:4096]},
+            "action": {
+                "button":   _t("list_button", lang)[:20],
+                "sections": [{"title": _t("list_section", lang)[:24], "rows": _get_menu_rows(lang)}],
+            },
+        },
+    }
+    return _send_whatsapp_payload(to_number, payload)
+
+
+def _send_view_menu_button(to_number: str, lang: str = "en"):
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type":    "individual",
+        "to":                to_number,
+        "type":              "interactive",
+        "interactive": {
+            "type": "button",
+            "body": {"text": _t("view_menu_hint", lang)[:1024]},
+            "action": {
+                "buttons": [
+                    {"type": "reply", "reply": {
+                        "id":    "menu_main",
+                        "title": _t("view_menu_btn", lang)[:20],
+                    }},
+                ],
+            },
+        },
+    }
+    return _send_whatsapp_payload(to_number, payload)
+
+
+def _send_reply_with_menu(to_number: str, text: str, lang: str = "en") -> bool:
+    ok = _send_whatsapp_text(to_number, text)
+    if ok:
+        _send_action_buttons(to_number, lang)
+    return ok
+
+
+def _send_action_buttons(to_number: str, lang: str = "en"):
+    """Send a dropdown list (View Menu + Social Connect) shown after every reply."""
+    rows = [
+        {"id": "menu_main",          "title": _t("view_menu_btn", lang)[:24]},
+        {"id": "social_connect_menu", "title": _t("social_connect_btn", lang)[:24]},
+    ]
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type":    "individual",
+        "to":                to_number,
+        "type":              "interactive",
+        "interactive": {
+            "type": "list",
+            "body": {"text": _t("action_footer_hint", lang)[:1024]},
+            "action": {
+                "button":   _t("action_list_button", lang)[:20],
+                "sections": [{"title": _t("action_list_section", lang)[:24], "rows": rows}],
+            },
+        },
+    }
+    _send_whatsapp_payload(to_number, payload)
+
+
+def _handle_menu_selection(to_number: str, contact_name: str, menu_id: str, msg_id: str, lang: str = "en"):
+    if menu_id == "menu_language":
+        _send_language_picker(to_number)
+        _save_message_id(msg_id)
+        return
+
+    if menu_id == "menu_catalogue":
+        if ADVANCED_FEATURES_AVAILABLE:
+            advanced_response = route_advanced_feature(
+                message_type="interactive",
+                message_body="menu_catalogue",
+                wa_from=to_number,
+                user_state={"language": lang, "contact_name": contact_name, "message_id": msg_id, "interactive_id": "menu_catalogue"},
+                message_data={"id": msg_id},
+            )
+            if advanced_response is not None:
+                _save_message_id(msg_id)
+                return
+        _send_catalogue_product_list(to_number, lang, mode="detail")
+        _save_message_id(msg_id)
+        return
+
+    if menu_id == "menu_track_order":
+        if ADVANCED_FEATURES_AVAILABLE:
+            route_advanced_feature(
+                message_type="interactive",
+                message_body="menu_track_order",
+                wa_from=to_number,
+                user_state={"language": lang, "contact_name": contact_name, "message_id": msg_id, "interactive_id": "menu_track_order"},
+                message_data={"id": msg_id},
+            )
+        else:
+            _send_reply_with_menu(to_number, "Order tracking is not available right now.", lang)
+        _save_message_id(msg_id)
+        return
+
+    if menu_id == "menu_quote":
+        _send_catalogue_product_list(to_number, lang, mode="quote")
+        _save_message_id(msg_id)
+        return
+
+    if menu_id == "social_connect_menu":
+        _send_social_connect_list(to_number, lang)
+        _save_message_id(msg_id)
+        return
+
+    handlers = {
+        "menu_export":    lambda: _send_reply_with_menu(to_number, _build_export_services_message(lang), lang),
+        "menu_sell":      lambda: _start_sell_flow(to_number, contact_name, lang),
+        "menu_about":     lambda: _send_reply_with_menu(to_number, _build_about_message(lang), lang),
+        "menu_terms":     lambda: _send_reply_with_menu(to_number, _build_terms_message(lang), lang),
+        "menu_feedback":  lambda: _start_feedback_flow(to_number, contact_name, lang),
+        "menu_talk":      lambda: _send_reply_with_menu(to_number, _build_talk_to_team_message(lang), lang),
+    }
+    handler = handlers.get(menu_id)
+    if handler:
+        handler()
+        _save_message_id(msg_id)
+        logger.info(f"[WA] Menu handled: {menu_id} lang={lang}")
+
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  CATALOGUE INTERACTIVE LIST (tap-to-select)
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _send_catalogue_product_list(to_number: str, lang: str = "en", mode: str = "detail"):
+    """
+    Send interactive list of all products.
+    mode='detail' â†’ tapping opens product detail + quote/sample buttons
+    mode='quote'  â†’ tapping starts quote flow (ask qty only)
+    """
+    products = _get_products()
+    rows = []
+    for idx, p in enumerate(products):
+        row_id = f"cat_{mode}_{idx}"
+        rows.append({
+            "id":          row_id,
+            "title":       p[:24],
+            "description": ("View details & request quote" if lang == "en" else "à¤µà¤¿à¤µà¤°à¤£ à¤µ à¤•à¥‹à¤Ÿ à¤¦à¥‡à¤–à¥‡à¤‚"),
+        })
+
+    if mode == "quote":
+        header_text = _t("quote_pick_header", lang)
+        body_text   = _t("quote_pick_body", lang)
+        btn_label   = _t("catalogue_list_btn", lang)[:20]
+    else:
+        header_text = _t("catalogue_header", lang)
+        body_text   = _t("catalogue_pick", lang)
+        btn_label   = _t("catalogue_list_btn", lang)[:20]
+
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type":    "individual",
+        "to":                to_number,
+        "type":              "interactive",
+        "interactive": {
+            "type":   "list",
+            "body":   {"text": f"{header_text}\n\n{body_text}"[:1024]},
+            "action": {
+                "button":   btn_label,
+                "sections": [{"title": _t("catalogue_list_section", lang)[:24], "rows": rows}],
+            },
+        },
+    }
+    _send_whatsapp_payload(to_number, payload)
+
+
+def _send_social_connect_list(to_number: str, lang: str = "en"):
+    """Send interactive list of all social media platforms."""
+    rows = []
+    for sid, name, emoji, url in SOCIAL_LINKS:
+        rows.append({
+            "id":          sid,
+            "title":       f"{emoji} {name}"[:24],
+            "description": url[:72],
+        })
+
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type":    "individual",
+        "to":                to_number,
+        "type":              "interactive",
+        "interactive": {
+            "type":   "list",
+            "body":   {"text": f"{_t('social_list_header', lang)}\n\n{_t('social_list_body', lang)}"[:1024]},
+            "action": {
+                "button":   _t("social_list_button", lang)[:20],
+                "sections": [{"title": _t("social_list_section", lang)[:24], "rows": rows}],
+            },
+        },
+    }
+    _send_whatsapp_payload(to_number, payload)
+
+
+def _send_social_link_cta(to_number: str, lang: str, emoji: str, name: str, url: str) -> bool:
+    """Send the chosen platform's link as a tappable CTA-URL button.
+
+    Tapping the button opens the link directly in the browser/app â€” the raw
+    URL is no longer shown as copy-paste text inside the message body.
+    """
+    body_text = _t("social_link_body", lang, emoji=emoji, name=name)
+    btn_text  = _t("social_link_btn", lang, name=name)[:20]
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type":    "individual",
+        "to":                to_number,
+        "type":              "interactive",
+        "interactive": {
+            "type": "cta_url",
+            "body": {"text": body_text[:1024]},
+            "action": {
+                "name": "cta_url",
+                "parameters": {
+                    "display_text": btn_text,
+                    "url":          url,
+                },
+            },
+        },
+    }
+    ok = _send_whatsapp_payload(to_number, payload)
+    if ok:
+        _send_action_buttons(to_number, lang)
+    return ok
+
+
+def _send_rating_list(to_number: str, lang: str = "en"):
+    """Send interactive 1â€“5 star rating list."""
+    star_map = [
+        ("rating_5", "â­â­â­â­â­", "5"),
+        ("rating_4", "â­â­â­â­",   "4"),
+        ("rating_3", "â­â­â­",     "3"),
+        ("rating_2", "â­â­",       "2"),
+        ("rating_1", "â­",        "1"),
+    ]
+    rows = []
+    for rid, stars, n in star_map:
+        plural = "" if n == "1" else "s"
+        rows.append({
+            "id":          rid,
+            "title":       stars[:24],
+            "description": _t("rating_row", lang, stars=n, plural=plural)[:72],
+        })
+
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type":    "individual",
+        "to":                to_number,
+        "type":              "interactive",
+        "interactive": {
+            "type":   "list",
+            "body":   {"text": f"{_t('rating_header', lang)}\n\n{_t('rating_body', lang)}"[:1024]},
+            "action": {
+                "button":   _t("rating_list_btn", lang)[:20],
+                "sections": [{"title": _t("rating_list_section", lang)[:24], "rows": rows}],
+            },
+        },
+    }
+    _send_whatsapp_payload(to_number, payload)
+
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  SAMPLE REQUEST FLOW
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _start_sample_flow(to_number: str, contact_name: str, msg_id: str, lang: str = "en"):
+    products = _get_products()
+    product_list = "\n".join(f"{i+1}. {p}" for i, p in enumerate(products))
+    msg = (
+        f"{_t('sample_header', lang)}\n"
+        f"{SEPARATOR}\n"
+        f"{_t('sample_products', lang)}\n"
+        f"{product_list}\n"
+        f"{SEPARATOR}\n"
+        f"{_t('sample_reply', lang)}"
+    )
+    _save_flow_state(to_number, "sample", "product", {"contact_name": contact_name, "lang": lang})
+    _send_reply_with_menu(to_number, msg, lang)
+    _save_message_id(msg_id)
+
+
+def _start_feedback_flow(to_number: str, contact_name: str, lang: str = "en"):
+    _save_flow_state(to_number, "feedback", "message", {"contact_name": contact_name, "lang": lang})
+    _send_whatsapp_text(
+        to_number,
+        f"{_t('feedback_header', lang)}\n{SEPARATOR}\n{_t('feedback_ask', lang)}",
+    )
+
+
+def _continue_flow(to_number: str, contact_name: str, user_text: str, flow: dict, msg_id: str, lang: str = "en") -> bool:
+    flow_type = flow.get("flow", "")
+    step      = flow.get("step", "")
+    data      = flow.get("data", {})
+    lang      = data.get("lang") or lang or _get_lang(to_number) or "en"
+
+    if flow_type == "sample":
+        return _continue_sample_flow(to_number, contact_name, user_text, step, data, msg_id, lang)
+
+    if flow_type == "quote":
+        return _continue_quote_flow(to_number, contact_name, user_text, step, data, msg_id, lang)
+
+    if flow_type == "feedback":
+        if step == "message" and user_text.strip():
+            # Save feedback to DynamoDB so admin dashboard can show it
+            _save_feedback(to_number, data.get("contact_name", contact_name), user_text, lang)
+            ticket_id = _create_zoho_ticket(
+                subject=f"WhatsApp Feedback â€” {contact_name}",
+                description=f"From: {to_number}\nName: {data.get('contact_name', contact_name)}\n\n{user_text}",
+                phone=to_number,
+                name=data.get("contact_name", contact_name),
+            )
+            thanks = _t("feedback_thanks", lang)
+            if ticket_id:
+                thanks += f"\nTicket: #{ticket_id}"
+            _send_reply_with_menu(to_number, thanks, lang)
+            _clear_flow_state(to_number)
+            _save_message_id(msg_id)
+            return True
+        return False
+
+    if flow_type == "sell":
+        return _continue_sell_flow(to_number, contact_name, user_text, step, data, msg_id, lang)
+
+    return False
+
+
+def _continue_quote_flow(to_number, contact_name, user_text, step, data, msg_id, lang="en") -> bool:
+    """Quote flow: qty â†’ demand confirmation â†’ rating."""
+    if step == "quantity":
+        qty = _extract_quantity(user_text) or user_text.strip()
+        if not qty or len(qty) < 2:
+            _send_reply_with_menu(to_number, _t("quote_qty_invalid", lang), lang)
+            _save_message_id(msg_id)
+            return True
+
+        product    = data.get("product", "Product")
+        sym        = _currency_symbol(to_number)
+        buyer_type = "Indian" if sym == "â‚¹" else "International"
+        if lang == "hi":
+            buyer_type = "à¤­à¤¾à¤°à¤¤à¥€à¤¯" if sym == "â‚¹" else "à¤…à¤‚à¤¤à¤°à¥à¤°à¤¾à¤·à¥à¤Ÿà¥à¤°à¥€à¤¯"
+
+        # Create Zoho lead
+        _create_zoho_lead(
+            name=data.get("contact_name", contact_name),
+            phone=to_number,
+            product=product,
+            quantity=qty,
+            description=f"Product: {product} | Qty: {qty} | Buyer: {buyer_type}",
+            buyer_type=buyer_type,
+        )
+
+        # 1. Send quote received confirmation
+        quote_msg = _t(
+            "quote_received", lang,
+            product=product, qty=qty, buyer_type=buyer_type,
+            sym=sym, hours=QUOTE_VALID_HOURS,
+            phone=COMPANY_PHONE, email=COMPANY_EMAIL,
+        )
+        _send_whatsapp_text(to_number, quote_msg)
+
+        # 2. Send separate DEMAND confirmation message
+        demand_header = _t("demand_header", lang)
+        demand_msg = (
+            f"{demand_header}\n"
+            f"{SEPARATOR}\n"
+            f"ðŸ“¦ {'Product' if lang=='en' else 'à¤‰à¤¤à¥à¤ªà¤¾à¤¦'}: *{product}*\n"
+            f"âš–ï¸ {'Quantity' if lang=='en' else 'à¤®à¤¾à¤¤à¥à¤°à¤¾'}: *{qty}*\n"
+            f"ðŸŒ {'Buyer' if lang=='en' else 'à¤–à¤°à¥€à¤¦à¤¾à¤°'}: {buyer_type}\n"
+            f"{SEPARATOR}\n"
+            f"{'âœ… Your demand has been registered. Our team will contact you shortly with pricing.' if lang=='en' else 'âœ… à¤†à¤ªà¤•à¥€ à¤®à¤¾à¤‚à¤— à¤¦à¤°à¥à¤œ à¤¹à¥‹ à¤—à¤ˆà¥¤ à¤¹à¤®à¤¾à¤°à¥€ à¤Ÿà¥€à¤® à¤œà¤²à¥à¤¦ à¤•à¥€à¤®à¤¤ à¤•à¥‡ à¤¸à¤¾à¤¥ à¤¸à¤‚à¤ªà¤°à¥à¤• à¤•à¤°à¥‡à¤—à¥€à¥¤'}\n"
+            f"ðŸ“ž {COMPANY_PHONE} | âœ‰ï¸ {COMPANY_EMAIL}"
+        )
+        _send_reply_with_menu(to_number, demand_msg, lang)
+
+        # 3. Send rating request
+        _send_rating_list(to_number, lang)
+
+        _clear_flow_state(to_number)
+        _save_message_id(msg_id)
+        return True
+
+    return False
+
+
+def _continue_sample_flow(to_number, contact_name, user_text, step, data, msg_id, lang="en") -> bool:
+    if step == "product":
+        product = _match_product_in_text(user_text) or user_text.strip()
+        if not product:
+            _send_reply_with_menu(to_number, _t("sample_invalid_product", lang), lang)
+            _save_message_id(msg_id)
+            return True
+        data["product"] = product
+        _save_flow_state(to_number, "sample", "quantity", data)
+        _send_whatsapp_text(to_number, _t("sample_product_ok", lang, product=product))
+        _save_message_id(msg_id)
+        return True
+
+    if step == "quantity":
+        qty = _extract_quantity(user_text) or user_text.strip()
+        if not _validate_sample_quantity(qty):
+            _send_reply_with_menu(to_number, _t("sample_qty_invalid", lang), lang)
+            _save_message_id(msg_id)
+            return True
+        data["quantity"] = qty
+        _save_flow_state(to_number, "sample", "address", data)
+        _send_whatsapp_text(to_number, _t("sample_ask_address", lang))
+        _save_message_id(msg_id)
+        return True
+
+    if step == "address":
+        if len(user_text.strip()) < 10:
+            _send_reply_with_menu(to_number, _t("sample_address_invalid", lang), lang)
+            _save_message_id(msg_id)
+            return True
+
+        data["address"] = user_text.strip()
+        total = SAMPLE_BASE_COST + COURIER_CHARGES
+        upi_link = (
+            f"upi://pay?pa={urllib.parse.quote(COMPANY_UPI)}"
+            f"&pn=Aarvex%20Global&am={total}&cu=INR&tn=Sample%20{urllib.parse.quote(data['product'])}"
+        )
+
+        ticket_id = _create_zoho_ticket(
+            subject=f"Sample Request â€” {data['product']}",
+            description=(
+                f"Product: {data['product']}\n"
+                f"Quantity: {data['quantity']}\n"
+                f"Address: {data['address']}\n"
+                f"Phone: {to_number}\n"
+                f"Sample Cost: â‚¹{SAMPLE_BASE_COST}\n"
+                f"Courier: â‚¹{COURIER_CHARGES}\n"
+                f"Total: â‚¹{total}\n"
+                f"Payment: {COMPANY_UPI}"
+            ),
+            phone=to_number,
+            name=data.get("contact_name", contact_name),
+        )
+
+        msg = _t(
+            "sample_summary", lang,
+            product=data["product"],
+            qty=data["quantity"],
+            address=data["address"][:60] + "...",
+            sample_cost=SAMPLE_BASE_COST,
+            courier=COURIER_CHARGES,
+            total=total,
+            upi=COMPANY_UPI,
+            upi_link=upi_link,
+        )
+        if ticket_id:
+            msg += f"\nðŸŽ« Ticket: #{ticket_id}"
+
+        _send_reply_with_menu(to_number, msg, lang)
+
+        # Send rating after sample order registered
+        _send_rating_list(to_number, lang)
+
+        _clear_flow_state(to_number)
+        _save_message_id(msg_id)
+        return True
+
+    return False
+
+
+def _validate_sample_quantity(qty: str) -> bool:
+    m = re.search(r"(\d+(?:\.\d+)?)\s*(g|kg)", qty, re.IGNORECASE)
+    if not m:
+        return False
+    val = float(m.group(1))
+    unit = m.group(2).lower()
+    grams = val if unit == "g" else val * 1000
+    return 100 <= grams <= 1000
+
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  QUOTE REQUEST FLOW
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _handle_quote_request(to_number, contact_name, product, quantity, full_text, msg_id, lang="en"):
+    sym = _currency_symbol(to_number)
+    buyer_type = "Indian" if sym == "â‚¹" else "International"
+    if lang == "hi":
+        buyer_type = "à¤­à¤¾à¤°à¤¤à¥€à¤¯" if sym == "â‚¹" else "à¤…à¤‚à¤¤à¤°à¥à¤°à¤¾à¤·à¥à¤Ÿà¥à¤°à¥€à¤¯"
+
+    _create_zoho_lead(
+        name=contact_name,
+        phone=to_number,
+        product=product,
+        quantity=quantity,
+        description=full_text,
+        buyer_type=buyer_type,
+    )
+
+    # 1. Quote received message
+    quote_msg = _t(
+        "quote_received", lang,
+        product=product, qty=quantity, buyer_type=buyer_type,
+        sym=sym, hours=QUOTE_VALID_HOURS,
+        phone=COMPANY_PHONE, email=COMPANY_EMAIL,
+    )
+    _send_whatsapp_text(to_number, quote_msg)
+
+    # 2. Separate demand confirmation message
+    demand_msg = (
+        f"{_t('demand_header', lang)}\n"
+        f"{SEPARATOR}\n"
+        f"ðŸ“¦ {'Product' if lang=='en' else 'à¤‰à¤¤à¥à¤ªà¤¾à¤¦'}: *{product}*\n"
+        f"âš–ï¸ {'Quantity' if lang=='en' else 'à¤®à¤¾à¤¤à¥à¤°à¤¾'}: *{quantity}*\n"
+        f"ðŸŒ {'Buyer' if lang=='en' else 'à¤–à¤°à¥€à¤¦à¤¾à¤°'}: {buyer_type}\n"
+        f"{SEPARATOR}\n"
+        f"{'âœ… Your demand has been registered. Our team will contact you shortly with pricing.' if lang=='en' else 'âœ… à¤†à¤ªà¤•à¥€ à¤®à¤¾à¤‚à¤— à¤¦à¤°à¥à¤œ à¤¹à¥‹ à¤—à¤ˆà¥¤ à¤¹à¤®à¤¾à¤°à¥€ à¤Ÿà¥€à¤® à¤œà¤²à¥à¤¦ à¤•à¥€à¤®à¤¤ à¤•à¥‡ à¤¸à¤¾à¤¥ à¤¸à¤‚à¤ªà¤°à¥à¤• à¤•à¤°à¥‡à¤—à¥€à¥¤'}\n"
+        f"ðŸ“ž {COMPANY_PHONE} | âœ‰ï¸ {COMPANY_EMAIL}"
+    )
+    _send_reply_with_menu(to_number, demand_msg, lang)
+
+    # 3. Rating request
+    _send_rating_list(to_number, lang)
+
+    _save_state(f"WA#{to_number}", msg_id, "WhatsApp-Quote", quote_msg[:500])
+    _save_message_id(msg_id)
+    logger.info(f"[WA] Quote request handled for {to_number}: {product} {quantity}")
+
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  FLOW STATE (DynamoDB)
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _get_flow_state(phone: str) -> dict:
+    try:
+        resp = table.get_item(Key={"pk": f"FLOW#WA#{phone}"})
+        return resp.get("Item") or {}
+    except ClientError:
+        return {}
+
+
+def _save_flow_state(phone: str, flow: str, step: str, data: dict):
+    try:
+        table.put_item(Item={
+            "pk":      f"FLOW#WA#{phone}",
+            "flow":    flow,
+            "step":    step,
+            "data":    data,
+            "updated": datetime.now(timezone.utc).isoformat(),
+            "ttl":     int(time.time()) + 86400,
+        })
+    except ClientError as e:
+        logger.error(f"[DYNAMO] Save flow error: {e}")
+
+
+def _clear_flow_state(phone: str):
+    try:
+        table.delete_item(Key={"pk": f"FLOW#WA#{phone}"})
+    except ClientError as e:
+        logger.error(f"[DYNAMO] Clear flow error: {e}")
+
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  ZOHO DESK + CRM
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _create_zoho_ticket(subject: str, description: str, phone: str, name: str) -> str:
+    if not ZOHO_ACCESS_TOKEN or not ZOHO_DESK_ORG_ID:
+        logger.warning("[ZOHO] Desk credentials not set â€” skipping ticket creation")
+        return ""
+
+    payload = {
+        "subject":     subject[:255],
+        "description": description,
+        "phone":       phone,
+        "contact":     {"lastName": name or "WhatsApp Customer", "phone": phone},
+        "channel":     "WhatsApp",
+        "priority":    "High",
+    }
+    if ZOHO_DESK_DEPARTMENT_ID:
+        payload["departmentId"] = ZOHO_DESK_DEPARTMENT_ID
+
+    url = f"{ZOHO_API_DOMAIN.rstrip('/')}/api/v1/tickets"
+    result = _zoho_post(url, payload, org_id=ZOHO_DESK_ORG_ID)
+    if result:
+        ticket_id = str(result.get("id", ""))
+        logger.info(f"[ZOHO] Ticket created: {ticket_id}")
+        return ticket_id
+    return ""
+
+
+def _create_zoho_lead(name: str, phone: str, product: str, quantity: str,
+                      description: str, buyer_type: str) -> str:
+    if not ZOHO_ACCESS_TOKEN:
+        logger.warning("[ZOHO] Access token not set â€” skipping lead creation")
+        return ""
+
+    lead_data = {
+        "Last_Name":   name or "WhatsApp Lead",
+        "Phone":       phone,
+        "Lead_Source": "WhatsApp",
+        "Company":     "WhatsApp Inquiry",
+        "Description": (
+            f"Product: {product}\nQuantity: {quantity}\n"
+            f"Buyer Type: {buyer_type}\nMessage: {description}"
+        ),
+    }
+
+    url = f"{ZOHO_CRM_DOMAIN.rstrip('/')}/crm/v2/Leads"
+    result = _zoho_post(url, {"data": [lead_data]})
+    if result:
+        records = result.get("data", [])
+        if records and records[0].get("status") == "success":
+            lead_id = records[0].get("details", {}).get("id", "")
+            logger.info(f"[ZOHO] Lead created: {lead_id}")
+            return str(lead_id)
+    return ""
+
+
+def _zoho_post(url: str, payload: dict, org_id: str = "") -> dict:
+    data = json.dumps(payload).encode()
+    headers = {
+        "Content-Type":  "application/json",
+        "Authorization": f"Zoho-oauthtoken {ZOHO_ACCESS_TOKEN}",
+    }
+    if org_id:
+        headers["orgId"] = org_id
+
+    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        logger.error(f"[ZOHO] HTTP {e.code}: {body[:500]}")
+    except Exception as e:
+        logger.error(f"[ZOHO] Exception: {e}")
+    return {}
+
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  WHATSAPP SEND HELPERS
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _send_whatsapp_text(to_number: str, message: str) -> bool:
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type":    "individual",
+        "to":                to_number,
+        "type":              "text",
+        "text":              {"preview_url": True, "body": message[:4096]},
+    }
+    return _send_whatsapp_payload(to_number, payload)
+
+
+def _send_whatsapp_reply(to_number: str, message: str) -> bool:
+    return _send_whatsapp_text(to_number, message)
+
+
+def _send_whatsapp_payload(to_number: str, payload: dict) -> bool:
+    if not WA_PHONE_NUMBER_ID:
+        logger.error("[WA] WA_PHONE_NUMBER_ID not set!")
+        return False
+
+    url = f"https://graph.facebook.com/{GRAPH_API_VERSION}/{WA_PHONE_NUMBER_ID}/messages"
+    data    = json.dumps(payload).encode()
+    headers = {
+        "Content-Type":  "application/json",
+        "Authorization": f"Bearer {WA_ACCESS_TOKEN}",
+    }
+    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read())
+            logger.info(f"[WA] Sent successfully: {json.dumps(result)[:200]}")
+            return True
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        logger.error(f"[WA] Send HTTP {e.code}: {body[:500]}")
+    except Exception as e:
+        logger.error(f"[WA] Send exception: {e}")
+    return False
+
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  INSTAGRAM DIRECT MESSAGE HANDLER (unchanged)
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _handle_instagram(payload):
+    try:
+        if not INSTAGRAM_ACCESS_TOKEN:
+            logger.error("[IG] INSTAGRAM_ACCESS_TOKEN not set in env variables!")
+            return _response(200, "Config error")
+
+        entry = payload.get("entry", [])
+        if not entry:
+            return _response(200, "No entry")
+
+        messaging_events = entry[0].get("messaging", [])
+        if not messaging_events:
+            logger.info("[IG] No messaging events â€” skipping")
+            return _response(200, "No messaging events")
+
+        for msg_event in messaging_events:
+            try:
+                _process_instagram_message(msg_event)
+            except Exception as e:
+                logger.error(f"[IG] Error processing one message: {e}", exc_info=True)
+
+        return _response(200, "OK")
+
+    except Exception as e:
+        logger.error(f"[IG] Unhandled exception: {e}", exc_info=True)
+        return _response(200, "OK")
+
+
+def _process_instagram_message(msg_event: dict):
+    message = msg_event.get("message", {})
+
+    if message.get("is_echo"):
+        logger.info("[IG] Echo message (bot's own) â€” skipping")
+        return
+
+    sender_id = msg_event.get("sender", {}).get("id", "")
+    msg_id    = message.get("mid", "")
+    msg_text  = (message.get("text") or "").strip()
+
+    if not sender_id:
+        logger.info("[IG] No sender id â€” skipping")
+        return
+
+    if not msg_text:
+        logger.info("[IG] Non-text / empty message â€” skipping")
+        return
+
+    logger.info(f"[IG] Message from {sender_id}: {msg_text[:100]}")
+
+    if _is_duplicate_message(msg_id):
+        logger.info(f"[IG] Duplicate message {msg_id} â€” skipping")
+        return
+
+    if _is_on_cooldown(f"IG#{sender_id}"):
+        logger.info(f"[IG] Cooldown active for {sender_id}")
+        return
+
+    ai_reply = _get_ai_reply("Customer", msg_text, msg_text, "Instagram Direct")
+    if not ai_reply:
+        logger.error("[IG] AI reply generation failed â€” sending fallback message instead of staying silent")
+        _send_instagram_reply(sender_id, _t("ai_fallback_error", "en"))
+        _save_message_id(msg_id)
+        return
+
+    logger.info(f"[IG] AI reply: {ai_reply[:200]}")
+
+    success = _send_instagram_reply(sender_id, ai_reply)
+    if success:
+        _save_state(f"IG#{sender_id}", msg_id, "Instagram Direct", ai_reply)
+        _save_message_id(msg_id)
+        logger.info(f"[IG] DONE â€” replied to {sender_id}")
+    else:
+        logger.error(f"[IG] Failed to send reply to {sender_id}")
+
+
+def _send_instagram_reply(recipient_id: str, message: str) -> bool:
+    ig_id = INSTAGRAM_PAGE_ID or "me"
+    url   = f"https://graph.facebook.com/{GRAPH_API_VERSION}/{ig_id}/messages"
+
+    payload = {
+        "recipient": {"id": recipient_id},
+        "message":   {"text": message},
+    }
+    data    = json.dumps(payload).encode()
+    headers = {
+        "Content-Type":  "application/json",
+        "Authorization": f"Bearer {INSTAGRAM_ACCESS_TOKEN}",
+    }
+    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read())
+            logger.info(f"[IG] Reply sent successfully: {json.dumps(result)[:200]}")
+            return True
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        logger.error(f"[IG] Send HTTP {e.code}: {body[:500]}")
+    except Exception as e:
+        logger.error(f"[IG] Send exception: {e}")
+    return False
+
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  FACEBOOK MESSENGER HANDLER (unchanged)
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _handle_facebook(payload):
+    try:
+        if not PAGE_ACCESS_TOKEN:
+            logger.error("[FB] PAGE_ACCESS_TOKEN not set in env variables!")
+            return _response(200, "Config error")
+
+        entry = payload.get("entry", [])
+        if not entry:
+            return _response(200, "No entry")
+
+        messaging_events = entry[0].get("messaging", [])
+        if not messaging_events:
+            logger.info("[FB] No messaging events â€” skipping")
+            return _response(200, "No messaging events")
+
+        for msg_event in messaging_events:
+            try:
+                _process_facebook_message(msg_event)
+            except Exception as e:
+                logger.error(f"[FB] Error processing one message: {e}", exc_info=True)
+
+        return _response(200, "OK")
+
+    except Exception as e:
+        logger.error(f"[FB] Unhandled exception: {e}", exc_info=True)
+        return _response(200, "OK")
+
+
+def _process_facebook_message(msg_event: dict):
+    message = msg_event.get("message", {})
+
+    if message.get("is_echo"):
+        logger.info("[FB] Echo message (bot's own) â€” skipping")
+        return
+
+    sender_id = msg_event.get("sender", {}).get("id", "")
+    msg_id    = message.get("mid", "")
+    msg_text  = (message.get("text") or "").strip()
+
+    if not sender_id:
+        logger.info("[FB] No sender id â€” skipping")
+        return
+
+    if not msg_text:
+        logger.info("[FB] Non-text / empty message â€” skipping")
+        return
+
+    logger.info(f"[FB] Message from {sender_id}: {msg_text[:100]}")
+
+    if _is_duplicate_message(msg_id):
+        logger.info(f"[FB] Duplicate message {msg_id} â€” skipping")
+        return
+
+    if _is_on_cooldown(f"FB#{sender_id}"):
+        logger.info(f"[FB] Cooldown active for {sender_id}")
+        return
+
+    ai_reply = _get_ai_reply("Customer", msg_text, msg_text, "Facebook Messenger")
+    if not ai_reply:
+        logger.error("[FB] AI reply generation failed â€” sending fallback message instead of staying silent")
+        _send_facebook_reply(sender_id, _t("ai_fallback_error", "en"))
+        _save_message_id(msg_id)
+        return
+
+    logger.info(f"[FB] AI reply: {ai_reply[:200]}")
+
+    success = _send_facebook_reply(sender_id, ai_reply)
+    if success:
+        _save_state(f"FB#{sender_id}", msg_id, "Facebook Messenger", ai_reply)
+        _save_message_id(msg_id)
+        logger.info(f"[FB] DONE â€” replied to {sender_id}")
+    else:
+        logger.error(f"[FB] Failed to send reply to {sender_id}")
+
+
+def _send_facebook_reply(recipient_id: str, message: str) -> bool:
+    url = f"https://graph.facebook.com/{GRAPH_API_VERSION}/me/messages"
+
+    payload = {
+        "recipient":      {"id": recipient_id},
+        "messaging_type": "RESPONSE",
+        "message":        {"text": message},
+    }
+    data    = json.dumps(payload).encode()
+    headers = {
+        "Content-Type":  "application/json",
+        "Authorization": f"Bearer {PAGE_ACCESS_TOKEN}",
+    }
+    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read())
+            logger.info(f"[FB] Reply sent successfully: {json.dumps(result)[:200]}")
+            return True
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        logger.error(f"[FB] Send HTTP {e.code}: {body[:500]}")
+    except Exception as e:
+        logger.error(f"[FB] Send exception: {e}")
+    return False
+
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  OPENROUTER AI
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _get_ai_reply(customer_name: str, subject: str, message: str, channel: str, lang: str = "en") -> str:
+    lang_hint = _t("ai_lang_hint", lang if lang in SUPPORTED_LANGS else "en")
+    system_prompt = f"{DEFAULT_SYSTEM_PROMPT}\n\nLANGUAGE: {lang_hint}"
+
+    user_message = (
+        f"Customer name: {customer_name}\n"
+        f"Platform: {channel}\n"
+        f"Preferred language: {lang}\n"
+        f"Subject: {subject}\n"
+        f"Message: {message}\n\n"
+        f"Write a helpful, concise reply for this customer inquiry."
+    )
+    payload = {
+        "model":      OPENROUTER_MODEL,
+        "max_tokens": 300,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user",   "content": user_message},
+        ],
+    }
+    data    = json.dumps(payload).encode()
+    headers = {
+        "Content-Type":  "application/json",
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "HTTP-Referer":  "https://aarvexglobal.com",
+        "X-Title":       "Aarvex Global Support Bot",
+    }
+    req = urllib.request.Request(
+        "https://openrouter.ai/api/v1/chat/completions",
+        data=data, headers=headers, method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            result  = json.loads(resp.read())
+            choices = result.get("choices", [])
+            if choices:
+                reply = choices[0].get("message", {}).get("content", "").strip()
+                if reply:
+                    logger.info(f"[AI] Reply generated â€” model: {OPENROUTER_MODEL}")
+                    return reply
+            logger.error(f"[AI] Empty response: {result}")
+    except urllib.error.HTTPError as e:
+        logger.error(f"[AI] HTTP {e.code}: {e.read().decode()[:300]}")
+    except Exception as e:
+        logger.error(f"[AI] Exception: {e}")
+    return ""
+
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  DYNAMODB â€” Cooldown + Deduplication
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _is_on_cooldown(contact_id: str) -> bool:
+    if COOLDOWN_MINUTES <= 0:
+        return False
+    try:
+        resp = table.get_item(Key={"pk": f"CONTACT#{contact_id}"})
+        item = resp.get("Item")
+        if item:
+            elapsed_min = (int(time.time()) - int(item.get("last_reply_ts", 0))) / 60
+            if elapsed_min < COOLDOWN_MINUTES:
+                logger.info(f"[DYNAMO] {contact_id} cooldown â€” {elapsed_min:.1f} min ago")
+                return True
+    except ClientError as e:
+        logger.error(f"[DYNAMO] Cooldown check error: {e}")
+    return False
+
+
+def _is_duplicate_message(msg_id: str) -> bool:
+    if not msg_id:
+        return False
+    try:
+        resp = table.get_item(Key={"pk": f"MSGID#{msg_id}"})
+        return bool(resp.get("Item"))
+    except ClientError:
+        return False
+
+
+def _save_message_id(msg_id: str):
+    if not msg_id:
+        return
+    try:
+        table.put_item(Item={
+            "pk":         f"MSGID#{msg_id}",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "ttl":        int(time.time()) + 86400,
+        })
+    except ClientError as e:
+        logger.error(f"[DYNAMO] Save message ID error: {e}")
+
+
+def _save_state(contact_id: str, msg_id: str, channel: str, reply: str):
+    pk = f"CONTACT#{contact_id}"
+    try:
+        existing = table.get_item(Key={"pk": pk}).get("Item") or {}
+        table.put_item(Item={
+            "pk":            pk,
+            "last_msg_id":   msg_id,
+            "channel":       channel,
+            "last_reply":    reply[:500],
+            "last_reply_ts": int(time.time()),
+            "updated_at":    datetime.now(timezone.utc).isoformat(),
+            "language":      existing.get("language", ""),
+            "name":          existing.get("name", ""),
+            "first_seen_ts": existing.get("first_seen_ts", int(time.time())),
+        })
+        logger.info(f"[DYNAMO] State saved for {contact_id}")
+    except ClientError as e:
+        logger.error(f"[DYNAMO] Save state error: {e}")
+
+
+def _response(status: int, message: str) -> dict:
+    return {
+        "statusCode": status,
+        "body":       json.dumps({"message": message}),
+        "headers":    {"Content-Type": "application/json"},
+    }
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+#  WEB FORM ORDER HANDLER
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+def _handle_web_order(event):
+    import uuid, time
+    try:
+        body_raw = event.get("body") or "{}"
+        if event.get("isBase64Encoded"):
+            body_raw = base64.b64decode(body_raw).decode("utf-8")
+        data = json.loads(body_raw)
+    except Exception as e:
+        return _response(400, "Invalid JSON")
+
+    cors = {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Methods": "POST,OPTIONS"
+    }
+
+    required = ["product_name","order_type","quantity_kg","customer_name","mobile","email","address","city","state"]
+    missing = [f for f in required if not data.get(f)]
+    if missing:
+        return {"statusCode": 400, "headers": cors, "body": json.dumps({"error": "Missing: " + ", ".join(missing)})}
+
+    # ARN generate karo
+    arn = "AX" + time.strftime("%Y%m%d") + str(uuid.uuid4())[:6].upper()
+    ticket_id = str(uuid.uuid4())
+
+    mobile = str(data.get("mobile","")).replace("+","").replace(" ","").replace("-","")
+    if not mobile.startswith("91") and len(mobile) == 10:
+        mobile = "91" + mobile
+
+    qty = float(data.get("quantity_kg", 0))
+    amount = int(data.get("amount_inr", 500))
+    total = amount + 150
+
+    item = {
+        "pk": f"TICKET#IMPORTER#{ticket_id}",
+        "sk": "METADATA",
+        "ticket_id": ticket_id,
+        "arn": arn,
+        "customer_name": data.get("customer_name",""),
+        "company_name": data.get("company_name",""),
+        "gst_number": data.get("gst_number",""),
+        "product_name": data.get("product_name",""),
+        "product_id": data.get("product_id",""),
+        "category_id": data.get("category_id",""),
+        "order_type": data.get("order_type",""),
+        "quantity_kg": str(qty),
+        "price_per_kg": str(data.get("price_per_kg",0)),
+        "amount_inr": str(amount),
+        "courier_charges": "150",
+        "total_inr": str(total),
+        "address": data.get("address",""),
+        "city": data.get("city",""),
+        "state": data.get("state",""),
+        "country": data.get("country","India"),
+        "pincode": data.get("pincode",""),
+        "mobile": mobile,
+        "email": data.get("email",""),
+        "payment_status": "Pending",
+        "order_status": "New",
+        "source": "web_form",
+        "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ")
+    }
+
+    try:
+        table.put_item(Item=item)
+        logger.info(f"[WEB_ORDER] Saved ticket {ticket_id} ARN={arn}")
+    except Exception as e:
+        logger.error(f"[WEB_ORDER] DynamoDB error: {e}")
+        return {"statusCode": 500, "headers": cors, "body": json.dumps({"error": "DB error"})}
+
+    # Cashfree payment link generate karo
+    try:
+        from advanced_features import create_cashfree_payment_link
+        ticket_for_payment = {
+            "arn": arn,
+            "ticket_id": ticket_id,
+            "product_name": data.get("product_name",""),
+            "quantity_kg": str(qty),
+            "customer_name": data.get("customer_name",""),
+            "email": data.get("email",""),
+            "mobile": mobile,
+            "payment_amount": str(total),
+            "payment_currency": "INR",
+        }
+        rzp_link = create_cashfree_payment_link(ticket_for_payment)
+        if rzp_link and rzp_link.get("short_url"):
+            rzp_url = rzp_link.get("short_url","")
+            table.update_item(
+                Key={"pk": f"TICKET#IMPORTER#{ticket_id}"},
+                UpdateExpression="SET razorpay_payment_link_url = :u, razorpay_payment_link_id = :i, payment_link_url = :u, payment_link_id = :i",
+                ExpressionAttributeValues={":u": rzp_url, ":i": rzp_link.get("id","")}
+            )
+            logger.info(f"[WEB_ORDER] Cashfree link created: {rzp_url}")
+        else:
+            rzp_url = ""
+    except Exception as e:
+        logger.error(f"[WEB_ORDER] Cashfree error: {e}")
+        rzp_url = ""
+
+    # WhatsApp pe notification bhejo
+    try:
+        from advanced_features import send_whatsapp_text as _send_wa
+        wa_msg = (
+            f"ðŸŽ‰ *Naya Web Order!*\n\n"
+            f"ðŸ“¦ *ARN:* {arn}\n"
+            f"ðŸ‘¤ *Customer:* {data.get('customer_name','')}\n"
+            f"ðŸŒ¶ï¸ *Product:* {data.get('product_name','')}\n"
+            f"âš–ï¸ *Qty:* {qty} kg ({data.get('order_type','').upper()})\n"
+            f"ðŸ’° *Total:* â‚¹{total}\n"
+            f"ðŸ“ž *Mobile:* +{mobile}\n"
+            f"ðŸ“§ *Email:* {data.get('email','')}\n"
+            f"ðŸ“ *City:* {data.get('city','')}, {data.get('state','')}\n\n"
+            f"Payment pending hai."
+        )
+        if rzp_url:
+            payment_msg = f"âœ… *Order Confirmed!*\n\n*ARN:* {arn}\n*Product:* {data.get('product_name','')}\n*Qty:* {qty} kg\n*Total:* â‚¹{total}\n\nðŸ’³ *Payment Link:*\nðŸ‘‰ {rzp_url}\n\n_Payment ke baad invoice automatically aayega_ ðŸ™"
+        else:
+            payment_msg = f"âœ… *Order Confirmed!*\n\n*ARN:* {arn}\n*Product:* {data.get('product_name','')}\n*Qty:* {qty} kg\n*Total:* â‚¹{total}\n\nPayment ke liye UPI: aarvex@upi\nScreenshot yahan bhejein.\n\nDhanyawad! ðŸ™"
+        _send_wa(mobile, payment_msg)
+        admin_num = ADMIN_WHATSAPP_NUMBER.replace("+","").replace(" ","")
+        if admin_num:
+            _send_wa(admin_num, wa_msg)
+    except Exception as e:
+        logger.error(f"[WEB_ORDER] WhatsApp error: {e}")
+
+    return {"statusCode": 200, "headers": cors, "body": json.dumps({"success": True, "arn": arn, "total": total})}

@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="portal-order-flow">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/portal-order-flow.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

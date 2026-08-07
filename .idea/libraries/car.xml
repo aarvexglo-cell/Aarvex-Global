@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="car">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/assets/_lottie_inspect/car.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

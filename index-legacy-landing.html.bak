@@ -1,0 +1,4215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aarvex Global — Premium Agri Export | Spices, Grains &amp; Produce</title>
+  <!-- Command Center telemetry (client health → admin) -->
+  <script>window.LAMBDA_URL='https://j1yound90m.execute-api.ap-southeast-1.amazonaws.com';window.AX_TAB_HINT='home';</script>
+  <script src="ax-telemetry.js?v=3"></script>
+  <script src="ax-error-log.js?v=3"></script>
+  <meta name="description"
+    content="Aarvex Global — certified agri import-export company. Buy premium spices, grains, pulses and fresh produce directly from verified Indian sellers. GSTIN, IEC &amp; Udyam registered.">
+  <meta name="keywords"
+    content="agri export India, spices exporter, grains wholesale, teja lal mirch, kashmiri mirch, basmati rice, onion export, agricultural marketplace, bulk produce">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0A0A0A">
+  <link rel="canonical" href="https://aarvexglobal.com/">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <!-- ── SEO: Open Graph (WhatsApp / Facebook / LinkedIn link previews) ── -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Aarvex Global">
+  <meta property="og:title" content="Aarvex Global — Premium Agri Export">
+  <meta property="og:description"
+    content="Buy premium spices, grains, pulses &amp; fresh produce directly from verified Indian sellers. Certified, export-grade, bulk-ready.">
+  <meta property="og:url" content="https://aarvexglobal.com/">
+  <meta property="og:image" content="https://aarvexglobal.com/assets/og-cover.jpg">
+  <meta property="og:image:alt" content="Aarvex Global — Agri Marketplace">
+  <meta property="og:locale" content="en_IN">
+
+  <!-- ── SEO: Twitter card ── -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Aarvex Global — Premium Agri Export">
+  <meta name="twitter:description"
+    content="Premium spices, grains &amp; produce from verified Indian sellers. Certified, export-grade, bulk-ready.">
+  <meta name="twitter:image" content="https://aarvexglobal.com/assets/og-cover.jpg">
+
+  <!-- ── SEO: structured data (Google rich results) ── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Aarvex Global",
+    "url": "https://aarvexglobal.com/",
+    "logo": "https://aarvexglobal.com/assets/favicon-192.png",
+    "description": "Certified agricultural import-export company and marketplace for premium spices, grains, pulses and fresh produce.",
+    "address": { "@type": "PostalAddress", "addressRegion": "Maharashtra", "addressCountry": "IN" },
+    "sameAs": []
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Aarvex Global",
+    "url": "https://aarvexglobal.com/",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://aarvexglobal.com/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="ax-icon.svg?v=4">
+  <link rel="apple-touch-icon" href="ax-icon.svg?v=4">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png?v=3">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="tokens.css?v=11">
+  <link rel="stylesheet" href="catalogue-ui.css">
+  <link rel="stylesheet" href="components.css">
+  <script src="portal-polyfills.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <style>
+    /* ─── TOKENS ─────────────────────────────────────────────────
+       Color, font, radius, shadow & gradient tokens now live in
+       tokens.css (shared with portal.html) — see legacy-alias
+       section there for --earth/--leaf/--gold/etc. This block only
+       keeps index.html's own golden-ratio spacing scale, which is
+       local to this marketing page and not shared. ───────────── */
+    :root {
+      /* Golden-ratio spacing scale (φ ≈ 1.618) — index.html only */
+      --s-1: 0.5rem;
+      --s-2: 0.8rem;
+      --s-3: 1.3rem;
+      --s-4: 2.1rem;
+      --s-5: 3.4rem;
+      --s-6: 5.5rem;
+      --s-7: 8.9rem;
+    }
+
+    /* ─── BASE ───────────────────────────────────── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--cream);
+      color: var(--text);
+      line-height: 1.65;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    ::selection {
+      background: rgba(46, 107, 65, .18);
+      color: var(--earth);
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+
+    input,
+    select,
+    textarea {
+      font-family: inherit;
+    }
+
+    /* ─── UTILITY ────────────────────────────────── */
+    /* --container-pad drives .container's side padding AND the
+       mobile hero-visual full-bleed breakout below (Section 0 #2 fix)
+       so the two can never drift out of sync across breakpoints. */
+    :root {
+      --container-pad: 28px;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 var(--container-pad);
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(30px, 4.4vw, 46px);
+      font-weight: 700;
+      color: var(--earth);
+      line-height: 1.12;
+      letter-spacing: -.015em;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--leaf);
+      background: rgba(46, 107, 65, .08);
+      border: 1px solid rgba(46, 107, 65, .18);
+      padding: 6px 15px;
+      border-radius: 40px;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow i {
+      font-size: 12px;
+    }
+
+    .btn-primary {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 15px 30px;
+      background: var(--gradient-leaf);
+      background-size: 160% 160%;
+      color: var(--white);
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 50px;
+      box-shadow: 0 8px 24px rgba(46, 107, 65, .28);
+      transition: transform .25s cubic-bezier(.22, 1, .36, 1), box-shadow .25s, background-position .5s;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 34px rgba(46, 107, 65, .4);
+      background-position: 100% 0;
+    }
+
+    .btn-primary:active {
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 14px 28px;
+      background: rgba(255, 255, 255, .04);
+      color: var(--white);
+      font-size: 15px;
+      font-weight: 600;
+      border: 1.5px solid rgba(255, 255, 255, .32);
+      border-radius: 50px;
+      transition: transform .25s cubic-bezier(.22, 1, .36, 1), background .25s, border-color .25s;
+      white-space: nowrap;
+      backdrop-filter: blur(6px);
+    }
+
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, .12);
+      border-color: rgba(255, 255, 255, .65);
+      transform: translateY(-3px);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* ─── NAV ────────────────────────────────────── */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(253, 250, 243, .92);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+      transition: all .25s;
+    }
+
+    .nav.scrolled {
+      box-shadow: 0 2px 20px rgba(26, 18, 8, .08);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      gap: 12px;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .nav-logo-badge {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(150deg, #ffffff 0%, var(--mist) 100%);
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 14px rgba(20, 48, 38, .12), inset 0 1px 0 rgba(255, 255, 255, .8);
+      transition: transform .35s cubic-bezier(.22, 1, .36, 1), box-shadow .35s;
+    }
+
+    .nav-logo:hover .nav-logo-badge {
+      transform: translateY(-1px) rotate(-3deg);
+      box-shadow: 0 8px 20px rgba(20, 48, 38, .18), inset 0 1px 0 rgba(255, 255, 255, .8);
+    }
+
+    .nav-logo-badge img {
+      width: 27px;
+      height: auto;
+      display: block;
+    }
+
+    .nav-logo-badge i {
+      color: #fff;
+      font-size: 18px;
+    }
+
+    .nav-logo-name {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--earth);
+      letter-spacing: -.3px;
+      line-height: 1;
+    }
+
+    .nav-logo-sub {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text3);
+      letter-spacing: .06em;
+    }
+
+    .nav-links {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      list-style: none;
+    }
+
+    .nav-toggle {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text2);
+      padding: 8px;
+      border-radius: 8px;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-toggle:hover {
+      background: var(--mist);
+      color: var(--leaf);
+    }
+
+    .nav-links a {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text2);
+      transition: all .15s;
+    }
+
+    .nav-links a:hover {
+      background: var(--mist);
+      color: var(--leaf);
+    }
+
+    .nav-cta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-social {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-social a {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .08);
+      color: var(--text2);
+      border: 1px solid rgba(255, 255, 255, .08);
+      transition: transform .2s, background .2s, color .2s;
+    }
+
+    .nav-social a:hover {
+      background: rgba(255, 255, 255, .16);
+      color: var(--leaf);
+      transform: translateY(-1px);
+    }
+
+    .nav-social a i {
+      font-size: 14px;
+    }
+
+    .nav-cta .nav-login-btn,
+    .nav-cta .nav-whatsapp {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-size: 13.5px;
+      font-weight: 600;
+      border-radius: 50px;
+      white-space: nowrap;
+      transition: transform .2s, border-color .2s, color .2s, background .2s, box-shadow .2s;
+    }
+
+    .nav-whatsapp {
+      background: #25D366;
+      color: #fff;
+      box-shadow: 0 3px 14px rgba(37, 211, 102, .28);
+    }
+
+    .nav-whatsapp:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(37, 211, 102, .36);
+    }
+
+    .nav-login-btn {
+      background: rgba(255, 255, 255, .1);
+      color: var(--forest);
+      border: 1.5px solid var(--border);
+    }
+
+    .nav-login-btn:hover {
+      background: var(--mist);
+      border-color: var(--leaf);
+      color: var(--leaf);
+      transform: translateY(-1px);
+    }
+
+    .nav-login-btn i {
+      font-size: 13px;
+      color: var(--leaf);
+    }
+
+    .nav-login-btn .nav-user-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--leaf);
+    }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 57px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--cream);
+      z-index: 999;
+      /* bottom padding keeps the pinned My Account button clear of the
+         screen edge / gesture bar on notched phones */
+      padding: 24px 24px calc(24px + env(safe-area-inset-bottom, 0px));
+      flex-direction: column;
+      gap: 6px;
+      overflow-y: auto;
+    }
+
+    .mobile-menu.open {
+      display: flex;
+    }
+
+    /* The floating WhatsApp bubble (bottom-left, z-index above everything)
+       used to sit right on top of the menu's pinned My Account button —
+       hide it while the menu is open so the login entry is actually
+       visible and tappable. */
+    .mobile-menu.open~.wa-fab {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .mobile-menu a {
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background .15s, transform .15s;
+    }
+
+    .mobile-menu a:hover {
+      background: var(--mist);
+      color: var(--leaf);
+      transform: translateX(2px);
+    }
+
+    .mobile-menu a i {
+      width: 22px;
+      text-align: center;
+      color: var(--leaf);
+    }
+
+    /* My Account — pinned to the bottom and styled as the menu's primary
+       action instead of one more plain list row. */
+    .mobile-menu a:last-child {
+      margin-top: auto;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--leaf) 0%, var(--forest) 100%);
+      color: #fff;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 15px 18px;
+      box-shadow: 0 8px 24px rgba(46, 107, 65, .28);
+    }
+
+    .mobile-menu a:last-child i {
+      color: #fff;
+    }
+
+    .mobile-menu a:last-child:hover {
+      transform: none;
+      background: linear-gradient(135deg, var(--leaf) 0%, var(--forest) 100%);
+      color: #fff;
+    }
+
+    .nav-login-btn.logged-in {
+      background: rgba(46, 107, 65, .08);
+      border-color: rgba(46, 107, 65, .3);
+    }
+
+    .catalogue-toolbar {
+      margin-bottom: 28px;
+    }
+
+    .catalogue-search-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .catalogue-search-wrap {
+      flex: 1;
+      min-width: 220px;
+      position: relative;
+    }
+
+    .catalogue-search-wrap input {
+      width: 100%;
+      padding: 12px 42px 12px 42px;
+      border: 1.5px solid var(--border);
+      border-radius: 50px;
+      font-size: 14px;
+      background: var(--white);
+    }
+
+    .catalogue-search-wrap .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text3);
+    }
+
+    .catalogue-search-wrap .search-clear {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      color: var(--text3);
+      font-size: 14px;
+      display: none;
+    }
+
+    .catalogue-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .catalogue-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(46, 107, 65, .1);
+      border: 1px solid rgba(46, 107, 65, .18);
+      color: var(--forest);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .25s;
+      min-height: 42px;
+    }
+
+    .catalogue-chip i {
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(46, 107, 65, .2);
+      color: var(--leaf);
+      font-size: 12px;
+    }
+
+    .catalogue-chip span {
+      display: inline-block;
+      line-height: 1.1;
+    }
+
+    .catalogue-chip:hover,
+    .catalogue-chip.active {
+      background: var(--leaf);
+      border-color: var(--leaf);
+      color: #fff;
+    }
+
+    .catalogue-chip:hover i,
+    .catalogue-chip.active i {
+      background: rgba(255, 255, 255, .24);
+      color: #fff;
+    }
+
+    .filter-count {
+      min-width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: var(--leaf);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .filter-count.show {
+      display: inline-flex;
+    }
+
+    .cat-chip {
+      padding: 6px 14px;
+      height: 30px;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--text2);
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .cat-chip.active,
+    .cat-chip:hover {
+      background: var(--leaf);
+      color: #fff;
+      border-color: var(--leaf);
+    }
+
+    .cat-chip.rating-chip {
+      font-size: 11px;
+    }
+
+    .product-card.paused-card {
+      opacity: .65;
+      filter: grayscale(.25);
+    }
+
+    .product-card.paused-card .paused-label {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(0, 0, 0, .65);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+    }
+
+    .shop-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--gold);
+      background: rgba(199, 153, 58, .12);
+      padding: 3px 8px;
+      border-radius: 20px;
+      margin: 4px 0;
+    }
+
+    .rating-stars {
+      font-size: 12px;
+      color: var(--gold);
+      letter-spacing: 1px;
+    }
+
+    .rating-count {
+      font-size: 11px;
+      color: var(--text3);
+      margin-left: 4px;
+    }
+
+    .modal-reviews {
+      margin-top: 20px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+
+    .review-item {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .review-form {
+      margin-top: 12px;
+      padding: 14px;
+      background: var(--mist);
+      border-radius: 12px;
+    }
+
+    .star-picker {
+      display: flex;
+      gap: 6px;
+      margin: 8px 0;
+    }
+
+    .star-picker button {
+      background: none;
+      font-size: 22px;
+      color: var(--border);
+      padding: 0;
+    }
+
+    .star-picker button.on {
+      color: var(--gold);
+    }
+
+    .modal-wa-contact {
+      margin: 16px 0;
+      padding: 12px;
+      background: rgba(37, 211, 102, .08);
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 66px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--cream);
+      z-index: 999;
+      padding: 24px;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mobile-menu.open {
+      display: flex;
+    }
+
+    .mobile-menu a {
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background .15s;
+    }
+
+    .mobile-menu a:hover {
+      background: var(--mist);
+      color: var(--leaf);
+    }
+
+    .mobile-menu a i {
+      width: 22px;
+      text-align: center;
+      color: var(--leaf);
+    }
+
+    /* ─── HERO ───────────────────────────────────── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      background:
+        radial-gradient(ellipse 90% 70% at 75% 30%, rgba(46, 107, 65, .35) 0%, transparent 60%),
+        linear-gradient(150deg, var(--forest) 0%, var(--forest2) 55%, #081410 100%);
+      overflow: hidden;
+      padding-top: 76px;
+    }
+
+    .hero-bg-pattern {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 50% 50% at 85% 65%, rgba(132, 206, 116, .10) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 50% at 8% 85%, rgba(199, 153, 58, .10) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .hero-grain {
+      position: absolute;
+      inset: 0;
+      opacity: .03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    .hero-watermark {
+      position: absolute;
+      bottom: -8%;
+      left: -6%;
+      width: clamp(280px, 38vw, 560px);
+      opacity: .045;
+      transform: rotate(-8deg);
+      pointer-events: none;
+      user-select: none;
+      z-index: 0;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: clamp(40px, 5vw, 72px);
+      align-items: center;
+      width: 100%;
+      padding: clamp(56px, 7vw, 96px) 0;
+    }
+
+    .hero-content .eyebrow {
+      background: rgba(132, 206, 116, .12);
+      border-color: rgba(132, 206, 116, .28);
+      color: var(--lime);
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(38px, 5.4vw, 62px);
+      font-weight: 600;
+      color: var(--white);
+      line-height: 1.06;
+      letter-spacing: -.02em;
+      margin-bottom: 22px;
+    }
+
+    .hero-title .accent {
+      font-style: normal;
+      color: var(--lime);
+    }
+
+    .hero-subtitle {
+      font-size: 17px;
+      color: rgba(255, 255, 255, .66);
+      line-height: 1.75;
+      max-width: 460px;
+      margin-bottom: 38px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 44px;
+    }
+
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      max-width: 480px;
+    }
+
+    .hero-stat {
+      padding: 18px 14px;
+      background: rgba(255, 255, 255, .05);
+      border: 1px solid rgba(255, 255, 255, .09);
+      border-radius: var(--r);
+      text-align: center;
+      transition: transform .25s, border-color .25s, background .25s;
+    }
+
+    .hero-stat:hover {
+      transform: translateY(-3px);
+      border-color: rgba(132, 206, 116, .3);
+      background: rgba(255, 255, 255, .08);
+    }
+
+    .hero-stat-num {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--lime);
+      line-height: 1;
+    }
+
+    .hero-stat-label {
+      font-size: 11px;
+      color: rgba(255, 255, 255, .5);
+      margin-top: 6px;
+      font-weight: 500;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    /* Hero visual — premium image showcase */
+    .hero-visual {
+      position: relative;
+    }
+
+    .hero-image-frame {
+      position: relative;
+      border-radius: var(--r-xl);
+      overflow: hidden;
+      box-shadow: var(--sh-lg);
+      border: 1px solid rgba(255, 255, 255, .12);
+      aspect-ratio: 1 / 1;
+    }
+
+    .hero-image-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.02);
+      transition: transform 1.2s cubic-bezier(.22, 1, .36, 1);
+    }
+
+    .hero-visual:hover .hero-image-frame img {
+      transform: scale(1.08);
+    }
+
+    .hero-image-frame::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 45%, rgba(8, 20, 16, .55) 100%);
+      pointer-events: none;
+    }
+
+    .hero-float-card {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 18px;
+      background: rgba(20, 38, 30, .72);
+      border: 1px solid rgba(255, 255, 255, .16);
+      border-radius: 16px;
+      backdrop-filter: blur(14px);
+      box-shadow: var(--sh-md);
+      z-index: 2;
+    }
+
+    .hero-float-card .hfc-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: var(--gradient-leaf);
+      color: #fff;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .hero-float-card .hfc-num {
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: #fff;
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    .hero-float-card .hfc-label {
+      font-size: 11px;
+      color: rgba(255, 255, 255, .6);
+      margin-top: 3px;
+      letter-spacing: .03em;
+    }
+
+    .hero-float-card.top {
+      top: 24px;
+      left: -18px;
+    }
+
+    .hero-float-card.bottom {
+      bottom: 24px;
+      right: -18px;
+    }
+
+    .hero-float-card.top .hfc-icon {
+      background: var(--gradient-gold);
+    }
+
+    .float-anim-1 {
+      animation: floaty 6s ease-in-out infinite;
+    }
+
+    .float-anim-2 {
+      animation: floaty 6s ease-in-out infinite 3s;
+    }
+
+    @keyframes floaty {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .hero-trust-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .trust-chip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 15px;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 40px;
+      font-size: 12.5px;
+      color: rgba(255, 255, 255, .72);
+      font-weight: 500;
+      transition: border-color .2s, background .2s;
+    }
+
+    .trust-chip:hover {
+      border-color: rgba(132, 206, 116, .4);
+      background: rgba(255, 255, 255, .1);
+    }
+
+    .trust-chip i {
+      color: var(--lime);
+      font-size: 12px;
+    }
+
+    /* ─── MARQUEE ────────────────────────────────── */
+    .marquee-section {
+      background: var(--forest);
+      padding: 14px 0;
+      overflow: hidden;
+      border-top: 1px solid rgba(255, 255, 255, .06);
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .marquee-track {
+      display: flex;
+      gap: 0;
+      white-space: nowrap;
+      animation: marquee 28s linear infinite;
+    }
+
+    .marquee-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 28px;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, .55);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .marquee-item i {
+      color: var(--lime);
+      font-size: 10px;
+    }
+
+    @keyframes marquee {
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    /* ─── PRODUCTS ───────────────────────────────── */
+    .products-section {
+      padding: 100px 0;
+      background: var(--cream);
+    }
+
+    .products-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 48px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .catalogue-loading {
+      text-align: center;
+      padding: 80px 0;
+      color: var(--text3);
+    }
+
+    .catalogue-loading i {
+      font-size: 36px;
+      color: var(--leaf);
+      margin-bottom: 12px;
+    }
+
+    .catalogue-loading p {
+      font-size: 14px;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .product-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      transition: all .25s;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--sh);
+    }
+
+    .product-card:hover {
+      box-shadow: var(--sh-md);
+      transform: translateY(-4px);
+      border-color: rgba(46, 107, 65, .2);
+    }
+
+    .product-card-img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(132, 206, 116, .18), transparent 60%),
+        linear-gradient(135deg, var(--mist), #dde8de);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--leaf);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .product-card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      inset: 0;
+    }
+
+    .product-card-img .img-fallback {
+      position: relative;
+      z-index: 1;
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, .55);
+      border: 1px solid rgba(46, 107, 65, .14);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6);
+    }
+
+    .product-card-img .img-fallback i {
+      font-size: 38px;
+      color: var(--leaf);
+    }
+
+    .product-card:hover .img-fallback {
+      transform: scale(1.06);
+      transition: transform .35s cubic-bezier(.22, 1, .36, 1);
+    }
+
+    .product-card-body {
+      padding: 22px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-card-category {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--leaf);
+      margin-bottom: 6px;
+    }
+
+    .product-card-name {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--earth);
+      margin-bottom: 8px;
+      line-height: 1.25;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Heart/wishlist button overlaid on the card image — same pattern as
+       portal.html's .product-card-like-btn, ported here for parity. */
+    .product-card-like-btn {
+      position: absolute;
+      top: 9px;
+      right: 9px;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .92);
+      backdrop-filter: blur(6px);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #9AA39C;
+      box-shadow: 0 3px 10px rgba(20, 48, 38, .14);
+      transition: all .15s ease;
+      z-index: 2;
+    }
+
+    .product-card-like-btn:hover {
+      transform: scale(1.1);
+    }
+
+    .product-card-like-btn.liked {
+      color: #E1435A;
+    }
+
+    .product-card-like-btn.liked i {
+      font-weight: 900;
+    }
+
+    /* Small stock-status pill under the price, mirroring portal.html */
+    .product-card-stock-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--color-feedback-success);
+      margin-top: 6px;
+    }
+
+    .product-card-stock-pill i {
+      font-size: 6px;
+    }
+
+    .product-card-desc {
+      font-size: 13px;
+      color: var(--text3);
+      line-height: 1.55;
+      margin-bottom: 12px;
+    }
+
+    .product-card-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .product-card-meta .tag {
+      background: var(--mist);
+      color: var(--leaf);
+      border: 1px solid rgba(46, 107, 65, .15);
+    }
+
+    .product-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .product-price {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--earth);
+    }
+
+    .product-price small {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text3);
+    }
+
+    .product-order-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 18px;
+      background: var(--leaf);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 40px;
+      transition: all .2s;
+    }
+
+    .product-order-btn:hover {
+      background: var(--forest);
+      transform: translateY(-1px);
+    }
+
+    .products-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text3);
+    }
+
+    .products-empty i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      color: var(--border);
+    }
+
+    .products-empty h3 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      color: var(--text2);
+      margin-bottom: 8px;
+    }
+
+    /* Default product data */
+    .default-products {
+      display: contents;
+    }
+
+    /* ─── WHY US ─────────────────────────────────── */
+    .why-section {
+      padding: 100px 0;
+      background: var(--forest);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .why-section::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      right: -100px;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(109, 191, 103, .08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .why-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    .why-content .eyebrow {
+      background: rgba(109, 191, 103, .1);
+      border-color: rgba(109, 191, 103, .2);
+      color: var(--lime);
+    }
+
+    .why-content .section-title {
+      color: var(--white);
+      margin-bottom: 14px;
+    }
+
+    .why-content p {
+      color: rgba(255, 255, 255, .6);
+      font-size: 16px;
+      line-height: 1.75;
+      margin-bottom: 32px;
+    }
+
+    .why-features {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .why-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 18px;
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid rgba(255, 255, 255, .07);
+      border-radius: var(--r);
+    }
+
+    .why-feature-icon {
+      width: 44px;
+      height: 44px;
+      background: rgba(109, 191, 103, .12);
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .why-feature-icon i {
+      color: var(--lime);
+      font-size: 18px;
+    }
+
+    .why-feature-title {
+      font-weight: 600;
+      color: var(--white);
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .why-feature-text {
+      font-size: 13px;
+      color: rgba(255, 255, 255, .5);
+      line-height: 1.6;
+    }
+
+    .why-creds {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .cred-card {
+      background: rgba(255, 255, 255, .05);
+      border: 1px solid rgba(255, 255, 255, .09);
+      border-radius: var(--r);
+      padding: 24px 20px;
+      text-align: center;
+    }
+
+    .cred-card i {
+      font-size: 28px;
+      color: var(--lime);
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .cred-card-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, .4);
+      margin-bottom: 4px;
+    }
+
+    .cred-card-value {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--white);
+      word-break: break-all;
+    }
+
+    /* ─── SELL SECTION ───────────────────────────── */
+    .sell-section {
+      padding: 100px 0;
+      background: var(--sand);
+    }
+
+    .sell-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: start;
+    }
+
+    .sell-info .eyebrow {
+      background: rgba(201, 149, 42, .1);
+      border-color: rgba(201, 149, 42, .25);
+      color: var(--gold);
+    }
+
+    .sell-info .section-title {
+      margin-bottom: 14px;
+    }
+
+    .sell-info p {
+      color: var(--text2);
+      font-size: 16px;
+      line-height: 1.75;
+      margin-bottom: 28px;
+    }
+
+    .sell-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .sell-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .sell-step-num {
+      width: 36px;
+      height: 36px;
+      background: var(--gold);
+      color: #fff;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .sell-step-text h4 {
+      font-weight: 600;
+      color: var(--earth);
+      margin-bottom: 2px;
+      font-size: 15px;
+    }
+
+    .sell-step-text p {
+      font-size: 13px;
+      color: var(--text3);
+    }
+
+    .sell-form-box {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 36px;
+      box-shadow: var(--sh);
+    }
+
+    .sell-form-box h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--earth);
+      margin-bottom: 6px;
+    }
+
+    .sell-form-box p {
+      font-size: 13px;
+      color: var(--text3);
+      margin-bottom: 28px;
+    }
+
+    /* ─── FORMS ──────────────────────────────────── */
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text2);
+      margin-bottom: 7px;
+    }
+
+    .form-label .req {
+      color: var(--color-feedback-error);
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--white);
+      outline: none;
+      transition: all .2s;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: var(--leaf);
+      box-shadow: 0 0 0 3px rgba(46, 107, 65, .1);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-submit {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--leaf), #3D8C50);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all .2s;
+      box-shadow: 0 4px 16px rgba(46, 107, 65, .25);
+    }
+
+    .form-submit:hover {
+      background: var(--forest);
+      box-shadow: 0 6px 24px rgba(46, 107, 65, .35);
+    }
+
+    .form-submit:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .form-success {
+      display: none;
+      text-align: center;
+      padding: 36px 20px;
+    }
+
+    .form-success.show {
+      display: block;
+    }
+
+    .form-success i {
+      font-size: 48px;
+      color: var(--leaf);
+      margin-bottom: 16px;
+    }
+
+    .form-success h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--earth);
+      margin-bottom: 8px;
+    }
+
+    .form-success p {
+      font-size: 14px;
+      color: var(--text3);
+    }
+
+    .form-err {
+      font-size: 12px;
+      color: var(--color-feedback-error);
+      margin-top: 5px;
+      display: none;
+    }
+
+    .form-err.show {
+      display: block;
+    }
+
+    .api-error-msg {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #DC2626;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .api-error-msg.show {
+      display: block;
+    }
+
+    /* ─── ORDER SECTION ──────────────────────────── */
+    .order-section {
+      padding: 100px 0;
+      background: var(--cream);
+    }
+
+    .order-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 40px;
+      align-items: start;
+    }
+
+    .order-form-box {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 40px;
+      box-shadow: var(--sh);
+    }
+
+    .order-form-box h3 {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--earth);
+      margin-bottom: 6px;
+    }
+
+    .order-form-box>p {
+      font-size: 14px;
+      color: var(--text3);
+      margin-bottom: 32px;
+    }
+
+    .order-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .sidebar-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px;
+      box-shadow: var(--sh);
+    }
+
+    .sidebar-card h4 {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--earth);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-card h4 i {
+      color: var(--leaf);
+    }
+
+    .sidebar-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sidebar-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text2);
+    }
+
+    .sidebar-list li i {
+      color: var(--leaf);
+      width: 16px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .order-type-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .order-type-tab {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--text2);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .2s;
+      text-align: center;
+    }
+
+    .order-type-tab.active {
+      border-color: var(--leaf);
+      background: rgba(46, 107, 65, .06);
+      color: var(--leaf);
+    }
+
+    .form-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--text3);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin: 24px 0 18px;
+    }
+
+    /* ─── TRACK ORDER ────────────────────────────── */
+    .track-section {
+      padding: 70px 0;
+      background: var(--mist);
+    }
+
+    .track-inner {
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .track-inner .section-title {
+      margin-bottom: 10px;
+    }
+
+    .track-inner p {
+      color: var(--text3);
+      font-size: 15px;
+      margin-bottom: 28px;
+    }
+
+    .track-form {
+      display: flex;
+      gap: 12px;
+    }
+
+    .track-input {
+      flex: 1;
+      padding: 14px 20px;
+      border: 1.5px solid var(--border);
+      border-radius: 50px;
+      font-size: 15px;
+      color: var(--text);
+      background: var(--white);
+      outline: none;
+      transition: border-color .2s;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .track-input:focus {
+      border-color: var(--leaf);
+      box-shadow: 0 0 0 3px rgba(46, 107, 65, .1);
+    }
+
+    .track-input::placeholder {
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .track-btn {
+      padding: 14px 28px;
+      background: var(--leaf);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+
+    .track-btn:hover {
+      background: var(--forest);
+    }
+
+    .track-result {
+      margin-top: 28px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px;
+      text-align: left;
+      display: none;
+    }
+
+    .track-result.show {
+      display: block;
+    }
+
+    .track-result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      gap: 12px;
+    }
+
+    .track-result h4 {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--earth);
+    }
+
+    .track-result p {
+      font-size: 13px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    .status-badge {
+      padding: 5px 14px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-badge.pending {
+      background: #FEF3C7;
+      color: #D97706;
+    }
+
+    .status-badge.completed {
+      background: #D1FAE5;
+      color: #059669;
+    }
+
+    .status-badge.processing {
+      background: #DBEAFE;
+      color: #2563EB;
+    }
+
+    .status-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .timeline-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .timeline-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .timeline-dot.done {
+      background: var(--leaf);
+    }
+
+    .timeline-dot.done i {
+      color: #fff;
+      font-size: 12px;
+    }
+
+    .timeline-dot.pending-dot {
+      background: var(--border);
+    }
+
+    .timeline-dot.pending-dot i {
+      color: var(--text3);
+      font-size: 12px;
+    }
+
+    .timeline-text h5 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .timeline-text span {
+      font-size: 12px;
+      color: var(--text3);
+    }
+
+    .track-error {
+      margin-top: 16px;
+      padding: 14px 18px;
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #DC2626;
+      text-align: center;
+      display: none;
+    }
+
+    .track-error.show {
+      display: block;
+    }
+
+    /* ─── ABOUT ──────────────────────────────────── */
+    .about-section {
+      padding: 100px 0;
+      background: var(--cream);
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: start;
+    }
+
+    .about-content .eyebrow {
+      background: rgba(46, 107, 65, .07);
+      border-color: rgba(46, 107, 65, .15);
+      color: var(--leaf);
+    }
+
+    .about-content .section-title {
+      margin-bottom: 14px;
+    }
+
+    .about-content p {
+      color: var(--text2);
+      font-size: 16px;
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+
+    .about-creds-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 8px;
+    }
+
+    .about-cred {
+      padding: 18px;
+      background: var(--mist);
+      border: 1px solid rgba(46, 107, 65, .12);
+      border-radius: var(--r);
+    }
+
+    .about-cred-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--leaf);
+      margin-bottom: 4px;
+    }
+
+    .about-cred-value {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--earth);
+      word-break: break-all;
+    }
+
+    .social-links-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .social-link-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      transition: all .2s;
+      text-decoration: none;
+    }
+
+    .social-link-card:hover {
+      border-color: var(--leaf);
+      transform: translateX(3px);
+    }
+
+    .social-link-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      font-size: 18px;
+    }
+
+    .social-link-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .social-link-sub {
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    .about-contact-card {
+      background: var(--forest);
+      border-radius: var(--r-lg);
+      padding: 32px;
+      color: #fff;
+      margin-top: 24px;
+    }
+
+    .about-contact-card h4 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+
+    .contact-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .contact-row i {
+      color: var(--lime);
+      width: 20px;
+      text-align: center;
+    }
+
+    .contact-row a {
+      color: rgba(255, 255, 255, .8);
+      font-size: 14px;
+      transition: color .15s;
+    }
+
+    .contact-row a:hover {
+      color: var(--lime);
+    }
+
+    /* ─── MODAL ──────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .55);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--white);
+      border-radius: var(--r-lg);
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .3);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 28px 0;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h3 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--earth);
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      background: var(--mist);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      color: var(--text2);
+      font-size: 16px;
+      transition: all .15s;
+      flex-shrink: 0;
+    }
+
+    .modal-close:hover {
+      background: var(--border);
+      color: var(--earth);
+    }
+
+    .modal-body {
+      padding: 0 28px 28px;
+    }
+
+    .modal-product-info {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 14px;
+      padding: 16px;
+      background: var(--mist);
+      border-radius: var(--r);
+      margin-bottom: 24px;
+    }
+
+    .modal-product-icon {
+      width: 100%;
+      min-height: 160px;
+      max-height: 220px;
+      background: var(--white);
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 48px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .modal-product-icon i {
+      color: var(--leaf);
+    }
+
+    .modal-product-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+
+    .modal-product-name {
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: var(--earth);
+      font-size: 16px;
+    }
+
+    .modal-product-meta {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    /* ─── TOAST ──────────────────────────────────── */
+    /* Legacy .toast-container/.toast (hardcoded-hex, bottom-right) removed
+       here — index.html now uses the single shared #toast host from
+       components.css / CatalogueUI.toast() (see JS toast() wrapper below
+       and the #toast div near the footer). See Phase 3 notes. */
+
+    /* ─── FOOTER ─────────────────────────────────── */
+    .footer {
+      background: var(--earth);
+      padding: 64px 0 32px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 48px;
+    }
+
+    .footer-brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .footer-brand-logo {
+      width: 38px;
+      height: auto;
+      flex-shrink: 0;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .25));
+    }
+
+    .footer-brand-name {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--white);
+    }
+
+    .footer-brand-desc {
+      font-size: 13px;
+      color: rgba(255, 255, 255, .45);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .footer-social {
+      display: flex;
+      gap: 10px;
+    }
+
+    .footer-social a {
+      width: 36px;
+      height: 36px;
+      background: rgba(255, 255, 255, .07);
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+      color: rgba(255, 255, 255, .55);
+      font-size: 14px;
+      transition: all .2s;
+    }
+
+    .footer-social a:hover {
+      background: var(--leaf);
+      color: #fff;
+    }
+
+    .footer-col-title {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: rgba(255, 255, 255, .4);
+      margin-bottom: 18px;
+    }
+
+    .footer-col-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .footer-col-list li a {
+      font-size: 13px;
+      color: rgba(255, 255, 255, .55);
+      transition: color .15s;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .footer-col-list li a:hover {
+      color: var(--lime);
+    }
+
+    .footer-col-list li a i {
+      font-size: 11px;
+    }
+
+    .footer-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, .07);
+      margin-bottom: 28px;
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer-bottom p {
+      font-size: 12px;
+      color: rgba(255, 255, 255, .3);
+    }
+
+    .footer-certs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .footer-cert {
+      padding: 5px 12px;
+      background: rgba(255, 255, 255, .05);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 20px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, .4);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .footer-cert i {
+      color: var(--lime);
+    }
+
+    /* ─── STICKY WA BUTTON ───────────────────────── */
+    .wa-fab {
+      position: fixed;
+      bottom: 28px;
+      left: 28px;
+      z-index: 1500;
+      width: 58px;
+      height: 58px;
+      background: #25D366;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 6px 24px rgba(37, 211, 102, .4);
+      transition: all .25s;
+    }
+
+    .wa-fab:hover {
+      transform: scale(1.08);
+      box-shadow: 0 10px 32px rgba(37, 211, 102, .5);
+    }
+
+    .wa-fab i {
+      color: #fff;
+      font-size: 26px;
+    }
+
+    .wa-fab-tooltip {
+      position: absolute;
+      left: 68px;
+      background: var(--earth);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+
+    .wa-fab:hover .wa-fab-tooltip {
+      opacity: 1;
+    }
+
+    /* ─── RESPONSIVE ─────────────────────────────── */
+    @media (max-width: 900px) {
+      .hero-inner {
+        grid-template-columns: 1fr;
+        gap: 44px;
+        padding: 60px 0;
+      }
+
+      .hero-visual {
+        order: -1;
+        max-width: none;
+        width: calc(100% + (2 * var(--container-pad)));
+        margin-left: calc(-1 * var(--container-pad));
+        margin-right: calc(-1 * var(--container-pad));
+      }
+
+      .hero-image-frame {
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+      }
+
+      .hero-content {
+        text-align: center;
+      }
+
+      .hero-content .eyebrow {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .hero-subtitle {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .hero-actions {
+        justify-content: center;
+      }
+
+      .hero-stats {
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .hero-trust-bar {
+        justify-content: center;
+      }
+
+      .why-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .sell-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .order-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .about-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .nav-inner {
+        height: 56px;
+      }
+
+      .nav-logo-sub {
+        display: none;
+      }
+
+      .nav-cta {
+        gap: 8px;
+      }
+
+      .nav-social {
+        display: none;
+      }
+
+      .nav-cta .btn-primary {
+        display: none;
+      }
+
+      .nav-cta .nav-whatsapp {
+        display: none;
+      }
+
+      .nav-cta .nav-login-btn {
+        display: inline-flex;
+      }
+
+      .nav-toggle {
+        display: flex;
+      }
+    }
+
+    @media (max-width: 600px) {
+      :root {
+        --container-pad: 16px;
+      }
+
+      .container {
+        padding: 0 var(--container-pad);
+      }
+
+      .products-section,
+      .why-section,
+      .sell-section,
+      .about-section {
+        padding: 70px 0;
+      }
+
+      .hero-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        max-width: 100%;
+      }
+
+      .hero-stat-num {
+        font-size: 22px;
+      }
+
+      .hero-stat {
+        padding: 14px 8px;
+      }
+
+      .hero-float-card {
+        padding: 10px 13px;
+      }
+
+      .hero-float-card .hfc-num {
+        font-size: 14px;
+      }
+
+      .hero-float-card .hfc-label {
+        font-size: 10px;
+      }
+
+      .hero-float-card.top {
+        left: -6px;
+      }
+
+      .hero-float-card.bottom {
+        right: -6px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .why-creds {
+        grid-template-columns: 1fr;
+      }
+
+      .about-creds-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .social-links-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .track-form {
+        flex-direction: column;
+      }
+
+      .modal {
+        max-height: 95vh;
+      }
+
+      .wa-fab {
+        bottom: 16px;
+        left: 16px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* ─── SCROLL REVEAL ──────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity .7s cubic-bezier(.22, 1, .36, 1), transform .7s cubic-bezier(.22, 1, .36, 1);
+      will-change: opacity, transform;
+    }
+
+    .reveal.in {
+      opacity: 1;
+      transform: none;
+    }
+
+    .reveal[data-delay="1"] {
+      transition-delay: .08s;
+    }
+
+    .reveal[data-delay="2"] {
+      transition-delay: .16s;
+    }
+
+    .reveal[data-delay="3"] {
+      transition-delay: .24s;
+    }
+
+    .reveal[data-delay="4"] {
+      transition-delay: .32s;
+    }
+
+    /* Hero entrance */
+    .hero-content>* {
+      opacity: 0;
+      animation: heroIn .8s cubic-bezier(.22, 1, .36, 1) forwards;
+    }
+
+    .hero-content>*:nth-child(1) {
+      animation-delay: .05s;
+    }
+
+    .hero-content>*:nth-child(2) {
+      animation-delay: .15s;
+    }
+
+    .hero-content>*:nth-child(3) {
+      animation-delay: .25s;
+    }
+
+    .hero-content>*:nth-child(4) {
+      animation-delay: .35s;
+    }
+
+    .hero-content>*:nth-child(5) {
+      animation-delay: .45s;
+    }
+
+    .hero-content>*:nth-child(6) {
+      animation-delay: .55s;
+    }
+
+    .hero-visual {
+      opacity: 0;
+      animation: heroIn 1s cubic-bezier(.22, 1, .36, 1) .35s forwards;
+    }
+
+    @keyframes heroIn {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* ─── SPINNER ────────────────────────────────── */
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, .3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body data-site-mode="index">
+
+  <!-- ── NAV ─────────────────────────────────────── -->
+  <nav class="nav" id="mainNav">
+    <div class="container">
+      <div class="nav-inner">
+        <a href="#" class="nav-logo">
+          <div class="nav-logo-badge"><img src="assets/logo-mark.png?v=3" alt="Aarvex Global logo"></div>
+          <div>
+            <div class="nav-logo-name">Aarvex Global</div>
+            <div class="nav-logo-sub">Agri Export Specialists</div>
+          </div>
+        </a>
+        <ul class="nav-links">
+          <li><a href="#products">Products</a></li>
+          <li><a href="#sell">Sell Produce</a></li>
+          <li><a href="#about">About Us</a></li>
+        </ul>
+        <div class="nav-social" aria-label="Social media links">
+          <a href="https://www.instagram.com/aarvexglobal" target="_blank" rel="noopener" aria-label="Instagram"><i
+              class="fa-brands fa-instagram"></i></a>
+          <a href="https://www.facebook.com/profile.php?id=61590539051710" target="_blank" rel="noopener"
+            aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="https://wa.link/o0a5u0" target="_blank" rel="noopener" aria-label="WhatsApp"><i
+              class="fa-brands fa-whatsapp"></i></a>
+          <a href="https://www.linkedin.com/in/aarvex-global-994305415/" target="_blank" rel="noopener"
+            aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+          <a href="https://x.com/aarvexglobal" target="_blank" rel="noopener" aria-label="X"><i
+              class="fa-brands fa-x-twitter"></i></a>
+          <a href="https://t.me/aarvexglobal_bot" target="_blank" rel="noopener" aria-label="Telegram"><i
+              class="fa-brands fa-telegram"></i></a>
+          <a href="https://in.pinterest.com/aarvexglobal/" target="_blank" rel="noopener" aria-label="Pinterest"><i
+              class="fa-brands fa-pinterest-p"></i></a>
+          <a href="https://www.threads.com/@aarvexglobal" target="_blank" rel="noopener" aria-label="Threads"><i
+              class="fa-brands fa-threads"></i></a>
+        </div>
+        <div class="nav-cta">
+          <a href="https://wa.link/o0a5u0" target="_blank" class="nav-whatsapp">
+            <i class="fa-brands fa-whatsapp"></i> WhatsApp
+          </a>
+          <a href="portal.html" class="nav-login-btn" id="navLoginBtn">
+            <i class="fa-solid fa-user"></i> Login / My Account
+          </a>
+        </div>
+        <button class="nav-toggle" id="navToggle" aria-label="Menu">
+          <i class="fa-solid fa-bars" id="navToggleIcon" style="font-size:20px"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#products" onclick="closeMobile()"><i class="fa-solid fa-leaf"></i> Products</a>
+    <a href="#sell" onclick="closeMobile()"><i class="fa-solid fa-tractor"></i> Sell Produce</a>
+    <a href="#about" onclick="closeMobile()"><i class="fa-solid fa-building"></i> About Us</a>
+    <a href="https://www.instagram.com/aarvexglobal" target="_blank"><i class="fa-brands fa-instagram"></i>
+      Instagram</a>
+    <a href="https://x.com/aarvexglobal" target="_blank"><i class="fa-brands fa-x-twitter"></i> X</a>
+    <a href="https://www.linkedin.com/in/aarvex-global-994305415/" target="_blank"><i
+        class="fa-brands fa-linkedin-in"></i> LinkedIn</a>
+    <a href="portal.html" id="mobileLoginBtn"><i class="fa-solid fa-user" style="color:var(--leaf)"></i> Login / My
+      Account</a>
+  </div>
+
+  <!-- ── HERO ─────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-bg-pattern"></div>
+    <div class="hero-grain"></div>
+    <img class="hero-watermark" src="assets/logo-mark-white.png?v=3" alt="" aria-hidden="true">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-content">
+          <div class="eyebrow">
+            <i class="fa-solid fa-certificate"></i> Certified Agri Export House
+          </div>
+          <h1 class="hero-title">
+            Premium Agricultural<br>
+            Produce, Delivered<br>
+            <span class="accent">Across the Globe</span>
+          </h1>
+          <p class="hero-subtitle">
+            From the fertile fields of Maharashtra to buyers worldwide — spices, grains, and farm commodities that are
+            certified, traceable, and shipped with care.
+          </p>
+          <div class="hero-actions">
+            <a href="#products" class="btn-primary">
+              <i class="fa-solid fa-box-open"></i> Explore Catalogue
+            </a>
+            <a href="portal.html" class="btn-outline">
+              <i class="fa-solid fa-user"></i> Open My Account
+            </a>
+            <a href="https://wa.link/o0a5u0" target="_blank" class="btn-outline">
+              <i class="fa-brands fa-whatsapp"></i> WhatsApp Us
+            </a>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <div class="hero-stat-num">10+</div>
+              <div class="hero-stat-label">Products</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-num">4</div>
+              <div class="hero-stat-label">Certifications</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-num">24h</div>
+              <div class="hero-stat-label">Response</div>
+            </div>
+          </div>
+          <div class="hero-trust-bar">
+            <div class="trust-chip"><i class="fa-solid fa-circle-check"></i> GSTIN Verified</div>
+            <div class="trust-chip"><i class="fa-solid fa-circle-check"></i> IEC Certified</div>
+            <div class="trust-chip"><i class="fa-solid fa-circle-check"></i> Udyam MSME</div>
+            <div class="trust-chip"><i class="fa-solid fa-circle-check"></i> Cashfree Secured</div>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="hero-image-frame">
+            <img src="assets/hero-products.jpg"
+              alt="Premium Indian spices, grains and agricultural produce for export — chillies, turmeric, basmati rice, cumin, sesame, soybean and garlic">
+          </div>
+          <div class="hero-float-card top float-anim-1">
+            <div class="hfc-icon"><i class="fa-solid fa-award"></i></div>
+            <div>
+              <div class="hfc-num">100% Certified</div>
+              <div class="hfc-label">Export-ready documentation</div>
+            </div>
+          </div>
+          <div class="hero-float-card bottom float-anim-2">
+            <div class="hfc-icon"><i class="fa-solid fa-earth-asia"></i></div>
+            <div>
+              <div class="hfc-num">Global Shipping</div>
+              <div class="hfc-label">FOB &amp; CIF · USD / INR</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── MARQUEE ─────────────────────────────────── -->
+  <div class="marquee-section">
+    <div class="marquee-track" id="marqueeTrack">
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Teja Lal Mirch</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Kashmiri Mirch</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Haldi / Turmeric</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Jeera / Cumin</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Basmati Rice 1121</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Wheat</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Soybean</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Onion</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Garlic</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Sesame Seeds</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Teja Lal Mirch</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Kashmiri Mirch</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Haldi / Turmeric</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Jeera / Cumin</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Basmati Rice 1121</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Wheat</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Soybean</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Onion</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Garlic</span>
+      <span class="marquee-item"><i class="fa-solid fa-seedling"></i>Sesame Seeds</span>
+    </div>
+  </div>
+
+  <!-- ── PRODUCTS CATALOGUE ──────────────────────── -->
+  <section class="products-section" id="products">
+    <div class="container">
+      <div class="products-header">
+        <div>
+          <div class="eyebrow"><i class="fa-solid fa-boxes-stacked"></i> Product Catalogue</div>
+          <h2 class="section-title">Premium Agricultural<br>Products</h2>
+        </div>
+        <p style="max-width:320px; color:var(--text3); font-size:14px; line-height:1.7">
+          Sourced directly from farms, quality-tested, and packed for domestic and international export.
+        </p>
+      </div>
+      <div class="catalogue-toolbar catalogue-search-unified">
+        <div class="search-filter-group">
+          <div class="catalogue-search-input-wrap">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="search" id="catalogueSearch" placeholder="Search products or shop ID (e.g. 00002)…"
+              autocomplete="off">
+            <button type="button" class="search-clear" id="searchClear" aria-label="Clear"><i
+                class="fa-solid fa-xmark"></i></button>
+          </div>
+        </div>
+        <div class="catalogue-chips chip-scroll-fade" id="catalogueChips" aria-label="Product categories"></div>
+        <div class="filter-dropdown" id="filterDropdown">
+          <div class="filter-section">
+            <div class="filter-section-label">Category</div>
+            <div class="filter-chips-row" id="categoryChips"></div>
+          </div>
+          <div class="filter-section">
+            <div class="filter-section-label">Rating</div>
+            <div class="filter-chips-row" id="ratingChips">
+              <button class="filter-pill cat-chip active" data-rating="all">All ratings</button>
+              <button class="filter-pill cat-chip" data-rating="5">5★</button>
+              <button class="filter-pill cat-chip" data-rating="4">4★+</button>
+              <button class="filter-pill cat-chip" data-rating="3">3★+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TOP SHOPS LEADERBOARD ─────────────────────── -->
+      <section class="top-shops-section" id="topShopsSection">
+        <div class="top-shops-header">
+          <div class="top-shops-title">
+            <i class="fa-solid fa-trophy"></i> Top Shops
+          </div>
+          <button class="top-shops-toggle" id="topShopsToggle" aria-expanded="false">
+            <i class="fa-solid fa-chevron-down" id="topShopsToggleIcon"></i>
+            <span id="topShopsToggleText">View all top shops</span>
+          </button>
+        </div>
+        <div class="top-shops-content" id="topShopsContent">
+          <div id="topShopsLoading" class="catalogue-loading">
+            <div><i class="fa-solid fa-spinner fa-spin"
+                style="font-size:36px; color:var(--leaf); margin-bottom:12px"></i></div>
+            <p>Loading top shops…</p>
+          </div>
+          <div id="topShopsEmpty" class="top-shops-empty" style="display:none">
+            <i class="fa-solid fa-store-slash"></i>
+            <p>No shops with published products yet.</p>
+          </div>
+          <div id="topShopsContainer" style="display:none">
+            <!-- Featured #1 shop will be rendered here -->
+            <div id="topShopFeatured"></div>
+            <!-- Shops #2-10 will be rendered here -->
+            <div class="top-shops-list" id="topShopsList"></div>
+          </div>
+        </div>
+      </section>
+
+      <div id="catalogueLiveBadge"></div>
+      <div class="products-grid" id="productsGrid">
+        <div class="catalogue-loading" style="grid-column:1/-1">
+          <div><i class="fa-solid fa-seedling fa-spin"
+              style="font-size:36px; color:var(--leaf); margin-bottom:12px"></i></div>
+          <p>Loading products from catalogue…</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── WHY AARVEX ──────────────────────────────── -->
+  <section class="why-section" id="about-why">
+    <div class="container">
+      <div class="why-grid">
+        <div class="why-content">
+          <div class="eyebrow"><i class="fa-solid fa-shield-halved"></i> Why Choose Us</div>
+          <h2 class="section-title">Trusted by Buyers<br>Across Continents</h2>
+          <p>We combine traditional agricultural expertise with modern digital processes — certified documentation,
+            transparent pricing, and dedicated support for every order.</p>
+          <div class="why-features">
+            <div class="why-feature">
+              <div class="why-feature-icon"><i class="fa-solid fa-certificate"></i></div>
+              <div>
+                <div class="why-feature-title">Certified Export House</div>
+                <div class="why-feature-text">Registered with GSTIN, IEC, Udyam MSME & RC — all documentation
+                  export-ready.</div>
+              </div>
+            </div>
+            <div class="why-feature">
+              <div class="why-feature-icon"><i class="fa-solid fa-globe"></i></div>
+              <div>
+                <div class="why-feature-title">International Shipping</div>
+                <div class="why-feature-text">FOB, CIF pricing available. USD & INR payments. Serving Middle East,
+                  Africa, Southeast Asia.</div>
+              </div>
+            </div>
+            <div class="why-feature">
+              <div class="why-feature-icon"><i class="fa-solid fa-bolt"></i></div>
+              <div>
+                <div class="why-feature-title">AI-Powered Response</div>
+                <div class="why-feature-text">WhatsApp bot + web platform both connected to same backend — instant
+                  quotes, 24/7.</div>
+              </div>
+            </div>
+            <div class="why-feature">
+              <div class="why-feature-icon"><i class="fa-solid fa-credit-card"></i></div>
+              <div>
+                <div class="why-feature-title">Cashfree Secured Payments</div>
+                <div class="why-feature-text">Payment links sent directly to WhatsApp after order. Invoice
+                  auto-generated.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="why-creds">
+          <div class="cred-card">
+            <i class="fa-solid fa-id-card"></i>
+            <div class="cred-card-label">GSTIN</div>
+            <div class="cred-card-value">27AZJPL8251G1Z3</div>
+          </div>
+          <div class="cred-card">
+            <i class="fa-solid fa-globe"></i>
+            <div class="cred-card-label">IEC Code</div>
+            <div class="cred-card-value">AZJPL8251G</div>
+          </div>
+          <div class="cred-card">
+            <i class="fa-solid fa-building-columns"></i>
+            <div class="cred-card-label">Udyam MSME</div>
+            <div class="cred-card-value">UDYAM-MH-08-0090771</div>
+          </div>
+          <div class="cred-card">
+            <i class="fa-solid fa-registered"></i>
+            <div class="cred-card-label">RC Number</div>
+            <div class="cred-card-value">AA270526178767H</div>
+          </div>
+          <div class="cred-card" style="grid-column:span 2">
+            <i class="fa-solid fa-location-dot"></i>
+            <div class="cred-card-label">Registered Address</div>
+            <div class="cred-card-value" style="font-size:13px; font-weight:500">Voltas Sagar Colony, Warora,
+              Chandrapur, Maharashtra — 442907</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── SELL YOUR PRODUCE ───────────────────────── -->
+  <section class="sell-section" id="sell">
+    <div class="container">
+      <div class="sell-grid">
+        <div class="sell-info">
+          <div class="eyebrow"><i class="fa-solid fa-tractor"></i> For Farmers & Exporters</div>
+          <h2 class="section-title">Sell Your<br>Produce to Us</h2>
+          <p>Are you a farmer, FPO, or produce aggregator? Register your crop with us and our team will contact you with
+            a price quote within 24 hours.</p>
+          <div class="sell-steps">
+            <div class="sell-step">
+              <div class="sell-step-num">1</div>
+              <div class="sell-step-text">
+                <h4>Fill the Form</h4>
+                <p>Tell us about your crop, quantity available, and expected price.</p>
+              </div>
+            </div>
+            <div class="sell-step">
+              <div class="sell-step-num">2</div>
+              <div class="sell-step-text">
+                <h4>Team Contact</h4>
+                <p>Our team will call you within 24 hours with a competitive offer.</p>
+              </div>
+            </div>
+            <div class="sell-step">
+              <div class="sell-step-num">3</div>
+              <div class="sell-step-text">
+                <h4>Payment & Pickup</h4>
+                <p>Agree on price, we arrange logistics and payment directly.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="sell-form-box">
+          <h3>Register Your Crop</h3>
+          <p>Fill in the details below and we'll reach out shortly.</p>
+          <div id="sellFormContent">
+            <div class="form-group">
+              <label class="form-label">Your Name <span class="req">*</span></label>
+              <input type="text" class="form-input" id="sell_name" placeholder="Full name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mobile Number <span class="req">*</span></label>
+              <input type="tel" class="form-input" id="sell_mobile" placeholder="+91 or 10-digit number">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-input" id="sell_email" placeholder="Optional">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Crop / Product <span class="req">*</span></label>
+              <input type="text" class="form-input" id="sell_crop" placeholder="e.g. Teja Mirch, Onion, Wheat…">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Quantity (kg) <span class="req">*</span></label>
+                <input type="number" class="form-input" id="sell_qty" placeholder="500" min="1">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Expected Price (₹/kg)</label>
+                <input type="number" class="form-input" id="sell_price" placeholder="Optional">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">City <span class="req">*</span></label>
+                <input type="text" class="form-input" id="sell_city" placeholder="Nagpur">
+              </div>
+              <div class="form-group">
+                <label class="form-label">State <span class="req">*</span></label>
+                <input type="text" class="form-input" id="sell_state" placeholder="Maharashtra">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pincode</label>
+              <input type="text" class="form-input" id="sell_pincode" placeholder="Optional">
+            </div>
+            <div class="api-error-msg" id="sellError"></div>
+            <div class="recaptcha-wrap" style="margin:16px 0;display:flex;justify-content:flex-start">
+              <div class="cf-turnstile" id="sellRecaptcha" data-sitekey="0x4AAAAAADs_xRz679e2-ggj"></div>
+            </div>
+            <button class="form-submit" id="sellSubmitBtn" onclick="submitSellForm()">
+              <i class="fa-solid fa-paper-plane"></i> Submit Listing
+            </button>
+          </div>
+          <div class="form-success" id="sellSuccess">
+            <i class="fa-solid fa-circle-check"></i>
+            <h3>Listing Submitted!</h3>
+            <p>Our team will contact you on WhatsApp within 24 hours.</p>
+            <p id="sellRefId" style="margin-top:10px; font-weight:600; color:var(--leaf); font-size:15px"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PLACE ORDER ─────────────────────────────── -->
+
+
+  <!-- ── TRACK ORDER ─────────────────────────────── -->
+
+
+  <!-- ── ABOUT ───────────────────────────────────── -->
+  <section class="about-section" id="about">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-content">
+          <div class="eyebrow"><i class="fa-solid fa-building"></i> About Us</div>
+          <h2 class="section-title">Aarvex Global —<br>Premium Agri Export House</h2>
+          <p>
+            Based in Warora, Chandrapur, Maharashtra, Aarvex Global is a certified agri-export company specialising in
+            food and agricultural products. We connect Indian farmers to global buyers with integrity, quality, and
+            speed.
+          </p>
+          <p>
+            Digital-first, AI-powered support on WhatsApp and web — with certified documentation, competitive pricing,
+            and end-to-end export logistics.
+          </p>
+          <div class="about-creds-grid">
+            <div class="about-cred">
+              <div class="about-cred-label">GSTIN</div>
+              <div class="about-cred-value">27AZJPL8251G1Z3</div>
+            </div>
+            <div class="about-cred">
+              <div class="about-cred-label">IEC Code</div>
+              <div class="about-cred-value">AZJPL8251G</div>
+            </div>
+            <div class="about-cred">
+              <div class="about-cred-label">Udyam MSME</div>
+              <div class="about-cred-value">UDYAM-MH-08-0090771</div>
+            </div>
+            <div class="about-cred">
+              <div class="about-cred-label">RC Number</div>
+              <div class="about-cred-value">AA270526178767H</div>
+            </div>
+          </div>
+          <div class="about-contact-card">
+            <h4>Get in Touch</h4>
+            <div class="contact-row">
+              <i class="fa-solid fa-phone"></i>
+              <a href="tel:+918767205473">+91-8767205473</a>
+            </div>
+            <div class="contact-row">
+              <i class="fa-solid fa-envelope"></i>
+              <a href="mailto:aarvexglo@gmail.com">aarvexglo@gmail.com</a>
+            </div>
+            <div class="contact-row">
+              <i class="fa-solid fa-location-dot"></i>
+              <span style="color:rgba(255,255,255,.6); font-size:14px">Voltas Sagar Colony, Warora, Chandrapur,
+                Maharashtra — 442907</span>
+            </div>
+            <div class="contact-row">
+              <i class="fa-solid fa-globe"></i>
+              <a href="https://aarvexglobal.com" target="_blank">aarvexglobal.com</a>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="eyebrow"><i class="fa-solid fa-share-nodes"></i> Connect With Us</div>
+          <h3
+            style="font-family:var(--font-display); font-size:22px; font-weight:800; color:var(--earth); margin-bottom:20px">
+            We're Active on All Platforms</h3>
+          <div class="social-links-grid">
+            <a href="https://www.instagram.com/aarvexglobal" target="_blank" class="social-link-card">
+              <div class="social-link-icon" style="background:#fce4ec; color:#E1306C"><i
+                  class="fa-brands fa-instagram"></i></div>
+              <div>
+                <div class="social-link-text">Instagram</div>
+                <div class="social-link-sub">@aarvexglobal</div>
+              </div>
+            </a>
+            <a href="https://www.facebook.com/profile.php?id=61590539051710" target="_blank" class="social-link-card">
+              <div class="social-link-icon" style="background:#e3f2fd; color:#1877F2"><i
+                  class="fa-brands fa-facebook-f"></i></div>
+              <div>
+                <div class="social-link-text">Facebook</div>
+                <div class="social-link-sub">Aarvex Global</div>
+              </div>
+            </a>
+            <a href="https://wa.link/o0a5u0" target="_blank" class="social-link-card">
+              <div class="social-link-icon" style="background:#e8f5e9; color:#25D366"><i
+                  class="fa-brands fa-whatsapp"></i></div>
+              <div>
+                <div class="social-link-text">WhatsApp</div>
+                <div class="social-link-sub">Chat & Orders</div>
+              </div>
+            </a>
+            <a href="https://www.linkedin.com/in/aarvex-global-994305415/" target="_blank" class="social-link-card">
+              <div class="social-link-icon" style="background:#e3f2fd; color:#0A66C2"><i
+                  class="fa-brands fa-linkedin-in"></i></div>
+              <div>
+                <div class="social-link-text">LinkedIn</div>
+                <div class="social-link-sub">Aarvex Global</div>
+              </div>
+            </a>
+            <a href="https://x.com/aarvexglobal" target="_blank" class="social-link-card">
+              <div class="social-link-icon" style="background:#f5f5f5; color:#000"><i
+                  class="fa-brands fa-x-twitter"></i></div>
+              <div>
+                <div class="social-link-text">X (Twitter)</div>
+                <div class="social-link-sub">@aarvexglobal</div>
+              </div>
+            </a>
+            <a href="https://t.me/aarvexglobal_bot" target="_blank" class="social-link-card">
+              <div class="social-link-icon" style="background:#e3f2fd; color:#229ED9"><i
+                  class="fa-brands fa-telegram"></i></div>
+              <div>
+                <div class="social-link-text">Telegram</div>
+                <div class="social-link-sub">Bot available</div>
+              </div>
+            </a>
+            <a href="https://in.pinterest.com/aarvexglobal/" target="_blank" class="social-link-card">
+              <div class="social-link-icon" style="background:#fce4ec; color:#E60023"><i
+                  class="fa-brands fa-pinterest-p"></i></div>
+              <div>
+                <div class="social-link-text">Pinterest</div>
+                <div class="social-link-sub">aarvexglobal</div>
+              </div>
+            </a>
+            <a href="https://www.threads.com/@aarvexglobal" target="_blank" class="social-link-card">
+              <div class="social-link-icon" style="background:#f5f5f5; color:#000"><i class="fa-brands fa-threads"></i>
+              </div>
+              <div>
+                <div class="social-link-text">Threads</div>
+                <div class="social-link-sub">@aarvexglobal</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ──────────────────────────────────── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand-lockup">
+            <img class="footer-brand-logo" src="assets/logo-mark-white.png?v=3" alt="Aarvex Global logo">
+            <div class="footer-brand-name">Aarvex Global</div>
+          </div>
+          <p class="footer-brand-desc">Premium quality agricultural products — spices, grains, and commodities —
+            exported with integrity from Warora, Maharashtra to the world.</p>
+          <div class="footer-social">
+            <a href="https://www.instagram.com/aarvexglobal" target="_blank"><i class="fa-brands fa-instagram"></i></a>
+            <a href="https://www.facebook.com/profile.php?id=61590539051710" target="_blank"><i
+                class="fa-brands fa-facebook-f"></i></a>
+            <a href="https://wa.link/o0a5u0" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+            <a href="https://www.linkedin.com/in/aarvex-global-994305415/" target="_blank"><i
+                class="fa-brands fa-linkedin-in"></i></a>
+            <a href="https://x.com/aarvexglobal" target="_blank"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="https://t.me/aarvexglobal_bot" target="_blank"><i class="fa-brands fa-telegram"></i></a>
+          </div>
+        </div>
+        <div>
+          <div class="footer-col-title">Products</div>
+          <ul class="footer-col-list">
+            <li><a href="#products"><i class="fa-solid fa-pepper-hot"></i> Teja Lal Mirch</a></li>
+            <li><a href="#products"><i class="fa-solid fa-pepper-hot"></i> Kashmiri Mirch</a></li>
+            <li><a href="#products"><i class="fa-solid fa-leaf"></i> Haldi / Turmeric</a></li>
+            <li><a href="#products"><i class="fa-solid fa-seedling"></i> Jeera / Cumin</a></li>
+            <li><a href="#products"><i class="fa-solid fa-wheat-awn"></i> Basmati Rice 1121</a></li>
+            <li><a href="#products"><i class="fa-solid fa-ellipsis"></i> View All Products</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Quick Links</div>
+          <ul class="footer-col-list">
+            <li></li>
+            <li><a href="#sell"><i class="fa-solid fa-tractor"></i> Sell Produce</a></li>
+            <li></li>
+            <li><a href="#about"><i class="fa-solid fa-building"></i> About Us</a></li>
+            <li><a href="https://wa.link/o0a5u0" target="_blank"><i class="fa-brands fa-whatsapp"></i> WhatsApp Bot</a>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Contact</div>
+          <ul class="footer-col-list">
+            <li><a href="tel:+918767205473"><i class="fa-solid fa-phone"></i> +91-8767205473</a></li>
+            <li><a href="mailto:aarvexglo@gmail.com"><i class="fa-solid fa-envelope"></i> aarvexglo@gmail.com</a></li>
+            <li><a href="#about"><i class="fa-solid fa-location-dot"></i> Warora, Maharashtra</a></li>
+            <li><a href="https://aarvexglobal.com" target="_blank"><i class="fa-solid fa-globe"></i>
+                aarvexglobal.com</a></li>
+            <li><a href="https://paragartbook-star.github.io/aarvex-global/privacy-policy.html" target="_blank"><i
+                  class="fa-solid fa-shield"></i> Privacy Policy</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-divider"></div>
+      <div class="footer-bottom">
+        <p>© 2025 Aarvex Global. All rights reserved. Premium Agri Export House, Warora, Maharashtra.</p>
+        <div class="footer-certs">
+          <span class="footer-cert"><i class="fa-solid fa-check"></i> GSTIN 27AZJPL8251G1Z3</span>
+          <span class="footer-cert"><i class="fa-solid fa-check"></i> IEC AZJPL8251G</span>
+          <span class="footer-cert"><i class="fa-solid fa-check"></i> Udyam MSME</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ── TOAST HOST (Phase 2) — was missing entirely on this page, so
+     product-modal.js's guarded showToast() call was silently a no-op
+     here (wishlist errors, save failures, etc. never surfaced). See
+     CatalogueUI.toast() in catalogue-ui.js + components.css. ── -->
+  <div id="toast"></div>
+
+  <!-- ── PRODUCT DETAIL MODAL ─────────────────────── -->
+  <div class="pd-modal-overlay" id="productDetailModal" role="dialog" aria-modal="true" aria-labelledby="pdModalTitle">
+    <div class="pd-modal-box">
+      <div class="pd-modal-head">
+        <h3 id="pdModalTitle">Product Details</h3>
+        <button type="button" class="pd-modal-close" onclick="ProductModal.closeModal()" aria-label="Close"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="pd-modal-content" id="pdModalBody"></div>
+      <div class="pd-modal-actions" id="pdModalActions"></div>
+      <div class="pd-reviews-section">
+        <h4>Customer Reviews</h4>
+        <div id="pdReviewsList"></div>
+        <div id="pdShopReactions"></div>
+        <div id="pdReviewForm"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SHOP PROFILE MODAL ────────────────────────── -->
+  <div class="pd-modal-overlay" id="shopProfileModal" role="dialog" aria-modal="true"
+    aria-labelledby="shopProfileModalTitle">
+    <div class="pd-modal-box">
+      <div class="pd-modal-head">
+        <h3 id="shopProfileModalTitle">Shop Profile</h3>
+        <button type="button" class="pd-modal-close" onclick="ProductModal.closeShop()" aria-label="Close"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="pd-modal-content" id="shopProfileBody"></div>
+    </div>
+  </div>
+
+  <!-- ── WA FAB ──────────────────────────────────── -->
+  <a href="https://wa.link/o0a5u0" target="_blank" class="wa-fab">
+    <i class="fa-brands fa-whatsapp"></i>
+    <span class="wa-fab-tooltip">Chat on WhatsApp</span>
+  </a>
+
+  <script src="catalogue-ui.js"></script>
+  <script src="product-modal.js?v=38"></script>
+  <script>
+    // ──────────────────────────────────────────────
+    //  CONFIG — replace with your Lambda Function URL
+    // ──────────────────────────────────────────────
+    const LAMBDA_URL = 'https://j1yound90m.execute-api.ap-southeast-1.amazonaws.com';
+    // NOTE: index.html uses Cloudflare Turnstile (see .cf-turnstile div above),
+    // not Google reCAPTCHA. Turnstile auto-renders from the data-sitekey div;
+    // getTurnstileToken() is defined in portal-polyfills.js (shared with portal.html).
+
+    // ──────────────────────────────────────────────
+    //  DEFAULT PRODUCTS (shown if Lambda catalogue empty)
+    // ──────────────────────────────────────────────
+    const DEFAULT_PRODUCTS = [
+      { product_id: 'teja_lal_mirch', product_name: 'Teja Lal Mirch', category_name: 'Spices', description: 'Premium-grade Teja chilli with high heat (SHU). A favourite export to the Middle East and Southeast Asia.', icon: 'fa-solid fa-pepper-hot', min_order_kg: 25, available_stock: 'In Stock', price_per_kg: '' },
+      { product_id: 'kashmiri_mirch', product_name: 'Kashmiri Mirch', category_name: 'Spices', description: 'Deep red colour with mild heat. Prized worldwide for the vibrant colour it adds to curry powder blends.', icon: 'fa-solid fa-pepper-hot', min_order_kg: 25, available_stock: 'In Stock', price_per_kg: '' },
+      { product_id: 'haldi', product_name: 'Haldi (Turmeric)', category_name: 'Spices', description: 'High curcumin content with a bright golden colour. Export-certified and supplied with quality test reports.', icon: 'fa-solid fa-mortar-pestle', min_order_kg: 25, available_stock: 'In Stock', price_per_kg: '' },
+      { product_id: 'jeera', product_name: 'Jeera (Cumin)', category_name: 'Spices', description: 'Premium cumin seeds — machine-cleaned, sortex-processed, and ready for export.', icon: 'fa-solid fa-seedling', min_order_kg: 10, available_stock: 'In Stock', price_per_kg: '' },
+      { product_id: 'basmati_rice_1121', product_name: 'Basmati Rice 1121', category_name: 'Grains', description: 'Premium long-grain Basmati 1121 — aged, low broken, and exported to the Middle East and Europe.', icon: 'fa-solid fa-wheat-awn', min_order_kg: 50, available_stock: 'In Stock', price_per_kg: '' },
+      { product_id: 'wheat', product_name: 'Wheat', category_name: 'Grains', description: 'High-protein Indian wheat — milling grade, suitable for flour production and bulk export.', icon: 'fa-solid fa-wheat-awn', min_order_kg: 1000, available_stock: 'Seasonal', price_per_kg: '' },
+      { product_id: 'soybean', product_name: 'Soybean', category_name: 'Grains', description: 'Oil-content-grade soybean from Central India — suitable for oil extraction and animal feed.', icon: 'fa-solid fa-seedling', min_order_kg: 500, available_stock: 'In Stock', price_per_kg: '' },
+      { product_id: 'onion', product_name: 'Onion', category_name: 'Vegetables', description: 'Fresh red onion of Maharashtra origin. A popular export to Bangladesh, Sri Lanka, and Malaysia.', icon: 'fa-solid fa-layer-group', min_order_kg: 100, available_stock: 'Seasonal', price_per_kg: '' },
+      { product_id: 'garlic', product_name: 'Garlic', category_name: 'Vegetables', description: 'Fresh garlic bulbs — strong aroma and high allicin. Available in multiple grades.', icon: 'fa-solid fa-bahai', min_order_kg: 50, available_stock: 'In Stock', price_per_kg: '' },
+      { product_id: 'sesame', product_name: 'Sesame Seeds', category_name: 'Seeds', description: 'Natural white sesame seeds — sortex-clean, low FFA, packed in 25 kg / 50 kg bags for export.', icon: 'fa-solid fa-seedling', min_order_kg: 25, available_stock: 'In Stock', price_per_kg: '' },
+    ];
+
+    // ──────────────────────────────────────────────
+    //  NAV SCROLL
+    // ──────────────────────────────────────────────
+    window.addEventListener('scroll', () => {
+      document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    // ──────────────────────────────────────────────
+    //  MOBILE MENU
+    // ──────────────────────────────────────────────
+    document.getElementById('navToggle').addEventListener('click', () => {
+      const m = document.getElementById('mobileMenu');
+      const icon = document.getElementById('navToggleIcon');
+      m.classList.toggle('open');
+      icon.className = m.classList.contains('open') ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+    });
+    function closeMobile() {
+      document.getElementById('mobileMenu').classList.remove('open');
+      document.getElementById('navToggleIcon').className = 'fa-solid fa-bars';
+    }
+
+    // ──────────────────────────────────────────────
+    //  TOAST
+    //  Thin wrapper kept so every existing toast(msg, type) call site
+    //  below needs no rename. Delegates to the shared queued
+    //  showToast() (catalogue-ui.js -> #toast host, components.css) —
+    //  see Phase 3 notes on the removed legacy #toastContainer system.
+    // ──────────────────────────────────────────────
+    function toast(msg, type = 'success') {
+      if (typeof window.showToast === 'function') {
+        window.showToast(msg, type);
+      }
+    }
+
+    // ──────────────────────────────────────────────
+    //  FETCH CATALOGUE FROM LAMBDA
+    // ──────────────────────────────────────────────
+    let catalogueProducts = [];
+    let selectedModalProduct = null;
+    let activeCategoryFilter = 'All';
+    let activeRatingFilter = 0;
+    let searchDebounce = null;
+
+    function renderStarRating(avg) {
+      const n = parseFloat(avg) || 0;
+      if (!n) {
+        // §0-5: zero/no reviews yet — an empty 5-star row reads as "rated zero",
+        // which is worse than showing nothing. Show only the New badge, no stars.
+        return `<div class="product-card-rating"><span class="rating-count rating-count-new">New</span></div>`;
+      }
+      // Same rounded SVG stars as the portal grid (see .ax-star in
+      // catalogue-ui.css) — kept in sync so both catalogues read identically.
+      const filled = Math.round(Math.min(5, Math.max(0, n)));
+      let stars = '';
+      for (let i = 0; i < 5; i++) {
+        stars += '<svg class="ax-star' + (i < filled ? ' filled' : '') + '" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.8l2.44 4.95 5.46.79-3.95 3.85.93 5.44L12 16.26l-4.88 2.57.93-5.44-3.95-3.85 5.46-.79z"/></svg>';
+      }
+      return `<div class="product-card-rating"><span class="rating-stars rating-stars-svg">${stars}</span><span class="rating-count">${n.toFixed(1)}</span></div>`;
+    }
+
+    /* ── Wishlist / heart button — same localStorage-backed pattern as
+       portal.html's toggleProductLike/isProductLiked, ported here so the
+       public catalogue has visual + functional parity. Index.html has no
+       logged-in `currentUser`, so guest likes are scoped to a shared guest
+       key (same key portal.html itself falls back to when signed out). ── */
+    function likedProductsKey() { return 'ax_liked_products_guest'; }
+    function getLikedProducts() {
+      try { return JSON.parse(localStorage.getItem(likedProductsKey()) || '[]'); } catch (e) { return []; }
+    }
+    function isProductLiked(key) { return getLikedProducts().indexOf(key) !== -1; }
+    function toggleProductLike(ev, key, btn) {
+      if (ev) ev.stopPropagation();
+      let liked = getLikedProducts();
+      const i = liked.indexOf(key);
+      let nowLiked;
+      if (i === -1) { liked.push(key); nowLiked = true; }
+      else { liked.splice(i, 1); nowLiked = false; }
+      localStorage.setItem(likedProductsKey(), JSON.stringify(liked));
+      if (btn) {
+        btn.classList.toggle('liked', nowLiked);
+        const icon = btn.querySelector('i');
+        if (icon) icon.className = (nowLiked ? 'fa-solid' : 'fa-regular') + ' fa-heart';
+      }
+    }
+
+    function buildCategoryChips(products) {
+      const cats = ['All', ...new Set(products.map(p => p.category_name).filter(Boolean))];
+      const dropdown = document.getElementById('categoryChips');
+      const topRow = document.getElementById('catalogueChips');
+      const dropdownHtml = cats.map(c => {
+        const value = c === 'All' ? 'all' : c.replace(/"/g, '&quot;');
+        return `<button class="filter-pill cat-chip${c === activeCategoryFilter ? ' active' : ''}" data-cat="${value}" type="button">${c}</button>`;
+      }).join('');
+      const topHtml = cats.map(c => {
+        const value = c === 'All' ? 'all' : c.replace(/"/g, '&quot;');
+        const icon = categoryIcon(c);
+        return `<button class="catalogue-chip${c === activeCategoryFilter ? ' active' : ''}" data-cat="${value}" type="button"><span class="cat-icon-circle"><i class="${icon}"></i></span><span class="chip-label">${c}</span></button>`;
+      }).join('');
+      if (dropdown) dropdown.innerHTML = dropdownHtml;
+      if (topRow) topRow.innerHTML = topHtml;
+    }
+
+    function updateFilterBadge() {
+      const badge = document.getElementById('filterActiveBadge');
+      if (!badge) return;
+      const activeCount = (activeCategoryFilter && activeCategoryFilter !== 'All' ? 1 : 0) + (activeRatingFilter > 0 ? 1 : 0);
+      badge.textContent = activeCount || '';
+      badge.classList.toggle('show', !!activeCount);
+    }
+
+    function setCategoryFilter(cat, btn) {
+      activeCategoryFilter = cat;
+      document.querySelectorAll('#categoryChips .cat-chip').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#catalogueChips .catalogue-chip').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      updateFilterBadge();
+      applyCatalogueFilters();
+    }
+
+    function setRatingFilter(minStars, btn) {
+      activeRatingFilter = minStars;
+      document.querySelectorAll('#ratingChips .cat-chip').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      updateFilterBadge();
+      applyCatalogueFilters();
+    }
+
+    function clearCatalogueFilters() {
+      activeCategoryFilter = 'All';
+      activeRatingFilter = 0;
+      const search = document.getElementById('catalogueSearch');
+      if (search) search.value = '';
+      const clear = document.getElementById('searchClear');
+      if (clear) clear.classList.remove('show');
+      buildCategoryChips(catalogueProducts);
+      document.querySelectorAll('#ratingChips .cat-chip').forEach((b, i) => b.classList.toggle('active', i === 0));
+      updateFilterBadge();
+      applyCatalogueFilters();
+    }
+
+    function applyCatalogueFilters() {
+      const q = (document.getElementById('catalogueSearch')?.value || '').trim().toLowerCase();
+      const clearBtn = document.getElementById('searchClear');
+      if (clearBtn) clearBtn.classList.toggle('show', !!q);
+      let list = catalogueProducts.slice();
+      if (activeCategoryFilter && activeCategoryFilter !== 'All') {
+        list = list.filter(p => p.category_name === activeCategoryFilter);
+      } else if (typeof CatalogueUI !== 'undefined') {
+        const st = CatalogueUI.getFilterState('filterDropdown');
+        if (st.category && st.category !== 'all') list = list.filter(p => p.category_name === st.category);
+      }
+      if (typeof CatalogueUI !== 'undefined') {
+        const st = CatalogueUI.getFilterState('filterDropdown');
+        if (st.rating === '5') list = list.filter(p => (parseFloat(p.avg_rating) || 0) >= 4.75);
+        else if (st.rating === '4') list = list.filter(p => (parseFloat(p.avg_rating) || 0) >= 4);
+        else if (st.rating === '3') list = list.filter(p => (parseFloat(p.avg_rating) || 0) >= 3);
+      } else if (activeRatingFilter > 0) {
+        list = list.filter(p => (parseFloat(p.avg_rating) || 0) >= activeRatingFilter);
+      }
+      if (q) {
+        if (typeof ProductModal !== 'undefined' && ProductModal.searchShop(q)) {
+          return;
+        }
+        list = list.filter(p =>
+          (p.product_name || '').toLowerCase().includes(q) ||
+          (p.category_name || '').toLowerCase().includes(q) ||
+          (p.shop_name || '').toLowerCase().includes(q) ||
+          (p.description || '').toLowerCase().includes(q)
+        );
+      }
+      renderProducts(list);
+    }
+
+    document.getElementById('catalogueSearch')?.addEventListener('input', () => {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(applyCatalogueFilters, 300);
+    });
+
+    async function loadCatalogue() {
+      const grid = document.getElementById('productsGrid');
+      if (grid) {
+        grid.innerHTML = Array(6).fill(0).map(function () {
+          return '<div class="product-card" style="pointer-events:none;opacity:.85">' +
+            '<div class="skeleton" style="width:100%;aspect-ratio:4/3;border-radius:0"></div>' +
+            '<div class="product-card-body" style="padding:18px">' +
+            '<div class="skeleton" style="height:10px;width:55%;margin-bottom:8px"></div>' +
+            '<div class="skeleton" style="height:16px;width:80%;margin-bottom:10px"></div>' +
+            '<div class="skeleton" style="height:32px;width:100%;border-radius:8px"></div>' +
+            '</div></div>';
+        }).join('');
+      }
+      let source = 'live';
+      try {
+        const res = await fetch(`${LAMBDA_URL}/catalogue`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(12000) : undefined
+        });
+        if (res.ok) {
+          const data = typeof safeFetchJson === 'function' ? await safeFetchJson(res) : await res.json();
+          const products = data.products || data.items || [];
+          if (products.length > 0) {
+            catalogueProducts = products;
+            buildCategoryChips(products);
+            applyCatalogueFilters();
+            return;
+          }
+          source = 'empty';
+        } else {
+          source = 'error';
+        }
+      } catch (e) {
+        source = 'offline';
+      }
+      catalogueProducts = source === 'offline' || source === 'error' ? DEFAULT_PRODUCTS : [];
+      if (catalogueProducts.length) {
+        buildCategoryChips(catalogueProducts);
+        applyCatalogueFilters();
+        if (source !== 'live') {
+          const badge = document.getElementById('catalogueLiveBadge');
+          if (badge) {
+            badge.innerHTML = source === 'offline'
+              ? '<i class="fa-solid fa-wifi-slash"></i> Offline preview — <a href="javascript:loadCatalogue()" style="color:inherit;font-weight:700">Retry live</a>'
+              : '<i class="fa-solid fa-seedling"></i> Sample catalogue — add products in Admin';
+            badge.style.display = '';
+          }
+        }
+        return;
+      }
+      if (grid) {
+        grid.innerHTML = `<div class="products-empty">
+      <i class="fa-solid fa-store"></i>
+      <h3>Products coming soon</h3>
+      <p>Sellers are onboarding. Check back shortly or contact us on WhatsApp for the full export catalogue.</p>
+      <button class="btn-primary" type="button" onclick="loadCatalogue()" style="margin-top:16px"><i class="fa-solid fa-rotate"></i> Refresh</button>
+    </div>`;
+      }
+    }
+
+    const PRODUCT_ICONS = {
+      mirch: 'fa-solid fa-pepper-hot', chilli: 'fa-solid fa-pepper-hot', pepper: 'fa-solid fa-pepper-hot',
+      haldi: 'fa-solid fa-mortar-pestle', turmeric: 'fa-solid fa-mortar-pestle',
+      jeera: 'fa-solid fa-seedling', cumin: 'fa-solid fa-seedling', sesame: 'fa-solid fa-seedling', seed: 'fa-solid fa-seedling',
+      rice: 'fa-solid fa-wheat-awn', wheat: 'fa-solid fa-wheat-awn', grain: 'fa-solid fa-wheat-awn',
+      soybean: 'fa-solid fa-seedling', bean: 'fa-solid fa-seedling',
+      onion: 'fa-solid fa-layer-group',
+      garlic: 'fa-solid fa-bahai',
+    };
+    const CATEGORY_ICONS = {
+      All: 'fa-solid fa-border-all',
+      Spices: 'fa-solid fa-pepper-hot',
+      Grains: 'fa-solid fa-wheat-awn',
+      Vegetables: 'fa-solid fa-bowl-food',
+      Seeds: 'fa-solid fa-seedling',
+      Oils: 'fa-solid fa-droplet',
+      Default: 'fa-solid fa-leaf',
+    };
+    function categoryIcon(name) {
+      return CATEGORY_ICONS[name] || CATEGORY_ICONS.Default;
+    }
+    function getProductIcon(p) {
+      if (p && typeof p === 'object' && p.icon) return p.icon;
+      const name = typeof p === 'string' ? p : (p && p.product_name) || '';
+      const n = name.toLowerCase();
+      for (const [k, v] of Object.entries(PRODUCT_ICONS)) {
+        if (n.includes(k)) return v;
+      }
+      return 'fa-solid fa-leaf';
+    }
+
+    function renderProducts(products) {
+      const grid = document.getElementById('productsGrid');
+      if (!products || !products.length) {
+        grid.innerHTML = `<div class="products-empty">
+      <i class="fa-solid fa-seedling"></i>
+      <h3>Catalogue Loading…</h3>
+      <p>Products will appear once configured in the admin panel. Reach us on WhatsApp for the full list.</p>
+    </div>`;
+        return;
+      }
+      grid.innerHTML = products.map((p, idx) => {
+        const icon = getProductIcon(p);
+        const hasImg = p.image_url && p.image_url.length > 10;
+        const disc = typeof CatalogueUI !== 'undefined' ? CatalogueUI.priceDiscountInfo(p) : { show: false, mrpHtml: '', badgeHtml: '' };
+        const price = p.lot_price && p.lot_size_kg
+          ? `₹${p.lot_price}<small> / lot (${p.lot_size_kg} kg)</small>`
+          : (p.price_per_kg ? `₹${p.price_per_kg}<small>/kg</small>` : `<small style="color:var(--text3);font-size:13px">Contact for price</small>`);
+        const paused = p.is_paused || (p.available_stock || '').toLowerCase().includes('out');
+        const pausedLabel = p.is_paused ? 'Paused' : ((p.available_stock || '').toLowerCase().includes('out') ? 'Out of Stock' : '');
+        const shopLine = p.shop_name ? `<div class="shop-badge"><i class="fa-solid fa-store"></i> ${p.shop_name}</div>` : '';
+        const ratingLine = renderStarRating(p.avg_rating);
+        const likeKey = (p.shop_id || '') + '::' + (p.product_id || idx);
+        const isLiked = isProductLiked(likeKey);
+        const stockLc = (p.available_stock || '').toLowerCase();
+        const stockColor = stockLc.includes('out') ? 'var(--color-feedback-error)' : (stockLc.includes('low') || stockLc.includes('few') ? 'var(--color-feedback-error)' : 'var(--color-feedback-success)');
+        return `
+    <div class="product-card reveal${paused ? ' paused-card' : ''}" onclick="openProductModalById('${(p.product_id || '').replace(/'/g, "\\'")}','${(p.category_id || '').replace(/'/g, "\\'")}')" style="cursor:pointer;position:relative">
+      ${pausedLabel ? `<span class="paused-label">${pausedLabel}</span>` : ''}
+      <div class="product-card-img">
+        ${hasImg ? `<img src="${p.image_url}" alt="${p.product_name}" loading="lazy" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='grid'">` : ''}
+        <div class="img-fallback" style="${hasImg ? 'display:none' : ''}">
+          <i class="${icon}"></i>
+        </div>
+        <button type="button" class="product-card-like-btn${isLiked ? ' liked' : ''}" onclick="toggleProductLike(event,'${likeKey}',this)"><i class="${isLiked ? 'fa-solid' : 'fa-regular'} fa-heart"></i></button>
+      </div>
+      <div class="product-card-body">
+        ${ratingLine}
+        <div class="product-card-category">${p.category_name || 'Agricultural Product'}</div>
+        <div class="product-card-name">${p.product_name}</div>
+        ${shopLine}
+        ${typeof CatalogueUI !== 'undefined' ? CatalogueUI.descHtml(p.description || 'Premium quality agricultural product from Aarvex Global. Export grade, certified documentation.', 120) : `<div class="product-card-desc">${p.description || 'Premium quality agricultural product from Aarvex Global.'}</div>`}
+        <div class="product-card-meta">
+          <span class="tag"><i class="fa-solid fa-weight-hanging" style="font-size:10px"></i> Min ${p.min_order_kg || 1} kg</span>
+        </div>
+        <div class="product-card-footer">
+          <div class="product-card-price-info">
+            <div class="product-card-price-wrap">
+              <div class="product-price">${price}</div>
+              ${disc.mrpHtml}
+            </div>
+            ${disc.badgeHtml}
+            <div class="product-card-stock-pill"><i class="fa-solid fa-circle" style="color:${stockColor}"></i> ${p.available_stock || 'In Stock'}</div>
+          </div>
+          <button class="product-order-btn" onclick="event.stopPropagation();openProductModalById('${(p.product_id || '').replace(/'/g, "\\'")}','${(p.category_id || '').replace(/'/g, "\\'")}')">
+            <i class="fa-solid fa-cart-plus"></i> Order
+          </button>
+        </div>
+      </div>
+    </div>`;
+      }).join('');
+      observeReveals(grid);
+    }
+
+
+    // ──────────────────────────────────────────────
+    //  PRODUCT MODAL
+    // ──────────────────────────────────────────────
+    function openProductModalById(productId, categoryId) {
+      var p = catalogueProducts.find(function (x) {
+        return x.product_id === productId && (!categoryId || x.category_id === categoryId);
+      });
+      if (!p) return;
+      var q = 'product=' + encodeURIComponent(p.product_id || '') + '&category=' + encodeURIComponent(p.category_id || '');
+      window.location.href = 'portal.html?' + q;
+    }
+
+
+
+
+
+
+
+    // ──────────────────────────────────────────────
+    //  SUBMIT SELL FORM
+    // ──────────────────────────────────────────────
+    async function submitSellForm() {
+      const errBox = document.getElementById('sellError');
+      errBox.classList.remove('show');
+
+      const payload = {
+        contact_name: document.getElementById('sell_name').value.trim(),
+        mobile: document.getElementById('sell_mobile').value.trim(),
+        email: document.getElementById('sell_email').value.trim(),
+        crop: document.getElementById('sell_crop').value.trim(),
+        quantity_available_kg: parseFloat(document.getElementById('sell_qty').value) || 0,
+        expected_price: document.getElementById('sell_price').value.trim() || undefined,
+        location_city: document.getElementById('sell_city').value.trim(),
+        location_state: document.getElementById('sell_state').value.trim(),
+        pincode: document.getElementById('sell_pincode').value.trim(),
+      };
+
+      const missing = [];
+      if (!payload.contact_name) missing.push('Name');
+      if (!payload.mobile) missing.push('Mobile');
+      if (!payload.crop) missing.push('Crop');
+      if (!payload.quantity_available_kg) missing.push('Quantity');
+      if (!payload.location_city) missing.push('City');
+      if (!payload.location_state) missing.push('State');
+      if (missing.length) {
+        errBox.textContent = 'Please fill: ' + missing.join(', ');
+        errBox.classList.add('show');
+        return;
+      }
+
+      const recaptchaToken = typeof getTurnstileToken === 'function' ? getTurnstileToken('sellRecaptcha') : '';
+      if (!recaptchaToken) {
+        errBox.textContent = 'Please complete the captcha verification.';
+        errBox.classList.add('show');
+        return;
+      }
+      payload.recaptcha_token = recaptchaToken;
+
+      const btn = document.getElementById('sellSubmitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div> Submitting…';
+
+      try {
+        const res = await fetch(`${LAMBDA_URL}/web/sell`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = typeof safeFetchJson === 'function' ? await safeFetchJson(res) : await res.json();
+        if (res.ok && data.success) {
+          document.getElementById('sellFormContent').style.display = 'none';
+          const succ = document.getElementById('sellSuccess');
+          succ.classList.add('show');
+          document.getElementById('sellRefId').textContent = data.reference_id ? `Reference ID: ${data.reference_id}` : '';
+          toast('Listing submitted! Our team will contact you on WhatsApp.');
+        } else {
+          errBox.textContent = data.error || 'Something went wrong. Please try again.';
+          errBox.classList.add('show');
+          if (typeof turnstile !== 'undefined') turnstile.reset('#sellRecaptcha');
+        }
+      } catch (e) {
+        errBox.textContent = 'Network error. Please try again or contact us on WhatsApp.';
+        errBox.classList.add('show');
+        if (typeof turnstile !== 'undefined') turnstile.reset('#sellRecaptcha');
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Listing';
+    }
+
+
+    // ──────────────────────────────────────────────
+    //  SCROLL REVEAL
+    // ──────────────────────────────────────────────
+    function setupReveal() {
+      const selectors = [
+        '.products-header',
+        '.why-content', '.cred-card',
+        '.sell-info', '.sell-form-box',
+        '.about-content', '.social-link-card',
+        '.footer-grid > div'
+      ];
+      const els = new Set();
+      selectors.forEach(sel => document.querySelectorAll(sel).forEach(el => els.add(el)));
+      els.forEach(el => el.classList.add('reveal'));
+
+      const io = new IntersectionObserver((entries, obs) => {
+        entries.forEach(en => {
+          if (en.isIntersecting) { en.target.classList.add('in'); obs.unobserve(en.target); }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+
+      document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+      window.__revealObserver = io;
+    }
+
+    // Re-observe dynamically rendered product cards
+    function observeReveals(scope) {
+      if (!window.__revealObserver) return;
+      (scope || document).querySelectorAll('.reveal:not(.in)').forEach(el => window.__revealObserver.observe(el));
+    }
+
+    // ──────────────────────────────────────────────
+    //  LOGIN STATE CHECK
+    //  Agar user pehle se logged in hai toh seedha
+    //  portal.html pe redirect kar do
+    // ──────────────────────────────────────────────
+    (function checkLoginState() {
+      try {
+        const saved = localStorage.getItem('ax_user');
+        if (!saved) return;
+        const user = JSON.parse(saved);
+
+        // Nav buttons → "My Account"
+        const btn = document.getElementById('navLoginBtn');
+        const mBtn = document.getElementById('mobileLoginBtn');
+        const firstName = (user.name || 'User').split(' ')[0];
+        if (btn) {
+          if (typeof CatalogueUI !== 'undefined') {
+            // .nav-user-avatar keeps the existing leaf-colored border ring;
+            // avatarInitialsHtml() supplies the sizing/fallback/onerror behavior.
+            const avatarHtml = CatalogueUI.avatarInitialsHtml(user, 26).replace('avatar-initials-fallback', 'avatar-initials-fallback nav-user-avatar');
+            btn.innerHTML = `${avatarHtml} ${firstName}`;
+          } else if (user.picture) {
+            btn.innerHTML = `<img class="nav-user-avatar" src="${user.picture}" alt=""> ${firstName}`;
+          } else {
+            btn.innerHTML = `<i class="fa-solid fa-circle-user"></i> ${firstName}`;
+          }
+          btn.classList.add('logged-in');
+          btn.href = 'portal.html';
+        }
+        if (mBtn) {
+          if (typeof CatalogueUI !== 'undefined') {
+            mBtn.innerHTML = `${CatalogueUI.avatarInitialsHtml(user, 22)} My Account`;
+          } else {
+            mBtn.innerHTML = user.picture
+              ? `<img src="${user.picture}" style="width:22px;height:22px;border-radius:50%;vertical-align:middle"> My Account`
+              : `<i class="fa-solid fa-circle-user" style="color:var(--leaf)"></i> My Account — ${firstName}`;
+          }
+        }
+
+        // Pre-fill Order & Sell forms with portal login data
+        function prefillForms() {
+          const set = (id, val) => {
+            if (!val) return;
+            const el = document.getElementById(id);
+            if (el && !el.value) el.value = val;
+          };
+          // Sell form
+          set('sell_name', user.name);
+          set('sell_email', user.email);
+          set('sell_mobile', user.phone || user.mobile || '');
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', prefillForms);
+        } else {
+          prefillForms();
+        }
+      } catch (e) {
+        localStorage.removeItem('ax_user');
+      }
+    })();
+
+    // ──────────────────────────────────────────────
+    //  TOP SHOPS LEADERBOARD
+    // ──────────────────────────────────────────────
+    async function loadTopShops() {
+      const loading = document.getElementById('topShopsLoading');
+      const empty = document.getElementById('topShopsEmpty');
+      const container = document.getElementById('topShopsContainer');
+      const featured = document.getElementById('topShopFeatured');
+      const list = document.getElementById('topShopsList');
+
+      try {
+        const res = await fetch(`${LAMBDA_URL}/shops/top`);
+        const data = await res.json();
+
+        loading.style.display = 'none';
+
+        if (!data.shops || data.shops.length === 0) {
+          empty.style.display = 'block';
+          return;
+        }
+
+        container.style.display = 'block';
+        const shops = data.shops;
+
+        // Render featured #1 shop
+        if (shops.length > 0) {
+          const topShop = shops[0];
+          featured.innerHTML = `
+        <div class="top-shop-featured" onclick="navigateToShop('${topShop.shop_id}')">
+          <div class="top-shop-featured-badge">★ Star Performer</div>
+          <div class="top-shop-featured-icon">
+            <i class="fa-solid fa-store"></i>
+          </div>
+          <div class="top-shop-featured-info">
+            <div class="top-shop-featured-name">${escapeHtml(topShop.shop_name || 'Unnamed Shop')}</div>
+            <div class="top-shop-featured-meta">
+              <div class="top-shop-rating">
+                <i class="fa-solid fa-star"></i> ${topShop.avg_rating || 0}
+              </div>
+              <div class="top-shop-reviews">${topShop.total_reviews || 0} reviews</div>
+              <div class="top-shop-likes">
+                <i class="fa-solid fa-heart"></i> ${topShop.like_count || 0}
+              </div>
+            </div>
+          </div>
+          <button class="top-shop-like-btn" onclick="event.stopPropagation(); likeShop('${topShop.shop_id}', this)">
+            <i class="fa-solid fa-heart"></i> Like
+          </button>
+        </div>
+      `;
+        }
+
+        // Render shops #2-10
+        if (shops.length > 1) {
+          const remainingShops = shops.slice(1);
+          list.innerHTML = remainingShops.map((shop, index) => `
+        <div class="top-shop-card" onclick="navigateToShop('${shop.shop_id}')">
+          <div class="top-shop-rank">#${index + 2}</div>
+          <div class="top-shop-card-icon">
+            <i class="fa-solid fa-store"></i>
+          </div>
+          <div class="top-shop-card-info">
+            <div class="top-shop-card-name">${escapeHtml(shop.shop_name || 'Unnamed Shop')}</div>
+            <div class="top-shop-card-meta">
+              <span><i class="fa-solid fa-star" style="color:var(--c-gold)"></i> ${shop.avg_rating || 0}</span>
+              <span>${shop.total_reviews || 0} reviews</span>
+              <span><i class="fa-solid fa-heart" style="color:#E1435A"></i> ${shop.like_count || 0}</span>
+            </div>
+          </div>
+          <button class="top-shop-card-like-btn" onclick="event.stopPropagation(); likeShop('${shop.shop_id}', this)">
+            <i class="fa-solid fa-heart"></i>
+          </button>
+        </div>
+      `).join('');
+        }
+
+        // Setup toggle
+        const toggle = document.getElementById('topShopsToggle');
+        const content = document.getElementById('topShopsContent');
+        const icon = document.getElementById('topShopsToggleIcon');
+        const text = document.getElementById('topShopsToggleText');
+
+        toggle.addEventListener('click', () => {
+          const isExpanded = content.classList.toggle('expanded');
+          icon.className = isExpanded ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down';
+          text.textContent = isExpanded ? 'Show less' : 'View all top shops';
+          toggle.setAttribute('aria-expanded', isExpanded);
+        });
+
+      } catch (e) {
+        console.error('Failed to load top shops:', e);
+        loading.style.display = 'none';
+        empty.style.display = 'block';
+      }
+    }
+
+    function navigateToShop(shopId) {
+      // Navigate to shop's public storefront
+      // For now, redirect to trade hub with shop filter
+      window.location.href = `portal.html?shop=${encodeURIComponent(shopId)}`;
+    }
+
+    async function likeShop(shopId, btn) {
+      const user = localStorage.getItem('ax_user');
+      if (!user) {
+        toast('Please login to like shops');
+        window.location.href = 'portal.html';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${LAMBDA_URL}/shop/like`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ shop_id: shopId })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          btn.classList.add('liked');
+          const icon = btn.querySelector('i');
+          if (icon) icon.classList.add('fa-solid');
+          icon.classList.remove('fa-regular');
+
+          // Update like count display
+          const likesDisplay = btn.parentElement.querySelector('.top-shop-likes, .top-shop-card-meta span:last-child');
+          if (likesDisplay) {
+            const currentCount = parseInt(likesDisplay.textContent.replace(/\D/g, '')) || 0;
+            likesDisplay.innerHTML = `<i class="fa-solid fa-heart" style="color:#E1435A"></i> ${data.like_count}`;
+          }
+
+          if (!data.already_liked) {
+            toast('Shop liked!');
+          }
+        }
+      } catch (e) {
+        console.error('Failed to like shop:', e);
+        toast('Failed to like shop. Please try again.');
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ──────────────────────────────────────────────
+    //  INIT
+    // ──────────────────────────────────────────────
+    setupReveal();
+    loadCatalogue();
+    loadTopShops();
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (typeof CatalogueUI !== 'undefined') {
+        CatalogueUI.initFilterDropdown({ onFilter: applyCatalogueFilters, onSearch: applyCatalogueFilters });
+        document.getElementById('filterDropdown')?.addEventListener('click', function (e) {
+          var chip = e.target.closest('#categoryChips .cat-chip');
+          if (chip) {
+            activeCategoryFilter = chip.getAttribute('data-cat') === 'all' ? 'All' : chip.getAttribute('data-cat');
+            applyCatalogueFilters();
+          }
+        });
+        document.getElementById('catalogueChips')?.addEventListener('click', function (e) {
+          var chip = e.target.closest('.catalogue-chip');
+          if (!chip) return;
+          activeCategoryFilter = chip.getAttribute('data-cat') === 'all' ? 'All' : chip.getAttribute('data-cat');
+          document.querySelectorAll('#catalogueChips .catalogue-chip').forEach(function (el) { el.classList.remove('active'); });
+          chip.classList.add('active');
+          document.querySelectorAll('#categoryChips .cat-chip').forEach(function (el) { el.classList.remove('active'); });
+          var matching = document.querySelector('#categoryChips .cat-chip[data-cat="' + chip.getAttribute('data-cat') + '"]');
+          if (matching) matching.classList.add('active');
+          updateFilterBadge();
+          applyCatalogueFilters();
+        });
+      }
+
+      /* On index: product card click → open pd-modal; "Order" button → portal.html */
+      if (typeof ProductModal !== 'undefined') {
+        var _origOpen = ProductModal.openModal;
+        ProductModal.openModal = function (product) {
+          window._indexProduct = product;
+          _origOpen(product);
+          /* Override the action button rendered by renderActions */
+          var wrap = document.getElementById('pdModalActions');
+          if (wrap) {
+            wrap.innerHTML =
+              '<button type="button" class="pd-btn-buy" onclick="indexGoToPortal()">' +
+              '<i class="fa-solid fa-cart-shopping"></i> Order This Product</button>' +
+              '<p class="pd-action-note"><i class="fa-solid fa-user-lock"></i> Complete your order securely in your account portal.</p>';
+          }
+        };
+        /* Also override openProductModalById to use new modal */
+        window.openProductModalById = function (productId, categoryId) {
+          var p = catalogueProducts.find(function (x) {
+            return x.product_id === productId && (!categoryId || x.category_id === categoryId);
+          });
+          if (p) ProductModal.openModal(p);
+        };
+      }
+    });
+
+    function indexGoToPortal() {
+      var p = window._indexProduct;
+      if (typeof ProductModal !== 'undefined') ProductModal.closeModal();
+      if (p) {
+        var q = 'product=' + encodeURIComponent(p.product_id || '') + '&category=' + encodeURIComponent(p.category_id || '') + '&action=order';
+        window.location.href = 'portal.html?' + q;
+      } else {
+        window.location.href = 'portal.html';
+      }
+    }
+  </script>
+</body>
+
+</html>

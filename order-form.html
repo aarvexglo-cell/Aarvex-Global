@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aarvex Global — Order Form</title>
+  <!-- Command Center telemetry (client health → admin) -->
+  <script>window.LAMBDA_URL='https://j1yound90m.execute-api.ap-southeast-1.amazonaws.com';window.AX_TAB_HINT='order_form';</script>
+  <script src="ax-telemetry.js?v=3"></script>
+  <script src="ax-error-log.js?v=3"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green: #1a6b3a; --green-light: #e8f5ee; --green-mid: #2d8a52; --green-dark: #0f4223;
+      --gold: #c8922a; --gold-light: #fdf3e3;
+      --text: #1a1a1a; --muted: #6b7280; --border: #d1d5db;
+      --bg: #f4f7f5; --white: #ffffff;
+      --error: #dc2626; --radius: 12px;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 0 0 60px; }
+
+    /* ── HEADER ── */
+    .header {
+      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 50%, var(--green-mid) 100%);
+      padding: 28px 20px 56px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .header-bg-pattern {
+      position: absolute; inset: 0; opacity: 0.07;
+      background-image: radial-gradient(circle, #fff 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .header-leaves {
+      position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+    }
+    .leaf {
+      position: absolute; font-size: 28px; opacity: 0.15;
+      animation: floatLeaf 6s ease-in-out infinite;
+    }
+    .leaf:nth-child(1) { top: 10%; left: 5%;  animation-delay: 0s; }
+    .leaf:nth-child(2) { top: 60%; left: 12%; animation-delay: 1.5s; font-size: 20px; }
+    .leaf:nth-child(3) { top: 20%; right: 8%; animation-delay: 0.8s; }
+    .leaf:nth-child(4) { top: 70%; right: 5%; animation-delay: 2.2s; font-size: 22px; }
+    .leaf:nth-child(5) { top: 45%; left: 3%;  animation-delay: 3s;  font-size: 18px; }
+    @keyframes floatLeaf {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50%       { transform: translateY(-12px) rotate(8deg); }
+    }
+    .header-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.85);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .header-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 30px; font-weight: 700;
+      color: #fff; position: relative;
+      letter-spacing: -0.5px;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.18);
+    }
+    .header-logo span { color: #7ec99a; }
+    .header-logo-icon {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border-radius: 10px;
+      width: 40px; height: 40px;
+      line-height: 40px;
+      font-size: 20px;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    .header-sub { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 6px; letter-spacing: 0.3px; position: relative; }
+    .header-wave {
+      position: absolute; bottom: -1px; left: 0; right: 0;
+      height: 44px; overflow: hidden;
+    }
+    .header-wave svg { display: block; width: 100%; height: 44px; }
+
+    /* ── PRODUCT BANNER ── */
+    .product-banner {
+      margin: -2px 16px 0; position: relative; z-index: 2;
+      background: var(--white);
+      border: 1.5px solid rgba(26,107,58,0.15);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 4px 16px rgba(26,107,58,0.08);
+    }
+    .product-icon {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, var(--green-light) 0%, #c5e8d4 100%);
+      border-radius: 10px;
+      display: grid; place-items: center; font-size: 26px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(26,107,58,0.12);
+    }
+    .product-name { font-weight: 700; font-size: 15px; color: var(--green-dark); }
+    .product-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .product-meta strong { color: var(--gold); }
+    .export-tag {
+      margin-left: auto; flex-shrink: 0;
+      background: var(--green-light);
+      color: var(--green);
+      font-size: 10px; font-weight: 600;
+      padding: 3px 8px; border-radius: 20px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── STEPS ── */
+    .steps { display: flex; margin: 18px 16px 0; gap: 4px; }
+    .step { flex: 1; text-align: center; position: relative; }
+    .step::after {
+      content: ''; position: absolute;
+      top: 13px; left: 50%; right: -50%;
+      height: 2px;
+      background: linear-gradient(to right, var(--border) 50%, transparent 50%);
+      background-size: 6px 2px;
+      z-index: 0;
+    }
+    .step:last-child::after { display: none; }
+    .step-dot {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--border); color: var(--muted);
+      font-size: 12px; font-weight: 600;
+      display: inline-flex; align-items: center; justify-content: center;
+      position: relative; z-index: 1;
+      transition: all 0.3s;
+    }
+    .step.active .step-dot {
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-mid) 100%);
+      color: #fff; box-shadow: 0 2px 8px rgba(26,107,58,0.35);
+    }
+    .step.done .step-dot {
+      background: var(--green-mid); color: #fff;
+    }
+    .step-label { font-size: 10px; color: var(--muted); margin-top: 5px; }
+    .step.active .step-label { color: var(--green); font-weight: 600; }
+    .step.done .step-label { color: var(--green-mid); }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      margin: 16px 16px 0;
+      padding: 22px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+    .card-title {
+      font-size: 15px; font-weight: 700;
+      margin-bottom: 18px; color: var(--green-dark);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--green-light);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+
+    /* ── FIELDS ── */
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 7px; color: #374151; }
+    .field label .req { color: var(--error); margin-left: 2px; }
+    .field input, .field select {
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid var(--border); border-radius: 9px;
+      font-size: 14px; font-family: inherit; color: var(--text);
+      background: var(--white); outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none; appearance: none;
+    }
+
+    .field input:focus, .field select:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(26,107,58,0.1);
+    }
+    .field-hint { font-size: 11px; color: var(--muted); margin-top: 5px; }
+    .field-error { font-size: 11px; color: var(--error); margin-top: 5px; display: none; }
+    .field-error.show { display: block; }
+    .field-row { display: flex; gap: 12px; }
+    .field-row .field { flex: 1; }
+
+    /* ── RADIO OPTIONS ── */
+    .radio-group { display: flex; gap: 10px; }
+    .radio-option {
+      flex: 1; border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 14px 12px; cursor: pointer; text-align: center;
+      transition: all 0.2s;
+    }
+    .radio-option.selected {
+      border-color: var(--green);
+      background: linear-gradient(135deg, var(--green-light) 0%, #d4edde 100%);
+      box-shadow: 0 2px 8px rgba(26,107,58,0.1);
+    }
+    .radio-option input { display: none; }
+    .radio-label { font-size: 13px; font-weight: 700; display: block; }
+    .radio-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-mid) 100%);
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 700; font-family: inherit;
+      cursor: pointer; margin-top: 6px;
+      box-shadow: 0 4px 12px rgba(26,107,58,0.3);
+      transition: transform 0.15s, box-shadow 0.15s;
+      letter-spacing: 0.2px;
+    }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(26,107,58,0.35); }
+    .btn-primary:disabled { background: var(--border); cursor: not-allowed; box-shadow: none; }
+    .btn-secondary {
+      width: 100%; padding: 12px;
+      background: transparent; color: var(--green);
+      border: 1.5px solid var(--green); border-radius: 10px;
+      font-size: 14px; font-weight: 600; font-family: inherit;
+      cursor: pointer; margin-top: 10px;
+      transition: background 0.2s;
+    }
+    .btn-secondary:hover { background: var(--green-light); }
+
+    /* ── SUMMARY ── */
+    .summary-row {
+      display: flex; justify-content: space-between;
+      padding: 9px 0; border-bottom: 1px solid var(--bg);
+      font-size: 13px;
+    }
+    .summary-row .key { color: var(--muted); }
+    .summary-row .val { font-weight: 600; }
+    .total-row {
+      display: flex; justify-content: space-between;
+      padding: 14px 0 0; font-size: 16px; font-weight: 800;
+    }
+    .total-row .val { color: var(--green); }
+
+    /* ── SUCCESS ── */
+    .success-card { text-align: center; padding: 32px 20px; }
+    .success-icon {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, #c5e8d4 0%, var(--green-light) 100%);
+      border-radius: 50%; display: inline-flex; align-items: center;
+      justify-content: center; font-size: 36px; margin-bottom: 18px;
+      box-shadow: 0 4px 16px rgba(26,107,58,0.15);
+    }
+    .success-title { font-size: 22px; font-weight: 800; color: var(--green); font-family: 'Playfair Display', serif; }
+    .success-sub { font-size: 14px; color: var(--muted); margin-top: 8px; line-height: 1.6; }
+    .arn-box {
+      background: linear-gradient(135deg, var(--green-light) 0%, #d4edde 100%);
+      border: 1.5px dashed var(--green-mid);
+      border-radius: 10px; padding: 14px 18px; margin: 18px 0;
+      font-size: 20px; font-weight: 800; color: var(--green-dark);
+      letter-spacing: 2px;
+    }
+
+    /* ── MISC ── */
+    .page { display: none; }
+    .page.active { display: block; }
+    .loading {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .notice {
+      background: var(--gold-light); border-left: 3px solid var(--gold);
+      border-radius: 0 8px 8px 0; padding: 10px 14px;
+      font-size: 12px; color: #7a5c1a; margin-bottom: 18px;
+    }
+    .submit-error {
+      background: #fef2f2; border-left: 3px solid var(--error);
+      border-radius: 0 8px 8px 0; padding: 10px 14px;
+      font-size: 12px; color: var(--error); margin-top: 14px; display: none;
+    }
+    .submit-error.show { display: block; }
+
+    /* ── SECTION DIVIDER ── */
+    .section-divider {
+      display: flex; align-items: center; gap: 10px;
+      margin: 20px 0 16px; color: var(--muted); font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.8px;
+    }
+    .section-divider::before, .section-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+
+  </style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<div class="header">
+  <div class="header-bg-pattern"></div>
+  <div class="header-leaves">
+    <span class="leaf">🌿</span>
+    <span class="leaf">🌾</span>
+    <span class="leaf">🌿</span>
+    <span class="leaf">🌶️</span>
+    <span class="leaf">🌾</span>
+  </div>
+  <div class="header-badge">🌍 Agricultural Export Specialists</div>
+  <div class="header-logo">
+    <span class="header-logo-icon">🌱</span>Aarvex <span>Global</span>
+  </div>
+  <div class="header-sub">Premium Spices & Grains · Worldwide Delivery</div>
+  <div class="header-wave">
+    <svg viewBox="0 0 400 44" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,20 C80,40 160,0 240,20 C320,40 360,10 400,20 L400,44 L0,44 Z" fill="#f4f7f5"/>
+    </svg>
+  </div>
+</div>
+
+<!-- ══ PRODUCT BANNER ══ -->
+<div class="product-banner">
+  <div class="product-icon" id="productIcon">🌶️</div>
+  <div>
+    <div class="product-name" id="productName">Lal Mirch</div>
+    <div class="product-meta" id="productMeta">Min. 25 kg · <strong>₹180/kg</strong></div>
+  </div>
+  <div class="export-tag">✈ Export Ready</div>
+</div>
+
+<!-- ══ STEPS ══ -->
+<div class="steps">
+  <div class="step active" id="s1"><div class="step-dot">1</div><div class="step-label">Order</div></div>
+  <div class="step" id="s2"><div class="step-dot">2</div><div class="step-label">Details</div></div>
+  <div class="step" id="s3"><div class="step-dot">3</div><div class="step-label">Contact</div></div>
+  <div class="step" id="s4"><div class="step-dot">✓</div><div class="step-label">Done</div></div>
+</div>
+
+<!-- ══ PAGE 1: ORDER TYPE ══ -->
+<div class="page active" id="page1">
+  <div class="card">
+    <div class="card-title">
+      <span class="card-title-icon">📋</span> Order Type & Quantity
+    </div>
+    <div class="field">
+      <label>Order Type <span class="req">*</span></label>
+      <div class="radio-group">
+        <label class="radio-option selected" id="opt-sample" onclick="selectOrderType('sample')">
+          <input type="radio" name="order_type" value="sample" checked>
+          <span class="radio-label">🧪 Sample</span>
+          <span class="radio-sub">Max 5 kg · ₹500 flat</span>
+        </label>
+        <label class="radio-option" id="opt-bulk" onclick="selectOrderType('bulk')">
+          <input type="radio" name="order_type" value="bulk">
+          <span class="radio-label">📦 Bulk</span>
+          <span class="radio-sub">Min 25 kg · per kg rate</span>
+        </label>
+      </div>
+    </div>
+    <div class="field">
+      <label for="qty">Quantity (kg) <span class="req">*</span></label>
+      <input type="number" id="qty" placeholder="e.g. 2" min="0.1" step="0.1">
+      <div class="field-hint" id="qtyHint">Sample order: max 5 kg</div>
+      <div class="field-error" id="qtyError">Valid quantity required</div>
+    </div>
+    <button class="btn-primary" onclick="goStep2()">Continue →</button>
+  </div>
+</div>
+
+<!-- ══ PAGE 2: BILLING DETAILS ══ -->
+<div class="page" id="page2">
+  <div class="card">
+    <div class="card-title">
+      <span class="card-title-icon">🏢</span> Billing & Delivery Details
+    </div>
+    <div class="notice">Ye details invoice aur delivery ke liye use hongi.</div>
+
+    <div class="field">
+      <label for="cname">Full Name <span class="req">*</span></label>
+      <input type="text" id="cname" placeholder="Rajesh Kumar">
+      <div class="field-error" id="cnameError">Name required</div>
+    </div>
+    <div class="field">
+      <label for="company">Company Name <span class="req">*</span></label>
+      <input type="text" id="company" placeholder="Kumar Traders Pvt Ltd">
+      <div class="field-error" id="companyError">Company required</div>
+    </div>
+    <div class="field">
+      <label for="gst">GST Number</label>
+      <input type="text" id="gst" placeholder="29ABCDE1234F1Z5 (optional)">
+      <div class="field-error" id="gstError">GST format valid nahi</div>
+    </div>
+
+    <div class="section-divider">Delivery Address</div>
+
+    <div class="field">
+      <label for="address">Street Address <span class="req">*</span></label>
+      <input type="text" id="address" placeholder="123 Market Street, Building Name">
+      <div class="field-error" id="addressError">Address required</div>
+    </div>
+
+    <!-- COUNTRY -->
+    <div class="field">
+      <label for="country">Country <span class="req">*</span></label>
+      <input type="text" id="country" placeholder="India" value="India">
+      <div class="field-error" id="countryError">Country required</div>
+    </div>
+
+    <!-- STATE -->
+    <div class="field">
+      <label for="state">State / Province <span class="req">*</span></label>
+      <input type="text" id="state" placeholder="Maharashtra">
+      <div class="field-error" id="stateError">State required</div>
+    </div>
+
+    <!-- CITY + PINCODE -->
+    <div class="field-row">
+      <div class="field" style="flex:1.4">
+        <label for="city">City <span class="req">*</span></label>
+        <input type="text" id="city" placeholder="Mumbai">
+        <div class="field-error" id="cityError">City required</div>
+      </div>
+      <div class="field" style="flex:1">
+        <label for="pincode">Pincode / ZIP</label>
+        <input type="text" id="pincode" placeholder="400001" maxlength="10">
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="goStep3()">Continue →</button>
+    <button class="btn-secondary" onclick="goBack(1)">← Back</button>
+  </div>
+</div>
+
+<!-- ══ PAGE 3: CONTACT ══ -->
+<div class="page" id="page3">
+  <div class="card">
+    <div class="card-title">
+      <span class="card-title-icon">📞</span> Contact Details
+    </div>
+    <div class="field">
+      <label for="mobile">WhatsApp Number <span class="req">*</span></label>
+      <input type="tel" id="mobile" placeholder="+91 9876543210">
+      <div class="field-hint">Include country code, e.g. +91 for India</div>
+      <div class="field-error" id="mobileError">Valid mobile required</div>
+    </div>
+    <div class="field">
+      <label for="email">Email Address <span class="req">*</span></label>
+      <input type="email" id="email" placeholder="rajesh@example.com">
+      <div class="field-hint">Invoice yahan bheja jayega</div>
+      <div class="field-error" id="emailError">Valid email required</div>
+    </div>
+
+    <div style="margin: 20px 0 16px;">
+      <div class="section-divider">Order Summary</div>
+      <div class="summary-row"><span class="key">Product</span><span class="val" id="sumProduct">—</span></div>
+      <div class="summary-row"><span class="key">Type</span><span class="val" id="sumType">—</span></div>
+      <div class="summary-row"><span class="key">Quantity</span><span class="val" id="sumQty">—</span></div>
+      <div class="summary-row"><span class="key">Amount</span><span class="val" id="sumAmount">—</span></div>
+      <div class="summary-row"><span class="key">Courier</span><span class="val">₹150</span></div>
+      <div class="total-row"><span>Total</span><span class="val" id="sumTotal">—</span></div>
+    </div>
+
+    <button class="btn-primary" id="submitBtn" onclick="submitOrder()">✅ Place Order</button>
+    <button class="btn-secondary" onclick="goBack(2)">← Back</button>
+    <div class="submit-error" id="submitError"></div>
+  </div>
+</div>
+
+<!-- ══ PAGE 4: SUCCESS ══ -->
+<div class="page" id="page4">
+  <div class="card success-card">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">Order Placed!</div>
+    <div class="success-sub" id="sucProduct">Aapka order successfully place ho gaya.</div>
+    <div class="arn-box">
+      <div style="font-size:11px;color:var(--muted);font-weight:500;margin-bottom:4px;">Order Reference Number (ARN)</div>
+      <div id="arnDisplay">—</div>
+    </div>
+    <div style="margin-top:20px;padding:16px;background:var(--green-light);border-radius:10px;font-size:13px;color:#1a4a2a;line-height:1.7;">
+      ✅ Aapka order successfully register ho gaya hai.<br><br>
+      📱 <b>Step 1:</b> WhatsApp pe payment link aayega — us link se payment karein.<br>
+      📧 <b>Step 2:</b> Payment complete hone ke baad invoice email pe aayega.<br>
+      📦 <b>Step 3:</b> Invoice WhatsApp pe bhi share kiya jayega.<br><br>
+      <span style="color:#1a6b3a;font-weight:700;">ARN number save karke rakhen — order track karne ke liye zaroori hai.</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = 'https://0f7ceixytc.execute-api.ap-southeast-1.amazonaws.com';
+
+  const params = new URLSearchParams(location.search);
+  const productId = params.get('product') || 'lal_mirch';
+
+  const productMap = {
+    lal_mirch:    { name: 'Lal Mirch (Red Chilli)', icon: '🌶️', price: 180, min: 25, categoryId: 'spices' },
+    haldi:        { name: 'Haldi (Turmeric)',        icon: '🟡', price: 150, min: 25, categoryId: 'spices' },
+    basmati_rice: { name: 'Basmati Rice 1121',       icon: '🌾', price: 95,  min: 50, categoryId: 'grains' },
+  };
+  const product = productMap[productId] || productMap['lal_mirch'];
+  document.getElementById('productName').textContent = product.name;
+  document.getElementById('productIcon').textContent = product.icon;
+  document.getElementById('productMeta').innerHTML = 'Min. ' + product.min + ' kg · <strong>₹' + product.price + '/kg</strong>';
+
+  // ══ ORDER LOGIC ══
+  let orderType = 'sample';
+  function selectOrderType(type) {
+    orderType = type;
+    document.getElementById('opt-sample').classList.toggle('selected', type === 'sample');
+    document.getElementById('opt-bulk').classList.toggle('selected', type === 'bulk');
+    document.getElementById('qtyHint').textContent = type === 'sample'
+      ? 'Sample order: max 5 kg'
+      : 'Bulk order: min ' + product.min + ' kg';
+  }
+
+  function setStep(n) {
+    for (let i = 1; i <= 4; i++) {
+      const s = document.getElementById('s' + i);
+      s.classList.remove('active', 'done');
+      if (i < n) s.classList.add('done');
+      if (i === n) s.classList.add('active');
+      document.getElementById('page' + i).classList.remove('active');
+    }
+    document.getElementById('page' + n).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function showError(id, msg) { const el = document.getElementById(id); if (el) { el.textContent = msg; el.classList.add('show'); } }
+  function clearError(id)      { document.getElementById(id)?.classList.remove('show'); }
+  function v(id)               { return document.getElementById(id)?.value?.trim() || ''; }
+
+  function goStep2() {
+    const qty = parseFloat(document.getElementById('qty').value);
+    clearError('qtyError');
+    if (!qty || qty <= 0) return showError('qtyError', 'Quantity required');
+    if (orderType === 'sample' && qty > 5) return showError('qtyError', 'Sample max 5 kg');
+    if (orderType === 'bulk' && qty < product.min) return showError('qtyError', 'Bulk min ' + product.min + ' kg');
+    setStep(2);
+  }
+
+  function goStep3() {
+    let ok = true;
+    ['cname','company','address','city','state','country'].forEach(id => clearError(id + 'Error'));
+    clearError('gstError');
+    if (!v('cname'))   { showError('cnameError',   'Name required');    ok = false; }
+    if (!v('company')) { showError('companyError', 'Company required'); ok = false; }
+    if (!v('address')) { showError('addressError', 'Address required'); ok = false; }
+    if (!v('city'))    { showError('cityError',    'City required');    ok = false; }
+    if (!v('state'))   { showError('stateError',   'State required');   ok = false; }
+    if (!v('country')) { showError('countryError', 'Country required'); ok = false; }
+    const gst = v('gst');
+    if (gst && !/^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}$/.test(gst)) {
+      showError('gstError', 'GST format valid nahi'); ok = false;
+    }
+    if (!ok) return;
+    const qty = parseFloat(document.getElementById('qty').value);
+    const amount = orderType === 'sample' ? 500 : Math.round(product.price * qty);
+    document.getElementById('sumProduct').textContent = product.name;
+    document.getElementById('sumType').textContent    = orderType === 'sample' ? '🧪 Sample' : '📦 Bulk';
+    document.getElementById('sumQty').textContent     = qty + ' kg';
+    document.getElementById('sumAmount').textContent  = '₹' + amount;
+    document.getElementById('sumTotal').textContent   = '₹' + (amount + 150);
+    setStep(3);
+  }
+
+  function goBack(n) { setStep(n); }
+
+  async function submitOrder() {
+    clearError('mobileError'); clearError('emailError');
+    document.getElementById('submitError').classList.remove('show');
+    const mobile = v('mobile').replace(/[\s-]/g, '');
+    const email  = v('email');
+    let ok = true;
+    if (!/^\+?\d{10,13}$/.test(mobile)) { showError('mobileError', 'Valid mobile required'); ok = false; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('emailError', 'Valid email required'); ok = false; }
+    if (!ok) return;
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading"></span>Placing Order...';
+
+    const qty    = parseFloat(document.getElementById('qty').value);
+    const amount = orderType === 'sample' ? 500 : Math.round(product.price * qty);
+
+    const payload = {
+      category_id:   product.categoryId,
+      product_id:    productId,
+      product_name:  product.name,
+      order_type:    orderType,
+      quantity_kg:   qty,
+      amount_inr:    amount,
+      price_per_kg:  product.price,
+      customer_name: v('cname'),
+      company_name:  v('company'),
+      gst_number:    v('gst') || '',
+      address:       v('address'),
+      city:          v('city'),
+      state:         v('state'),
+      country:       v('country'),
+      pincode:       v('pincode') || '',
+      mobile:        mobile,
+      email:         email,
+    };
+
+    try {
+      const res  = await fetch(`${API_BASE}/web/order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.arn) {
+        document.getElementById('arnDisplay').textContent  = data.arn;
+        document.getElementById('sucProduct').textContent  = product.name + ' — ' + qty + ' kg';
+        setStep(4);
+      } else {
+        btn.disabled = false; btn.innerHTML = '✅ Place Order';
+        const msg = data.error || 'Order place nahi hua. Dobara try karein.';
+        const errEl = document.getElementById('submitError');
+        errEl.textContent = msg + ' (WhatsApp: +91-8767205473 par contact karein)';
+        errEl.classList.add('show');
+      }
+    } catch (e) {
+      btn.disabled = false; btn.innerHTML = '✅ Place Order';
+      const errEl = document.getElementById('submitError');
+      errEl.textContent = 'Network error. Dobara try karein.';
+      errEl.classList.add('show');
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "brand": {
+    "lime": "#D4ED6B",
+    "lime_ink": "#0A0A0A",
+    "dark_page": "#0D1712",
+    "dark_raised": "#121F18",
+    "fonts_display": "Fraunces",
+    "fonts_ui": ["Plus Jakarta Sans", "Inter"],
+    "max_families": 3,
+    "reject": ["purple-on-white", "pure-#000-page-bg", "white-on-lime"]
+  },
+  "viewports": [
+    { "id": "desktop", "w": 1440, "h": 900 },
+    { "id": "mobile", "w": 390, "h": 844 }
+  ],
+  "sections": [
+    "Hierarchy",
+    "Color Theory",
+    "Typography",
+    "Psychology",
+    "Nielsen Heuristics",
+    "Design System",
+    "Platform",
+    "Motion / Micro-interactions",
+    "Navigation",
+    "Accessibility",
+    "Process",
+    "Trends (brand-safe)"
+  ]
+}

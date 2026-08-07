@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEMO — Aarvex Global Index Redesign</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0A0A0A">
+  <link rel="icon" type="image/svg+xml" href="ax-icon.svg?v=4">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="tokens.css?v=11">
+  <link rel="stylesheet" href="index-demo.css?v=1">
+</head>
+<body>
+<div class="demo-wrap">
+
+  <!-- Demo-only chrome — remove when promoting to production -->
+  <div class="demo-ribbon" role="status">
+    <span>DEMO V1 (simple) — see richer redesign →</span>
+    <a href="index-demo-v2.html">Open Demo V2</a>
+    <a href="index.html">Current index</a>
+    <a href="portal.html">Portal</a>
+  </div>
+
+  <header class="dx-nav" id="dxNav">
+    <div class="dx-nav-inner">
+      <a href="index-demo.html" class="dx-brand" aria-label="Aarvex Global home">
+        <div class="dx-brand-mark"><img src="ax-icon.svg?v=4" alt=""></div>
+        <div>
+          <div class="dx-brand-name">Aarvex Global</div>
+          <div class="dx-brand-sub">Agri marketplace</div>
+        </div>
+      </a>
+      <ul class="dx-nav-links">
+        <li><a href="#market">Market</a></li>
+        <li><a href="#shops">Shops</a></li>
+        <li><a href="#trust">Why us</a></li>
+        <li><a href="#sell">Sell</a></li>
+      </ul>
+      <div class="dx-nav-cta">
+        <a class="dx-btn dx-btn-wa" href="https://wa.link/o0a5u0" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+        <a class="dx-btn dx-btn-ghost" href="portal.html">Login</a>
+        <a class="dx-btn dx-btn-lime" href="portal.html">Trade now</a>
+      </div>
+      <button type="button" class="dx-nav-toggle" id="dxNavToggle" aria-label="Menu"><i class="fa-solid fa-bars"></i></button>
+    </div>
+  </header>
+
+  <div class="dx-mobile" id="dxMobile">
+    <a href="#market">Market</a>
+    <a href="#shops">Shops</a>
+    <a href="#trust">Why us</a>
+    <a href="#sell">Sell produce</a>
+    <a href="portal.html" class="dx-btn dx-btn-lime" style="margin-top:16px">Trade now</a>
+  </div>
+
+  <!-- Hero: brand-first, one line, CTAs, full-bleed media -->
+  <section class="dx-hero" aria-label="Aarvex Global">
+    <div class="dx-hero-media" aria-hidden="true"></div>
+    <div class="dx-hero-content">
+      <h1 class="dx-brand-hero dx-rise">Aarvex<br><span>Global</span></h1>
+      <p class="dx-hero-line dx-rise dx-rise-d1">Certified agri marketplace — spices, grains &amp; fresh produce from verified Indian sellers.</p>
+      <div class="dx-hero-actions dx-rise dx-rise-d2">
+        <a class="dx-btn dx-btn-lime" href="#market"><i class="fa-solid fa-bag-shopping"></i> Browse live market</a>
+        <a class="dx-btn dx-btn-ghost" href="portal.html"><i class="fa-solid fa-arrow-right"></i> Open account</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="dx-ticker" aria-hidden="true">
+    <div class="dx-ticker-label">Live</div>
+    <div class="dx-ticker-track" id="dxTickerTrack">
+      <span><b>Loading catalogue…</b></span>
+      <span><b>Loading catalogue…</b></span>
+    </div>
+  </div>
+
+  <!-- Market -->
+  <section class="dx-section" id="market">
+    <div class="dx-section-head dx-reveal">
+      <div>
+        <div class="dx-kicker">Marketplace</div>
+        <h2 class="dx-title">Trade what’s live now</h2>
+        <p class="dx-sub">Dynamic grid from your catalogue API — search, filter, switch products &amp; shops.</p>
+      </div>
+      <button type="button" class="dx-btn dx-btn-ghost" id="dxRefresh"><i class="fa-solid fa-rotate"></i> Refresh</button>
+    </div>
+
+    <div class="dx-search-block dx-reveal">
+      <div class="dx-search">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <input type="search" id="dxSearch" placeholder="Search products or shop…" autocomplete="off" aria-label="Search catalogue">
+        <button type="button" class="dx-search-clear" id="dxSearchClear" aria-label="Clear"><i class="fa-solid fa-xmark"></i></button>
+        <span class="dx-search-mic" title="Voice coming soon" aria-hidden="true"><i class="fa-solid fa-microphone"></i></span>
+      </div>
+    </div>
+
+    <div class="dx-modes dx-reveal" role="tablist">
+      <button type="button" class="dx-mode active" data-mode="products" role="tab"><i class="fa-solid fa-box"></i> Products</button>
+      <button type="button" class="dx-mode" data-mode="shops" role="tab"><i class="fa-solid fa-store"></i> Shops</button>
+    </div>
+
+    <div id="dxProductsBlock">
+      <div class="dx-cats" id="dxCats" aria-label="Categories"></div>
+      <div class="dx-live" id="dxLive"><span class="dx-live-dot"></span> Loading…</div>
+      <div class="dx-grid" id="dxGrid" aria-live="polite"></div>
+    </div>
+
+    <div id="dxShopsBlock" hidden>
+      <div class="dx-shops" id="dxShopsInline"></div>
+      <p class="dx-sub" style="margin-top:16px">Full shop directory continues below.</p>
+    </div>
+  </section>
+
+  <section class="dx-section" id="shops" style="padding-top:0">
+    <div class="dx-section-head dx-reveal">
+      <div>
+        <div class="dx-kicker">Verified sellers</div>
+        <h2 class="dx-title">Top shops</h2>
+        <p class="dx-sub">Pulled from <code style="color:var(--demo-lime)">/shops/top</code> — same source as portal.</p>
+      </div>
+      <a class="dx-btn dx-btn-lime" href="portal.html">Explore in portal</a>
+    </div>
+    <div class="dx-shops" id="dxShops"></div>
+  </section>
+
+  <section class="dx-trust" id="trust">
+    <div class="dx-trust-inner">
+      <div class="dx-reveal">
+        <div class="dx-kicker">Why Aarvex</div>
+        <h2 class="dx-title">Built for serious agri trade</h2>
+        <p class="dx-sub" style="margin-top:12px">GST-ready B2B flow, verified shops, live stock, and a portal that matches this brand end-to-end.</p>
+      </div>
+      <ul class="dx-trust-list dx-reveal">
+        <li><i class="fa-solid fa-check"></i><span>Verified sellers with shop IDs you can search and follow.</span></li>
+        <li><i class="fa-solid fa-check"></i><span>Live catalogue — prices, lots, and stock update from admin.</span></li>
+        <li><i class="fa-solid fa-check"></i><span>Orders, negotiate, track, and messaging inside one portal.</span></li>
+        <li><i class="fa-solid fa-check"></i><span>Brand theme: lime actions on ink — readable on every CTA.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="dx-sell" id="sell">
+    <div class="dx-sell-band dx-reveal">
+      <div class="dx-kicker">For farmers &amp; traders</div>
+      <h2 class="dx-title">List produce. Reach buyers.</h2>
+      <p class="dx-sub">Open a seller account in the portal — KYC, products, and deals in one place.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <a class="dx-btn dx-btn-lime" href="portal.html"><i class="fa-solid fa-seedling"></i> Start selling</a>
+        <a class="dx-btn dx-btn-ghost" href="https://wa.link/o0a5u0" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> Talk to us</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="dx-foot">
+    <div class="dx-foot-inner">
+      <div>
+        <div class="dx-foot-brand">Aarvex Global</div>
+        <p class="dx-foot-meta">Premium agri export &amp; marketplace. This page is a redesign demo — promote to <code>index.html</code> only after you approve.</p>
+      </div>
+      <div class="dx-foot-links">
+        <a href="index.html">Current index</a>
+        <a href="portal.html">Portal</a>
+        <a href="admin_dashboard.html">Admin</a>
+        <a href="https://wa.link/o0a5u0" target="_blank" rel="noopener">WhatsApp</a>
+      </div>
+      <div class="dx-foot-copy">
+        <span>© Aarvex Global · Demo redesign</span>
+        <span>Theme: lime #D4ED6B · ink #0A0A0A</span>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script>
+  /* Mirror shops into Products|Shops tab panel */
+  document.addEventListener('DOMContentLoaded', function () {
+    var obs = new MutationObserver(function () {
+      var src = document.getElementById('dxShops');
+      var dest = document.getElementById('dxShopsInline');
+      if (src && dest) dest.innerHTML = src.innerHTML;
+    });
+    var shops = document.getElementById('dxShops');
+    if (shops) obs.observe(shops, { childList: true, subtree: true });
+  });
+</script>
+<script src="index-demo.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,345 @@
+/* ══════════════════════════════════════════════════════════════
+   AARVEX GLOBAL — DESIGN TOKENS (Phase 1 rebuild)
+   Loaded by BOTH index.html and portal.html, before any other
+   stylesheet.
+
+   THREE LAYERS — do not skip layers, do not reference Layer 1
+   primitives directly from component CSS. Components (and any new
+   CSS) should reference Layer 2 semantic tokens only; Layer 3 exists
+   for the rare genuine per-component override.
+
+   Section 0 audit item #1 (portal-ui-pro.css:521 redefining
+   .status-new as Tailwind-blue, shadowing the correct gold rule in
+   portal.html:810) is resolved here by giving "new" its own
+   permanent semantic token — --color-feedback-new — instead of an
+   ad hoc class fight. portal-ui-pro.css:521 must still be physically
+   deleted (Phase 4) since a stray class-level override will always
+   be able to shadow a token, no matter how correct the token is.
+   ══════════════════════════════════════════════════════════════ */
+
+:root {
+
+  /* ══════════════ LAYER 1 — PRIMITIVES ══════════════
+     Raw color ramps only. Nothing here is used directly by
+     components — only Layer 2 reads from Layer 1. */
+
+  /* Green — brand hue ~140°, existing mid/dark steps (leaf/forest)
+     kept as-is (already brand-recognized, already ≥6:1 on white —
+     verified below), extended with NEW lighter steps at 55–65% L so
+     a fresh mid-green surface is available for hero/section use
+     instead of defaulting to the darkest forest step every time
+     (Section 0 #9 — no more stacking dark-green section after
+     dark-green section). Darkest steps (900/950) are kept but
+     reserved for small high-contrast text/icon use only, per spec —
+     not for large surface fills anymore. */
+  --green-50:   #EEF7F1;
+  --green-100:  #DBF0E2;
+  --green-200:  #BEE4CB;
+  --green-300:  #98D7AD;
+  --green-400:  #7BCC96;  /* fresh mid-tone, L≈64% — new hero/section surface option */
+  --green-500:  #64C484;  /* fresh mid-tone, L≈58% — new hero/section surface option */
+  --green-600:  #3E9159;  /* = old --c-leaf2 */
+  --green-700:  #2E6B41;  /* = old --c-leaf  — primary action color, 6.37:1 on white */
+  --green-800:  #1A3D2B;  /* = old --c-forest3 */
+  --green-900:  #143026;  /* = old --c-forest  — text/icon-only from here down */
+  --green-950:  #0C1F18;  /* = old --c-forest2 — text/icon-only */
+
+  /* Logo lime (geometric A mark #d4ed6b) — accent / active / CTA pop */
+  --brand-lime:        #D4ED6B;
+  --brand-lime-soft:   #E4F59A;
+  --brand-lime-deep:   #B8D94A;
+  --brand-lime-ink:    #0A0A0A;  /* text/icons ON lime (logo contrast rule) */
+  --brand-lime-glow:   rgba(212, 237, 107, .35);
+
+  /* Gold — brand hue ~40°, existing accent kept as the 500 anchor
+     (already 7.15:1 against dark text — verified below), extended
+     into a full ramp for tints/surfaces. */
+  --gold-50:   #FAF7EF;
+  --gold-100:  #F4EAD7;  /* = old --c-sand */
+  --gold-200:  #EDDAB6;
+  --gold-300:  #E2B65C;  /* = old --c-gold2 */
+  --gold-400:  #F0C97A;  /* = old --c-gold3 */
+  --gold-500:  #C7993A;  /* = old --c-gold  — primary accent */
+  --gold-600:  #AE8532;
+  --gold-700:  #8A6B2E;  /* accessible gold-on-light text, 4.64:1 on solid warning-surface */
+  --gold-750:  #7C6029;  /* one step darker — needed for the *translucent* new-badge surface, where
+                            gold-700 only reaches 4.49:1 (fails 4.5:1 AA); this hits 5.32:1 */
+  --gold-800:  #685227;
+  --gold-900:  #473A1F;
+
+  /* Neutral / warm — unchanged, already high-contrast and correct. */
+  --neutral-0:    #FFFFFF;
+  --neutral-25:   #FDFAF4;  /* cream */
+  --neutral-50:   #EDF4EF;  /* mist */
+  --neutral-100:  #E0EDE4;  /* mist2 */
+  --neutral-200:  #E4DBCA;  /* border-subtle — decorative only, 1.37:1, NOT for lone UI boundaries */
+  --neutral-300:  #D5C9B6;  /* border-subtle-2 */
+  --neutral-400:  #A2937A;  /* border-interactive — 3.0:1 on white, use for input/control outlines */
+  --neutral-600:  #93897A;  /* text-quaternary */
+  --neutral-700:  #6B5F50;  /* text-tertiary, 5.97:1 */
+  --neutral-800:  #3D3428;  /* text-secondary, 11.72:1 */
+  --neutral-900:  #16120C;  /* text-primary, 17.9:1 */
+  --neutral-950:  #0D0B08;  /* earth — darkest, decorative/backdrop only */
+
+  /* Blue/teal — Section 0 #1/#12 flagged this as a possible stray.
+     DECISION: kept as a real primitive, not removed. It's already
+     load-bearing in two places (stat-card "blue" variant, and the
+     conceptual "info" feedback color) and it passes AA (4.73:1 on
+     white) — the actual bug was portal-ui-pro.css inventing an
+     UNRELATED, uncontrolled blue (#1d4ed8) for .status-new, not this
+     token. Formalizing this one and eliminating that one is the fix. */
+  --blue-50:   #EAF4F3;
+  --blue-500:  #2A7F7E;  /* = old --c-blue */
+  --blue-600:  #236866;
+
+  /* Red — unchanged, already AA (4.6:1 on white). */
+  --red-50:   #FBEBEC;
+  --red-500:  #D93644;
+  --red-600:  #C3303D;  /* accessible red-on-tint text, 4.78:1 on --color-feedback-error-surface —
+                            red-500 itself only hits 3.99:1 there and was wrongly reused for years */
+
+  /* ══════════════ LAYER 2 — SEMANTIC TOKENS ══════════════
+     The only layer components should reference. Each of these maps
+     to a Layer 1 step chosen for a specific, checked purpose. */
+
+  /* Surfaces */
+  --color-surface-base:      var(--neutral-25);   /* page background */
+  --color-surface-raised:    var(--neutral-0);     /* cards, modals */
+  --color-surface-sunken:    var(--neutral-50);    /* inset panels, input backgrounds */
+  --color-surface-brand:     var(--green-500);     /* NEW: fresh mid-green hero/section surface (Section 0 #9).
+                                                        CONTRAST WARNING: only 2.15:1 with white text — use
+                                                        --color-text-primary (dark, 8.68:1) on this surface,
+                                                        never --color-text-on-action. Not currently used with
+                                                        white text anywhere in the codebase; keep it that way. */
+  --color-surface-brand-deep: var(--green-900);    /* dark section variant — text/icon must be light on this */
+
+  /* Actions — primary CTA = logo lime + dark ink (logo contrast rule) */
+  --color-action-primary:          var(--brand-lime);
+  --color-action-primary-hover:    var(--brand-lime-soft);
+  --color-action-primary-pressed:  var(--brand-lime-deep);
+  --color-action-primary-disabled: var(--neutral-300);
+  --color-action-secondary:        var(--gold-500);
+  --color-action-secondary-hover:  var(--gold-600);
+  --color-action-lime:             var(--brand-lime);
+  --color-action-lime-hover:       var(--brand-lime-soft);
+  --color-text-on-lime:            var(--brand-lime-ink);
+
+  /* Text */
+  --color-text-primary:    var(--neutral-900);  /* 17.9:1 on surface-base */
+  --color-text-secondary:  var(--neutral-800);  /* 11.72:1 on surface-base */
+  --color-text-tertiary:   var(--neutral-700);  /* 5.97:1 on surface-base */
+  --color-text-quaternary: var(--neutral-600);  /* decorative/meta only — not verified for body text, don't use for anything readable */
+  --color-text-on-action:  var(--brand-lime-ink); /* dark ink on lime CTA */
+  --color-text-on-brand-deep: var(--neutral-0); /* for text on --color-surface-brand-deep */
+
+  /* Borders — two tiers, deliberately. See --neutral-200 vs --neutral-400
+     note above: WCAG 1.4.11 (3:1) only binds a border that is the SOLE
+     indicator of a control's boundary. A card with its own shadow/bg
+     doesn't need it; a bare input outline does. */
+  --color-border-subtle:      var(--neutral-200);  /* cards, dividers, decorative */
+  --color-border-interactive: var(--neutral-400);  /* input/select/checkbox default outline — passes 3:1 */
+  --color-border-focus:       var(--brand-lime-deep);    /* focus-visible ring — logo lime family */
+
+  /* Nav / icon-patch primitives (Wave 1 brand pass) */
+  --nav-pad-x: 13px;
+  --nav-row-h: 42px;
+  --nav-gap-icon-label: 13px;
+  --nav-section-gap: 21px;
+  --nav-radius: 12px;
+  /* Light sidebar is white — tint with ink (not raised white) so patches read */
+  --nav-surface: var(--color-text-primary);
+  --nav-patch-idle: color-mix(in srgb, var(--nav-surface) 10%, transparent);
+  --nav-patch-hover: color-mix(in srgb, var(--nav-surface) 16%, transparent);
+  --nav-patch-active: color-mix(in srgb, var(--brand-lime) 42%, transparent);
+  --nav-ico: var(--color-text-secondary);          /* light theme: dark icons on light patch */
+  --nav-ico-active: var(--brand-lime-ink);         /* always dark ink on lime active patch */
+  --nav-rail: var(--brand-lime-deep);
+  --nav-row-active-bg: color-mix(in srgb, var(--brand-lime) 18%, transparent);
+  --nav-section-line: color-mix(in srgb, var(--color-border-subtle) 70%, transparent);
+
+  /* Feedback — each with a text color verified against its own surface tint */
+  --color-feedback-success:         var(--green-700);
+  --color-feedback-success-text:    #235433;   /* 8.05:1 on success-surface */
+  --color-feedback-success-surface: var(--green-50);
+
+  --color-feedback-warning:         var(--gold-600);
+  --color-feedback-warning-text:    var(--gold-700);  /* 4.64:1 on warning-surface */
+  --color-feedback-warning-surface: var(--gold-50);
+
+  --color-feedback-error:         var(--red-500);   /* 4.6:1 on white */
+  --color-feedback-error-text:    var(--red-600);   /* 4.78:1 on error-surface — was red-500 (3.99:1, AA fail) */
+  --color-feedback-error-surface: var(--red-50);
+
+  --color-feedback-info:         var(--blue-500);  /* 4.73:1 on white */
+  --color-feedback-info-text:    var(--blue-600);
+  --color-feedback-info-surface: var(--blue-50);
+
+  /* "New" badge — its own dedicated token. This directly resolves
+     Section 0 #1: the badge no longer shares a class with any other
+     concept, so there is nothing left for portal-ui-pro.css:521 to
+     legitimately "mean" to redefine. That line must still be
+     deleted (Phase 4) — this token makes the deletion safe/obvious,
+     it doesn't substitute for it. */
+  --color-feedback-new:         var(--gold-500);
+  --color-feedback-new-text:    var(--gold-750);   /* 5.32:1 on new-surface — was gold-700 (4.49:1, AA fail) */
+  --color-feedback-new-surface: rgba(199,153,58,.12);
+
+  /* ── Gradients (logo lime brand ramp) ── */
+  --gradient-brand:       linear-gradient(135deg,#E4F59A 0%,#D4ED6B 48%,#B8D94A 100%);
+  --gradient-brand-soft:  linear-gradient(135deg,var(--brand-lime-soft) 0%,var(--brand-lime) 100%);
+  --gradient-accent:      linear-gradient(135deg,var(--gold-400) 0%,var(--gold-300) 45%,var(--gold-500) 100%);
+  --gradient-deep:        linear-gradient(135deg,var(--green-900) 0%,var(--green-950) 55%,#060E0A 100%);
+  --gradient-hero:        linear-gradient(150deg,var(--green-800) 0%,var(--green-950) 50%,#060E0A 100%);
+
+  /* ══════════════ LAYER 3 — COMPONENT TOKENS ══════════════
+     Scoped overrides only where a component genuinely needs to
+     diverge from the semantic layer. Keep this list short — if a
+     component token just repeats a semantic token's value, delete
+     the component token and reference the semantic one directly. */
+  --button-radius:        var(--r);
+  --button-radius-pill:   var(--r-full);
+  --card-radius:          var(--r-md);
+  --card-shadow-rest:     var(--sh-sm);
+  --card-shadow-hover:    var(--sh-md);
+  --modal-radius:         var(--r-lg);
+  --modal-shadow:         var(--sh-lg);
+  --input-radius:         var(--r-sm);
+  --input-border-width:   1.5px;
+
+  /* ══════════════ TYPE SCALE (§3) ══════════════
+     ~1.2 modular ratio from a 16px body base, rounded to clean
+     pixel steps (standard practice — raw mathematical output is
+     14.7/23.0/27.6/33.2px etc.; rounded here for crisp rendering). */
+  --text-caption:   12px;
+  --text-body-sm:   14px;
+  --text-body:      16px;
+  --text-body-lg:   18px;
+  --text-title-sm:  20px;
+  --text-title:     24px;
+  --text-title-lg:  32px;
+  --text-display:   40px;
+
+  --leading-tight:  1.15;
+  --leading-normal: 1.5;
+  --leading-loose:  1.7;
+  --tracking-tight: -0.02em;
+  --tracking-wide:  0.08em;
+
+  /* ── Type families (unchanged) ── */
+  --f-display:    'Fraunces','Plus Jakarta Sans','Inter',Georgia,serif;
+  --f-display-ui: 'Plus Jakarta Sans','Inter',system-ui,sans-serif;
+  --f-body:       'Inter',system-ui,-apple-system,sans-serif;
+
+  /* ══════════════ SPACING — 8pt grid (§4) ══════════════ */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-7:  32px;
+  --space-8:  40px;
+  --space-9:  48px;
+  --space-10: 64px;
+  --space-11: 80px;
+  --space-12: 96px;
+
+  /* ── Radius (unchanged) ── */
+  --r-xs: 6px; --r-sm: 10px; --r: 16px; --r-md: 20px;
+  --r-lg: 28px; --r-xl: 40px; --r-full: 999px;
+
+  /* Standard aspect ratio every ad / promo banner is fitted into (object-fit:
+     cover), so ads of any uploaded size render at one uniform height instead of
+     mismatched heights. Change this one value to re-standardise every banner. */
+  --ax-ad-ratio: 16 / 9;
+  /* Standard aspect ratio for product photo carousels (shop + product modal). */
+  --ax-product-ratio: 1 / 1;
+
+  /* ── Shadow / elevation — 5 tiers (§5): rest/hover/pressed/floating/modal ── */
+  --sh-xs:   0 1px 3px rgba(13,11,8,.06), 0 1px 2px rgba(13,11,8,.04);   /* rest */
+  --sh-sm:   0 4px 12px rgba(13,11,8,.08), 0 2px 4px rgba(13,11,8,.04);  /* hover */
+  --sh:      0 8px 24px rgba(13,11,8,.10), 0 3px 8px rgba(13,11,8,.06);  /* pressed/active */
+  --sh-md:   0 16px 48px rgba(13,11,8,.13), 0 6px 16px rgba(13,11,8,.08); /* floating (dropdowns, popovers) */
+  --sh-lg:   0 32px 80px rgba(13,11,8,.18), 0 12px 32px rgba(13,11,8,.10); /* modal/sheet */
+  --sh-leaf: 0 8px 28px rgba(46,107,65,.30);  /* brand-tinted elevation, e.g. primary CTA hover */
+  --sh-gold: 0 8px 28px rgba(199,153,58,.30); /* now the ONLY glow-style shadow — also used to unify
+                                                  the marketing-CTA-glow vs catalogue-card-flat-shadow
+                                                  inconsistency from Section 0 #11: cards use --sh-xs/sm/md,
+                                                  only primary brand CTAs get a glow, consistently. */
+  --sh-gold-hover: 0 12px 36px rgba(199,153,58,.45); /* §0-11 Phase 4: the hover step of the same glow —
+                                                  every gold-CTA hover state (btn-gold, dash-ad-cta-btn, and
+                                                  any future one) now shares this exact value instead of each
+                                                  call site hand-rolling its own rgba hover shadow. */
+
+  /* ── Motion (§8) ── */
+  --ease:     cubic-bezier(.22,1,.36,1);
+  --ease-out: cubic-bezier(0,0,.2,1);
+  --t-fast: .15s; --t-base: .25s; --t-slow: .4s;
+  --duration-fast: 120ms;
+  --duration-base: 220ms;
+  --duration-slow: 380ms;
+
+  /* ══════════════ LEGACY ALIASES ══════════════
+     index.html's original un-prefixed names, kept alive so its
+     existing inline <style> block needs no rewrite this phase.
+     Do NOT use these for any new CSS — reference Layer 2 semantic
+     tokens directly. These now point at the NEW ramp, so index.html
+     inherits the resolved palette automatically without being
+     touched until its dedicated Phase 3 pass. */
+  --earth:   var(--neutral-950);
+  --forest:  var(--green-900);
+  --forest2: var(--green-950);
+  --leaf:    var(--green-700);
+  --leaf2:   var(--green-600);
+  --lime:    var(--brand-lime);
+  --gold:    var(--gold-500);
+  --gold2:   var(--gold-300);
+  --sand:    var(--gold-100);
+  --cream:   var(--neutral-25);
+  --white:   var(--neutral-0);
+  --mist:    var(--neutral-50);
+  --text:    var(--color-text-primary);
+  --text2:   var(--color-text-secondary);
+  --text3:   var(--color-text-tertiary);
+  --border:  var(--color-border-subtle);
+  --font-display: var(--f-display);
+  --font-body:    var(--f-body);
+  --gradient-leaf: var(--gradient-brand-soft);
+  --gradient-gold: var(--gradient-accent);
+
+  /* portal.html + portal-ui.css + portal-ui-pro.css + catalogue-ui.css
+     canonical --c-/--g- names — kept identical in value to before so
+     every existing consumer keeps working untouched; they now simply
+     point at Layer 1/2 tokens instead of hardcoded hex. */
+  --c-earth:    var(--neutral-950);
+  --c-forest:   var(--green-900);
+  --c-forest2:  var(--green-950);
+  --c-forest3:  var(--green-800);
+  --c-leaf:     var(--green-700);
+  --c-leaf2:    var(--green-600);
+  --c-leaf3:    #4EA86A;
+  --c-lime:     var(--green-300);
+  --c-gold:     var(--gold-500);
+  --c-gold2:    var(--gold-300);
+  --c-gold3:    var(--gold-400);
+  --c-sand:     var(--gold-100);
+  --c-cream:    var(--neutral-25);
+  --c-white:    var(--neutral-0);
+  --c-mist:     var(--neutral-50);
+  --c-mist2:    var(--neutral-100);
+  --c-text:     var(--color-text-primary);
+  --c-text2:    var(--color-text-secondary);
+  --c-text3:    var(--color-text-tertiary);
+  --c-text4:    var(--color-text-quaternary);
+  --c-border:   var(--color-border-subtle);
+  --c-border2:  var(--neutral-300);
+  --c-red:      var(--red-500);
+  --c-red-bg:   var(--color-feedback-error-surface);
+  --c-blue:     var(--blue-500);
+
+  --g-leaf:  var(--gradient-brand);
+  --g-leaf2: var(--gradient-brand-soft);
+  --g-gold:  var(--gradient-accent);
+  --g-dark:  var(--gradient-deep);
+  --g-hero:  var(--gradient-hero);
+}

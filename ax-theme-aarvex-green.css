@@ -1,0 +1,350 @@
+/* ══════════════════════════════════════════════════════════════
+   AARVEX — GREEN "MESSENGER" THEME OVERRIDE  (Phase 1: global look)
+   ──────────────────────────────────────────────────────────────
+   Purpose: retint the WHOLE app to match the new dark-green design
+   language used across the messenger / account / story prototypes,
+   WITHOUT touching any layout or JS. It works by re-pointing the
+   Layer-1 primitive tokens (tokens.css) inside html[data-theme="dark"]
+   to the prototype palette, so every token-driven component recolors
+   at once. Loaded LAST in portal.html so it wins the cascade over the
+   older dark block in ax-features.css (same specificity → later wins).
+
+   Palette anchors (logo lime brand pass):
+     page bg     #0D1712      panel/raised  #121F18
+     sunken      #16261D      hairline      #233326
+     logo lime   #D4ED6B      gold          #C9A227
+     text hi     #EAF2ED      text lo       #9FB3A6
+   ══════════════════════════════════════════════════════════════ */
+
+html[data-theme="dark"] {
+  /* ── Surfaces / neutrals → NEON-OLIVE ramp (Phase 1 rebuild) ──
+     Hue shifted from teal (~150°) to the logo-lime family (~78°) so
+     every dark surface shares the brand's neon hue instead of the old
+     "green stone" teal. Text steps re-checked for contrast on #0B0F06. */
+  --neutral-25:  #0B0F06;   /* page background            */
+  --neutral-0:   #161D0F;   /* raised cards / sheets      */
+  --neutral-50:  #1D2614;   /* sunken panels / inputs     */
+  --neutral-100: #212B16;
+  --neutral-200: #303D22;   /* subtle borders / dividers  */
+  --neutral-300: #3B4A29;
+  --neutral-400: #6E7A55;   /* interactive border / muted */
+  --neutral-600: #8C9775;   /* quaternary text            */
+  --neutral-700: #A7B391;   /* tertiary text   (7:1)      */
+  --neutral-800: #CAD4B6;   /* secondary text / body (11:1)*/
+  --neutral-900: #F1F5E6;   /* primary text    (17:1)     */
+  --neutral-950: #F8FBEE;
+
+  /* Logo lime ramp on dark surfaces */
+  --brand-lime:        #D4ED6B;
+  --brand-lime-soft:   #E4F59A;
+  --brand-lime-deep:   #B8D94A;
+  --brand-lime-ink:    #0A0A0A;
+  --brand-lime-glow:   rgba(212, 237, 107, .4);
+
+  /* Green ramp: keep lime accents (400–700); deep surfaces → neon-olive */
+  --green-400: #D4ED6B;
+  --green-500: #C5E05A;
+  --green-600: #B8D94A;
+  --green-700: #D4ED6B;   /* primary action = logo lime */
+  --green-800: #1D2614;
+  --green-900: #10160B;
+  --green-950: #0B0F06;
+  --green-50:  #141A0E;
+  --green-100: #1D2614;
+
+  /* ── Gold accent → prototype gold ── */
+  --gold-500: #C9A227;
+  --gold-400: #E2B65C;
+  --gold-300: #E9C87E;
+  --gold-50:  #241E12;
+  --gold-100: #2A2417;
+
+  --red-50:   #2A1717;
+  --blue-500: #6FA8C9;
+  --blue-50:  #14222B;
+
+  /* ── Legacy --c-forest* (used by hero/deep sections) ── */
+  --c-forest:  #0B0F06;
+  --c-forest2: #070A04;
+  --c-forest3: #1D2614;
+  --c-leaf:    #D4ED6B;
+  --c-leaf2:   #E4F59A;
+
+  /* ── Semantic re-points ── */
+  --color-surface-base:      var(--neutral-25);
+  --color-surface-raised:    var(--neutral-0);
+  --color-surface-sunken:    var(--neutral-50);
+  --color-surface-brand:     #26331A;
+  --color-surface-brand-deep:#0B0F06;
+
+  --color-action-primary:          #D4ED6B;
+  --color-action-primary-hover:    #E4F59A;
+  --color-action-primary-pressed:  #B8D94A;
+  --color-action-lime:             #D4ED6B;
+  --color-action-lime-hover:       #E4F59A;
+  --color-text-on-action:          #0A0A0A;   /* dark ink on lime */
+  --color-text-on-lime:            #0A0A0A;
+
+  --color-border-subtle:      #303D22;
+  --color-border-interactive: #3B4A29;
+  --color-border-focus:       #D4ED6B;
+
+  --color-feedback-success:         #D4ED6B;
+  --color-feedback-success-text:    #E4F59A;
+  --color-feedback-success-surface: #17210E;
+  --color-feedback-info:            #6FA8C9;
+  --color-feedback-info-text:       #A9CFE3;
+  --color-feedback-info-surface:    #14222B;
+  --color-feedback-new:             #C9A227;
+  --color-feedback-new-text:        #E2B65C;
+  --color-feedback-new-surface:     rgba(201,162,39,.14);
+
+  /* Nav patches on dark sidebar — tint with light ink (not raised panel) */
+  --nav-surface: #EAF2ED;
+  --nav-patch-idle: color-mix(in srgb, var(--nav-surface) 12%, transparent);
+  --nav-patch-hover: color-mix(in srgb, var(--nav-surface) 18%, transparent);
+  --nav-patch-active: color-mix(in srgb, var(--brand-lime) 42%, transparent);
+  --nav-ico: #F1F5E6;                 /* light icons on dark translucent patch */
+  --nav-ico-active: var(--brand-lime-ink);
+  --nav-rail: var(--brand-lime);
+  --nav-row-active-bg: color-mix(in srgb, var(--brand-lime) 16%, transparent);
+  --nav-section-line: color-mix(in srgb, #303D22 80%, transparent);
+
+  /* ── Gradients → lime CTA + deep NEON-OLIVE surfaces ── */
+  --gradient-brand:      linear-gradient(135deg,#E4F59A 0%,#D4ED6B 48%,#B8D94A 100%);
+  --gradient-brand-soft: linear-gradient(135deg,#B8D94A 0%,#D4ED6B 100%);
+  --gradient-deep:       linear-gradient(135deg,#161D0F 0%,#0B0F06 55%,#070A04 100%);
+  --gradient-hero:       linear-gradient(150deg,#1D2614 0%,#0B0F06 50%,#070A04 100%);
+
+  color-scheme: dark;
+}
+
+/* ── Body base ── */
+html[data-theme="dark"] body{ background:var(--neutral-25); color:var(--neutral-800); }
+
+/* ── Typography signature: big titles in Fraunces, like the prototypes.
+      Only display/heading roles — body stays Inter. ── */
+html[data-theme="dark"] .page-title,
+html[data-theme="dark"] .app-title,
+html[data-theme="dark"] .section-title,
+html[data-theme="dark"] .ax-msg-title,
+html[data-theme="dark"] .story-title,
+html[data-theme="dark"] .profile-dd-name{
+  font-family: var(--f-display);
+  letter-spacing:-0.01em;
+}
+
+/* ── Accent pop: primary CTAs get the mint fill + dark ink + soft glow ── */
+html[data-theme="dark"] .btn-primary,
+html[data-theme="dark"] .ax-msg-send,
+html[data-theme="dark"] .story-btn-next{
+  background:#D4ED6B !important;
+  color:#0A0A0A !important;
+  border-color:#D4ED6B !important;
+  box-shadow:0 8px 22px -8px rgba(212,237,107,.45);
+}
+html[data-theme="dark"] .btn-primary:hover{ background:#E4F59A !important; }
+
+/* ── Mint focus ring across inputs/controls ── */
+html[data-theme="dark"] input:focus,
+html[data-theme="dark"] textarea:focus,
+html[data-theme="dark"] select:focus,
+html[data-theme="dark"] .form-input:focus{
+  border-color:#D4ED6B !important;
+  box-shadow:0 0 0 3px rgba(212,237,107,.18) !important;
+}
+
+/* ── Nav / sheets pick up the deeper page tone ── */
+html[data-theme="dark"] .mobile-nav{ background:#0B0F06 !important; border-color:#303D22 !important; }
+html[data-theme="dark"] .nav{ background:rgba(11,15,6,.92) !important; }
+
+/* ── Active/selected pills & chips → logo lime ── */
+html[data-theme="dark"] .chip.active,
+html[data-theme="dark"] .filter-chip.active,
+html[data-theme="dark"] .ax-tab.active,
+html[data-theme="dark"] .tab-item.active{
+  background:#D4ED6B !important;
+  color:#0A0A0A !important;
+  border-color:#D4ED6B !important;
+}
+
+/* ── Verified / brand ticks stay crisp lime ── */
+html[data-theme="dark"] .verified,
+html[data-theme="dark"] .ax-verified{ background:#D4ED6B !important; color:#0A0A0A !important; }
+
+/* ══════════════════════════════════════════════════════════════
+   MESSENGER SKIN — reshape the real ax-messenger.css components to
+   the messenger-app.html prototype look. CSS-only (colour + radius +
+   spacing), so no behaviour/layout breaks. Real .ax-* selectors.
+   ══════════════════════════════════════════════════════════════ */
+
+/* overlay + topbar surfaces */
+html[data-theme="dark"] .ax-chat-overlay{ background:#0D1712 !important; }
+html[data-theme="dark"] .ax-chat-topbar{ background:#0D1712 !important; border-color:#233326 !important; }
+
+/* message bubbles — sent = mint-dim gradient, received = raised panel,
+   with the prototype's asymmetric speech-bubble radii */
+html[data-theme="dark"] .ax-chat-bubble.mine{
+  background:linear-gradient(135deg,#2F9670,#256F55) !important;
+  color:#EAF9F1 !important;
+  border-radius:16px 5px 16px 16px !important;
+  box-shadow:0 2px 10px -4px rgba(0,0,0,.4) !important;
+}
+html[data-theme="dark"] .ax-chat-bubble.theirs{
+  background:#16261D !important;
+  color:#EAF2ED !important;
+  border-radius:5px 16px 16px 16px !important;
+}
+html[data-theme="dark"] .ax-chat-reply-quote{
+  background:rgba(0,0,0,.2) !important;
+  border-left:2.5px solid #C9A227 !important;
+  border-radius:7px !important;
+}
+html[data-theme="dark"] .ax-chat-reaction-pill{
+  background:#121F18 !important; border:1px solid #233326 !important;
+}
+
+/* inbox conversation rows */
+html[data-theme="dark"] .ax-chat-overlay .ax-inbox-row{ border-radius:14px !important; }
+html[data-theme="dark"] .ax-chat-overlay .ax-inbox-row:active{ background:#16261D !important; }
+html[data-theme="dark"] .ax-inbox-badge{ background:#D4ED6B !important; color:#0A0A0A !important; }
+
+/* composer + send */
+html[data-theme="dark"] .ax-chat-composer{ background:#0D1712 !important; border-color:#233326 !important; }
+html[data-theme="dark"] .ax-chat-send-btn{
+  background:#D4ED6B !important; color:#0A0A0A !important;
+  border-radius:50% !important; box-shadow:0 6px 16px -6px rgba(212,237,107,.55) !important;
+}
+
+/* hub tabs + filter chips → mint pill when active (prototype segmented look) */
+html[data-theme="dark"] .ax-msg-hub-tab.active,
+html[data-theme="dark"] .ax-msg-chip.active{
+  background:#D4ED6B !important; color:#0A0A0A !important; border-color:#D4ED6B !important;
+}
+html[data-theme="dark"] .ax-msg-hub-tabs{ border:1px solid #233326 !important; border-radius:999px !important; }
+
+/* forward / QR / action sheets → rounded panels */
+html[data-theme="dark"] .ax-fwd-card,
+html[data-theme="dark"] .ax-msg-qr-sheet,
+html[data-theme="dark"] .ax-msg-ctx-menu{
+  background:#121F18 !important; border-color:#233326 !important; border-radius:22px !important;
+}
+html[data-theme="dark"] .ax-fwd-send{ background:#D4ED6B !important; color:#0A0A0A !important; }
+html[data-theme="dark"] .ax-fwd-check{ background:#D4ED6B !important; color:#0A0A0A !important; }
+
+/* context reaction bar + action buttons */
+html[data-theme="dark"] .ax-msg-react-row,
+html[data-theme="dark"] .ax-selbar-react{ background:#16261D !important; border-color:#233326 !important; }
+html[data-theme="dark"] .ax-selbar-btn .ic,
+html[data-theme="dark"] .ax-selbar-btn i{ color:#D4ED6B !important; }
+
+/* settings rows + toggle */
+html[data-theme="dark"] .ax-msg-set-row{ border-color:#233326 !important; }
+html[data-theme="dark"] .ax-msg-set-section{ color:#C9A227 !important; }
+html[data-theme="dark"] .ax-msg-switch.on{ background:#D4ED6B !important; }
+
+/* calls */
+html[data-theme="dark"] .ax-call-again{ background:#16261D !important; color:#E8637C !important; }
+html[data-theme="dark"] .ax-chat-daysep{ background:#16261D !important; color:#5E7266 !important; }
+html[data-theme="dark"] .ax-chat-pinned-bar{ background:#16261D !important; border-color:#233326 !important; }
+
+/* ══════════════════════════════════════════════════════════════
+   SOCIAL / CHAT / PROFILE / STORY-EDITOR SKIN (ax-social.css)
+   These components hardcode LIGHT colours (#fff, #2E6B41, #eee) that
+   the token retint can't reach — so retint them explicitly to the
+   prototype dark-green palette. CSS-only (colour/radius/bg), safe.
+   ══════════════════════════════════════════════════════════════ */
+
+/* sheets / overlays */
+html[data-theme="dark"] .ax-profile-sheet,
+html[data-theme="dark"] .ax-chat-sheet,
+html[data-theme="dark"] .ax-actionsheet-card{
+  background:#121F18 !important; color:#EAF2ED !important; border:1px solid #233326 !important;
+}
+html[data-theme="dark"] .ax-actionsheet{ background:rgba(5,10,7,.72) !important; }
+html[data-theme="dark"] .ax-actionsheet-card button{ color:#EAF2ED !important; }
+
+/* profile */
+html[data-theme="dark"] .ax-prof-cover-empty{ background:linear-gradient(135deg,#1F3A2C,#16261D) !important; }
+html[data-theme="dark"] .ax-prof-role{ color:#D4ED6B !important; background:rgba(212,237,107,.14) !important; }
+html[data-theme="dark"] .ax-prof-stats{ border-color:#233326 !important; }
+html[data-theme="dark"] .ax-prof-menu-btn{ border-color:#233326 !important; color:#9FB3A6 !important; }
+html[data-theme="dark"] .ax-prof-cell{ background:#16261D !important; }
+html[data-theme="dark"] .ax-verified-badge{ color:#D4ED6B !important; background:rgba(212,237,107,.14) !important; }
+
+/* chat (ax-social variant) — dark thread, mint out-bubble, panel in-bubble */
+html[data-theme="dark"] .ax-chat-topbar{ border-color:#233326 !important; }
+html[data-theme="dark"] .ax-chat-back{ color:#EAF2ED !important; }
+html[data-theme="dark"] .ax-chat-messages{ background:#0D1712 !important; }
+html[data-theme="dark"] .ax-chat-bubble{ background:#16261D !important; color:#EAF2ED !important; }
+html[data-theme="dark"] .ax-chat-out .ax-chat-bubble{
+  background:linear-gradient(135deg,#2F9670,#256F55) !important; color:#EAF9F1 !important;
+}
+html[data-theme="dark"] .ax-chat-callbtn{ background:rgba(212,237,107,.14) !important; color:#D4ED6B !important; }
+html[data-theme="dark"] .ax-chat-composer{ border-color:#233326 !important; }
+html[data-theme="dark"] .ax-chat-attach-btn{ color:#D4ED6B !important; }
+html[data-theme="dark"] .ax-chat-send-btn{ background:#D4ED6B !important; color:#0A0A0A !important; }
+html[data-theme="dark"] .ax-inbox-row{ border-color:#1A2A22 !important; }
+html[data-theme="dark"] .ax-inbox-badge{ background:#D4ED6B !important; color:#0A0A0A !important; }
+html[data-theme="dark"] .ax-chat-loc,
+html[data-theme="dark"] .ax-chat-doc{ background:rgba(0,0,0,.25) !important; }
+
+/* privacy & blocking */
+html[data-theme="dark"] .ax-toggle-row,
+html[data-theme="dark"] .ax-block-row{ border-color:#233326 !important; }
+html[data-theme="dark"] .ax-priv-toggle{ background:#2C4034 !important; }
+html[data-theme="dark"] .ax-priv-toggle:checked{ background:#D4ED6B !important; }
+html[data-theme="dark"] .ax-aud-opt{ border-color:#233326 !important; }
+html[data-theme="dark"] .ax-aud-opt.selected,
+html[data-theme="dark"] .ax-aud-opt[aria-selected="true"]{ border-color:#D4ED6B !important; background:rgba(212,237,107,.1) !important; }
+html[data-theme="dark"] .ax-aud-check{ color:#D4ED6B !important; }
+html[data-theme="dark"] .ax-privacy-field-label,
+html[data-theme="dark"] .ax-privacy-section-title{ color:#C9A227 !important; }
+
+/* ══ REAL STORY EDITOR (ax-stories.js injected styles) ══
+   These classes are injected at runtime with hardcoded colours; the
+   html[data-theme="dark"] prefix out-specifies them, so these win and
+   convert the whole editor to the story-editor.html prototype look.
+   No JS touched — zero risk to the story-posting flow. */
+html[data-theme="dark"] .ax-story-editor-overlay{ background:#0D1712 !important; font-family:var(--f-body) !important; }
+html[data-theme="dark"] .ax-story-editor-title{ font-family:var(--f-display) !important; font-size:17px !important; color:#EAF2ED !important; }
+html[data-theme="dark"] .ax-story-editor-icon-btn{ background:#16261D !important; border:1px solid #233326 !important; color:#EAF2ED !important; border-radius:14px !important; }
+html[data-theme="dark"] .ax-story-editor-next{ background:#D4ED6B !important; color:#0A0A0A !important; border-radius:999px !important; box-shadow:0 8px 22px -8px rgba(212,237,107,.55) !important; }
+html[data-theme="dark"] .ax-story-tabs{ border-bottom:1px solid #233326 !important; }
+html[data-theme="dark"] .ax-story-tab{ color:#9FB3A6 !important; }
+html[data-theme="dark"] .ax-story-tab.active{ color:#D4ED6B !important; border-bottom-color:#C9A227 !important; }
+html[data-theme="dark"] .ax-story-panel{ background:#0D1712 !important; border-top:1px solid #233326 !important; }
+html[data-theme="dark"] .ax-story-hint,
+html[data-theme="dark"] .ax-radius-note{ color:#5E7266 !important; font-family:var(--f-mono,monospace) !important; }
+html[data-theme="dark"] .ax-story-adjust-btn{ background:#16261D !important; border:1px solid #233326 !important; color:#EAF2ED !important; border-radius:14px !important; }
+html[data-theme="dark"] .ax-story-adjust-btn i{ color:#D4ED6B !important; }
+html[data-theme="dark"] .ax-story-adjust-btn.on{ background:rgba(212,237,107,.14) !important; border-color:#D4ED6B !important; color:#D4ED6B !important; }
+html[data-theme="dark"] .ax-story-adjust-btn.on i{ color:#D4ED6B !important; }
+html[data-theme="dark"] .ax-story-filter-item.on{ color:#D4ED6B !important; }
+html[data-theme="dark"] .ax-story-filter-item.on .ax-story-filter-thumb{ border-color:#D4ED6B !important; }
+html[data-theme="dark"] .ax-story-text-opt-btn{ background:#16261D !important; border:1px solid #233326 !important; }
+html[data-theme="dark"] .ax-story-text-opt-btn.on{ background:rgba(212,237,107,.14) !important; color:#D4ED6B !important; }
+html[data-theme="dark"] .ax-story-shape-grid button{ background:#16261D !important; border:1px solid #233326 !important; color:#D4ED6B !important; border-radius:14px !important; }
+html[data-theme="dark"] .ax-story-emoji-grid button{ background:none !important; }
+html[data-theme="dark"] .ax-story-music-search{ background:#16261D !important; }
+html[data-theme="dark"] .ax-story-music-item{ background:none !important; color:#EAF2ED !important; }
+html[data-theme="dark"] .ax-story-music-item:hover{ background:#16261D !important; }
+html[data-theme="dark"] .ax-story-music-item.on,
+html[data-theme="dark"] .ax-story-music-item.on i{ color:#D4ED6B !important; }
+html[data-theme="dark"] .ax-story-music-row{ background:rgba(212,237,107,.14) !important; }
+html[data-theme="dark"] .ax-story-caption-input{ background:#16261D !important; }
+html[data-theme="dark"] .ax-story-field-label{ color:#C9A227 !important; }
+html[data-theme="dark"] .ax-story-aud-chip,
+html[data-theme="dark"] .ax-aud-chip{ background:#16261D !important; }
+html[data-theme="dark"] .ax-story-share-btn{ background:#D4ED6B !important; color:#0A0A0A !important; }
+html[data-theme="dark"] .ax-story-obj-del{ background:#E1435A !important; }
+html[data-theme="dark"] .ax-story-text-layer[contenteditable="true"]{ outline:1.5px dashed rgba(212,237,107,.8) !important; caret-color:#D4ED6B !important; }
+/* Story object resize + rotate handles (unprefixed — editor is always dark) */
+.ax-story-obj{ z-index:6; }
+.ax-story-obj-scale{ position:absolute; right:-11px; bottom:-11px; width:20px; height:20px; border-radius:50%; background:#D4ED6B; border:2px solid #06110b; cursor:nwse-resize; pointer-events:auto; box-shadow:0 2px 6px rgba(0,0,0,.45); }
+.ax-story-obj-rot{ position:absolute; top:-30px; left:50%; margin-left:-11px; width:22px; height:22px; border-radius:50%; background:#C9A227; color:#3a2c05; border:2px solid #06110b; display:flex; align-items:center; justify-content:center; font-size:10px; cursor:grab; pointer-events:auto; box-shadow:0 2px 6px rgba(0,0,0,.45); }
+/* Sticker category chips */
+.ax-story-emoji-cats{ display:flex; gap:8px; overflow-x:auto; margin-bottom:10px; padding-bottom:2px; }
+.ax-story-emoji-cats::-webkit-scrollbar{ display:none; }
+.ax-story-emoji-cat{ flex:0 0 auto; border:1.5px solid #233326; background:#16261D; color:#9FB3A6; border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600; cursor:pointer; font-family:var(--f-body); }
+.ax-story-emoji-cat.on{ background:#D4ED6B; color:#0A0A0A; border-color:#D4ED6B; }

@@ -1,0 +1,111 @@
+{
+  "purpose": "End-to-end confirmation pack for Home All Areas, permanent address picker, public radius filtering, selected-user exception, city shops, favourites, ads, notifications and messages.",
+  "before_you_start": [
+    "Deploy the current Lambda code, then sign in once with Account A and Account B.",
+    "Replace every __TOKEN_A__ / __TOKEN_B__ with that account's fresh browser localStorage ax_google_token. Do not put tokens in source control.",
+    "Replace __SUB_A__ / __SUB_B__ with each Google user sub. Account A is the viewer; Account B is 10–15 km away.",
+    "Create Account B's public feed/story, KYC-approved active shop and active product using the normal app UI before running Account A's read tests.",
+    "Copy one value from events at a time into the Lambda Console Test event field; do not invoke the entire file at once."
+  ],
+  "pass_rules": [
+    "At 5 km: Account B must be absent from geo users, public feed/stories, catalogue products and shop directory if B's saved Personal Information map pin is outside 5 km.",
+    "At 10 km: Account B appears only if its permanent Personal Information pin is at most 10 km away. Changing a device GPS/delivery address must not change results.",
+    "Selected post exception: an out-of-radius post appears only after both accounts follow each other AND Account B explicitly selects Account A. A public or followers-only post remains hidden outside the radius.",
+    "Top Shops and Star Performers use Account A's Personal Information city and remain unchanged when the radius changes. Favourites and admin-controlled ads are never radius filtered.",
+    "All Area address picker calls profile/update. Its address, city, pincode and pin must appear in GET /profile; an existing shop must mirror the same pickup address."
+  ],
+  "events": {
+    "A_update_personal_address": {
+      "version": "2.0", "rawPath": "/profile/update", "requestContext": { "http": { "method": "POST" } },
+      "headers": { "Content-Type": "application/json", "Authorization": "Bearer __TOKEN_A__" }, "queryStringParameters": null,
+      "body": "{\"address\":\"Central MIDC Road, Nagpur\",\"city\":\"Nagpur\",\"state\":\"Maharashtra\",\"pincode\":\"440016\",\"address_lat\":\"21.150063\",\"address_lng\":\"79.092983\"}", "isBase64Encoded": false,
+      "expect": "200 + success:true; profile returns the exact address and coordinates."
+    },
+    "A_verify_saved_address": {
+      "version": "2.0", "rawPath": "/profile", "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __TOKEN_A__" }, "queryStringParameters": null, "body": null, "isBase64Encoded": false,
+      "expect": "200; profile.address/city/pincode/address_lat/address_lng equal the previous event."
+    },
+    "A_set_5_km": {
+      "version": "2.0", "rawPath": "/geo/set", "requestContext": { "http": { "method": "POST" } },
+      "headers": { "Content-Type": "application/json", "Authorization": "Bearer __TOKEN_A__" }, "queryStringParameters": null,
+      "body": "{\"radius_km\":5,\"label\":\"Within 5 km\"}", "isBase64Encoded": false,
+      "expect": "200 + feed_geo.radius_km = 5; response lat/lng are Account A Personal Information pin, not device GPS."
+    },
+    "A_5km_users": {
+      "version": "2.0", "rawPath": "/geo/users", "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __TOKEN_A__" }, "queryStringParameters": { "radius_km": "5" }, "body": null, "isBase64Encoded": false,
+      "expect": "Account B is absent when B is 10–15 km away."
+    },
+    "A_5km_public_feed": {
+      "version": "2.0", "rawPath": "/feed", "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __TOKEN_A__" }, "queryStringParameters": { "limit": "50", "offset": "0" }, "body": null, "isBase64Encoded": false,
+      "expect": "Account B public post is absent; any post with missing permanent pin is also absent."
+    },
+    "A_5km_stories": {
+      "version": "2.0", "rawPath": "/story/list", "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __TOKEN_A__" }, "queryStringParameters": null, "body": null, "isBase64Encoded": false,
+      "expect": "Account B public story is absent outside 5 km."
+    },
+    "A_5km_catalogue": {
+      "version": "2.0", "rawPath": "/catalogue/sections", "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __TOKEN_A__" }, "queryStringParameters": null, "body": null, "isBase64Encoded": false,
+      "expect": "Account B product is absent outside 5 km."
+    },
+    "A_5km_shop_directory": {
+      "version": "2.0", "rawPath": "/shop/list", "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __TOKEN_A__" }, "queryStringParameters": { "limit": "100", "offset": "0" }, "body": null, "isBase64Encoded": false,
+      "expect": "Account B KYC-approved shop is absent outside 5 km."
+    },
+    "A_set_10_km": {
+      "version": "2.0", "rawPath": "/geo/set", "requestContext": { "http": { "method": "POST" } },
+      "headers": { "Content-Type": "application/json", "Authorization": "Bearer __TOKEN_A__" }, "queryStringParameters": null,
+      "body": "{\"radius_km\":10,\"label\":\"Within 10 km\"}", "isBase64Encoded": false,
+      "expect": "200 + feed_geo.radius_km = 10; repeat the four 5km read tests and Account B appears only when truly within 10 km."
+    },
+    "A_follow_B": {
+      "version": "2.0", "rawPath": "/feed/follow", "requestContext": { "http": { "method": "POST" } },
+      "headers": { "Content-Type": "application/json", "Authorization": "Bearer __TOKEN_A__" }, "queryStringParameters": null,
+      "body": "{\"user_sub\":\"__SUB_B__\",\"follow\":true}", "isBase64Encoded": false,
+      "expect": "200; Account A now follows Account B."
+    },
+    "B_follow_A": {
+      "version": "2.0", "rawPath": "/feed/follow", "requestContext": { "http": { "method": "POST" } },
+      "headers": { "Content-Type": "application/json", "Authorization": "Bearer __TOKEN_B__" }, "queryStringParameters": null,
+      "body": "{\"user_sub\":\"__SUB_A__\",\"follow\":true}", "isBase64Encoded": false,
+      "expect": "200; mutual follow relationship is now present."
+    },
+    "B_create_selected_post": {
+      "version": "2.0", "rawPath": "/feed/post", "requestContext": { "http": { "method": "POST" } },
+      "headers": { "Content-Type": "application/json", "Authorization": "Bearer __TOKEN_B__" }, "queryStringParameters": null,
+      "body": "{\"description\":\"RADIUS-E2E selected-only test\",\"visibility\":\"selected\",\"audience_subs\":[\"__SUB_A__\"]}", "isBase64Encoded": false,
+      "expect": "200; capture the returned post_id. Set Account A back to 5 km, then A_5km_public_feed must include this selected post despite B being outside radius."
+    },
+    "A_city_top_shops": {
+      "version": "2.0", "rawPath": "/shops/top", "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __TOKEN_A__" }, "queryStringParameters": null, "body": null, "isBase64Encoded": false,
+      "expect": "Only KYC-approved shops in Account A's Personal Information city; same result at 5 km and 10 km."
+    },
+    "A_favourite_products": {
+      "version": "2.0", "rawPath": "/favourites/products", "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __TOKEN_A__" }, "queryStringParameters": null, "body": null, "isBase64Encoded": false,
+      "expect": "A liked Account B product remains here even when it is outside 5 km."
+    },
+    "A_favourite_shops": {
+      "version": "2.0", "rawPath": "/shop/favourites", "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __TOKEN_A__" }, "queryStringParameters": null, "body": null, "isBase64Encoded": false,
+      "expect": "A liked Account B shop remains here even when it is outside 5 km."
+    },
+    "A_admin_ad_unchanged": {
+      "version": "2.0", "rawPath": "/banner/active", "requestContext": { "http": { "method": "GET" } },
+      "headers": { "Authorization": "Bearer __TOKEN_A__" }, "queryStringParameters": { "placement": "trade_top" }, "body": null, "isBase64Encoded": false,
+      "expect": "Same admin-controlled advertisement at 5 km, 10 km and All Areas."
+    },
+    "A_clear_radius": {
+      "version": "2.0", "rawPath": "/geo/set", "requestContext": { "http": { "method": "POST" } },
+      "headers": { "Content-Type": "application/json", "Authorization": "Bearer __TOKEN_A__" }, "queryStringParameters": null,
+      "body": "{\"clear\":true}", "isBase64Encoded": false,
+      "expect": "200; Home returns to All Areas while address remains unchanged in Personal Information."
+    }
+  }
+}

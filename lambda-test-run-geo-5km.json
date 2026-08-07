@@ -1,0 +1,16 @@
+{
+  "version": "2.0",
+  "rawPath": "/geo/set",
+  "requestContext": {
+    "http": {
+      "method": "POST"
+    }
+  },
+  "headers": {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer __PASTE_CURRENT_ax_google_token_HERE__"
+  },
+  "queryStringParameters": null,
+  "body": "{\"radius_km\":5,\"label\":\"Within 5 km\"}",
+  "isBase64Encoded": false
+}

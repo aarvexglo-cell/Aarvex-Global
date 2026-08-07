@@ -1,0 +1,1855 @@
+/* Aarvex Portal — Professional UI curation (mobile + desktop) */
+
+:root {
+  --portal-content-pad: var(--s5, 24px);
+}
+
+@media (max-width: 768px) {
+  :root {
+    --portal-content-pad: var(--s3, 12px);
+  }
+}
+
+/* ── Mobile header spacing ── */
+@media (max-width: 768px) {
+  .nav-right {
+    gap: 8px;
+  }
+}
+
+/* ── Full-bleed sections (hero, ad) ── */
+.portal-bleed {
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+@media (max-width: 768px) {
+  #panel-dashboard .portal-bleed {
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+  }
+}
+
+/* ── Welcome hero — professional full-bleed ── */
+.dash-hero.portal-bleed {
+  margin-bottom: 0;
+  border-radius: var(--r-lg);
+  border: none;
+  padding: clamp(20px, 4vw, 32px) clamp(24px, 5vw, 40px);
+  background:
+    linear-gradient(135deg, #0c1f18 0%, #143026 42%, #1a3d2b 100%);
+}
+
+@media (max-width: 768px) {
+  .dash-hero.portal-bleed {
+    padding: 20px 18px 22px;
+    margin-bottom: 0;
+  }
+}
+
+.dash-hero.portal-bleed .dash-hero-content {
+  grid-template-columns: auto 1fr;
+  gap: 16px 18px;
+  align-items: center;
+}
+
+.dash-hero.portal-bleed .dash-hero-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.dash-hero.portal-bleed .dash-hero-greeting {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  margin-bottom: 4px;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.dash-hero.portal-bleed .dash-hero-name {
+  font-size: clamp(20px, 5vw, 28px);
+  margin-bottom: 6px;
+  line-height: 1.15;
+}
+
+.dash-hero.portal-bleed .dash-hero-desc {
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.68);
+  max-width: none;
+}
+
+.dash-hero.portal-bleed .dash-hero-badge {
+  grid-column: 1 / -1;
+  justify-self: flex-start;
+  margin-top: 4px;
+  padding: 7px 14px;
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: none;
+}
+
+@media (min-width: 769px) {
+  .dash-hero.portal-bleed .dash-hero-badge {
+    grid-column: auto;
+    justify-self: end;
+    margin-top: 0;
+  }
+
+  .dash-hero.portal-bleed .dash-hero-content {
+    grid-template-columns: auto 1fr auto;
+  }
+}
+
+/* ── Ad banner — edge-to-edge image panel ── */
+.dash-banner.portal-bleed {
+  margin-top: 0;
+  /* No gap — the Home search bar sits flush under the ad, matching the Trade
+     tab (whose .trade-banner has no bottom margin). */
+  margin-bottom: 0;
+  padding: 0;
+  min-height: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: #143026;
+  display: block;
+  transition: none;
+}
+
+/* Edge-to-edge on every screen size — no side margin, no rounded corners,
+   whether or not a real ad is loaded (dash-banner-rounded is added by
+   mpRenderBanner once an admin-configured ad comes in). */
+.dash-banner.portal-bleed.dash-banner-rounded {
+  border-radius: 0;
+  margin-left: 0;
+  margin-right: 0;
+  width: 100%;
+}
+
+.dash-banner.portal-bleed:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.dash-banner.portal-bleed .dash-banner-default {
+  padding: 28px 20px;
+}
+
+.dash-banner.portal-bleed .dash-banner-img-wrap,
+.dash-banner.portal-bleed a {
+  display: block;
+  width: 100%;
+  line-height: 0;
+}
+
+.dash-banner.portal-bleed .dash-banner-img-wrap {
+  min-height: 0 !important;
+  max-height: none !important;
+  border-radius: 0 !important;
+  height: auto;
+}
+
+/* Auto height, driven by the image's own aspect ratio at 100% width — no
+   forced crop (object-fit:cover) and no stretch. Whatever the admin
+   uploads renders at its natural proportions, on mobile and desktop
+   alike, and the container (and the search bar right after it, on Trade)
+   just follows however tall that turns out to be. */
+.dash-banner.portal-bleed img {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  display: block;
+}
+
+.ax-hero-wrap { position: relative; }
+#dashHeroWrap .dash-banner-default { display: flex; flex-direction: column; justify-content: center; min-height: 220px; }
+
+/* ── Compact stat row (dashboard + delivery) ── */
+.dash-stats {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  margin-bottom: var(--s3);
+}
+
+/* Compact stat chips: much shorter footprint, icon sits inline-top,
+   value+label tight underneath. ~35% less vertical space than before. */
+.dash-stats .stat-card {
+  padding: 9px 8px 8px;
+  border-radius: 13px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 0;
+}
+
+.dash-stats .stat-card:hover {
+  transform: translateY(-1px);
+}
+
+.dash-stats .stat-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.dash-stats .stat-value {
+  font-size: clamp(16px, 4vw, 20px);
+  font-weight: 800;
+  margin-bottom: 1px;
+  line-height: 1.1;
+}
+
+.dash-stats .stat-label {
+  font-size: 8px;
+  letter-spacing: 0.05em;
+  line-height: 1.25;
+  opacity: .74;
+}
+
+.dash-stats .stat-card:last-child {
+  grid-column: auto !important;
+}
+
+@media (max-width: 768px) {
+  .dash-stats {
+    gap: 6px !important;
+  }
+
+  .dash-stats .stat-card {
+    padding: 8px 6px 7px;
+  }
+}
+
+/* Delivery summary — lighter, compact */
+.delivery-summary-shell {
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin-bottom: var(--s3) !important;
+}
+
+.delivery-summary-panel {
+  gap: 12px !important;
+}
+
+.delivery-summary-heading {
+  margin-bottom: 4px;
+}
+
+.delivery-summary-heading h3 {
+  font-size: 18px !important;
+}
+
+.delivery-summary-heading p {
+  font-size: 12.5px !important;
+}
+
+.delivery-summary-pill {
+  display: none !important;
+}
+
+/* ── Bottom nav: no pill highlight, no click animation — the active tab
+   is shown as a solid/filled icon, inactive tabs as outline-only icons
+   (faked via a transparent fill + text-stroke, since Font Awesome Free
+   only ships solid glyphs for these icons). ── */
+.mobile-nav-slider {
+  display: none !important;
+}
+
+/* (Old flat-tab overrides that forced the active bottom-nav button back
+   to a transparent background lived here — deleted, they were silently
+   killing the solid sliding pill defined in portal-base.css.) */
+
+/* Welcome strip below the dashboard ad is gone entirely (it rendered as a
+   dark gradient bar with unreadable text) — the ad flows straight into
+   the three stat cards (Total Orders / Listings / GST) with nothing in
+   between. The user's name still shows in the sidebar and on the Trade
+   tab's on-ad chip, so nothing of value is lost here. */
+#panel-dashboard .dash-hero { display: none !important; }
+.content-inner #dashBannerSlot { order: -1; }
+
+/* Search bar sticks to the top of the viewport once scrolled there — it
+   scrolls away naturally with the banner above it first, then locks at
+   top:64px (just under the site header) and stays put while the product
+   grid keeps scrolling underneath it. Applied unconditionally so it
+   works whether or not a banner is currently loaded for this placement
+   (see mpLoadBanner / mpRenderBanner in portal-marketplace.js). */
+.catalogue-search-sticky {
+  position: sticky; top: 64px; z-index: 12; background: var(--color-surface-base); padding-top: var(--s2);
+  /* box-shadow only — animating padding here made dock/undock a LAYOUT
+     animation, shifting the content under the user's finger mid-scroll
+     and feeding the auto-hide handler fake direction changes (flicker).
+     The dock swap is now instant + fully height-compensated by its
+     spacer, so nothing below ever moves. */
+  transition: box-shadow .3s cubic-bezier(.4,0,.2,1);
+}
+/* Breathing room between the Favourites search bar and its grid — the
+   cards were starting flush against the bar's bottom edge. Padding (not
+   margin) so the sticky bar's own background keeps covering the gap while
+   cards scroll underneath it. Applies at every viewport size. */
+#panel-favourites .catalogue-search-sticky { padding-bottom: var(--s3, 13px); }
+/* Mobile header is shorter (.nav-inner height:58px, see portal.html line
+   988) — matching `top` here keeps the sticky offset flush with the
+   header's actual bottom edge. Without this the bar would stick 6px below
+   where the header ends, and initSearchDock()'s dock-trigger check
+   (bar.top <= navH+1) would never pass on mobile, so the bar would never
+   actually take over the header no matter how far you scrolled. */
+@media (max-width: 768px) {
+  .catalogue-search-sticky {
+    top: 58px;
+  }
+}
+/* Docked state: fixed header chrome. On desktop signed-in the bar starts
+   AFTER the 280px sidebar (same as .nav) so placeholders never clip under it. */
+.catalogue-search-sticky.is-docked {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 64px;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px !important;
+  background: var(--color-surface-base, #fff);
+  box-shadow: 0 2px 14px rgba(20,48,38,.10);
+  border-bottom: 1px solid rgba(20,48,38,.08);
+  overflow: visible;
+}
+@media (min-width: 769px) {
+  body.is-signed-in .catalogue-search-sticky.is-docked {
+    left: 280px;
+  }
+}
+@media (max-width: 768px) {
+  .catalogue-search-sticky.is-docked {
+    height: 58px;
+    padding: 0 !important;
+    gap: 0;
+  }
+  #panel-dashboard .catalogue-search-sticky.is-docked .search-dock-icon-btn,
+  #panel-trade .catalogue-search-sticky.is-docked .search-dock-icon-btn {
+    width: 44px; height: 44px; min-width: 44px;
+  }
+}
+.catalogue-search-sticky.is-docked .cat-header.catalogue-search-unified {
+  display: flex !important;
+  align-items: center;
+  margin-bottom: 0 !important;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  gap: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+}
+.catalogue-search-sticky.is-docked .ax-search-bar.search-filter-group {
+  /* Cancel any mobile full-bleed while docked — normal flex child. */
+  width: auto !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  flex: 1 1 auto;
+  align-self: center;
+}
+.catalogue-search-sticky.is-docked .ax-search-bar .catalogue-search-input-wrap {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+.catalogue-search-sticky.is-docked .filter-dropdown,
+.catalogue-search-sticky.is-docked .ax-search-suggest,
+.catalogue-search-sticky.is-docked .ax-user-search-results {
+  top: calc(100% + 8px);
+}
+
+.search-dock-icon-row { display: none; flex-shrink: 0; align-items: center; }
+.catalogue-search-sticky.is-docked .search-dock-icon-row { display: flex; }
+/* Desktop: sidebar already provides nav — hide dock hamburger/bell. */
+@media (min-width: 769px) {
+  body.is-signed-in .catalogue-search-sticky.is-docked .search-dock-icon-row {
+    display: none !important;
+  }
+}
+
+.search-dock-spacer { display: none; }
+.search-dock-spacer.active { display: block; }
+
+/* Trade docked uses the same inset field + mobile menu as Home (no
+   edge-to-edge strip that clips text under the sidebar). */
+#panel-trade .catalogue-search-sticky.is-docked {
+  padding: 0 !important;
+  top: 0;
+}
+@media (max-width: 768px) {
+  #panel-trade .catalogue-search-sticky.is-docked {
+    padding: 0 !important;
+  }
+}
+#panel-trade .catalogue-search-sticky.is-docked .cat-header.catalogue-search-unified {
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100%;
+}
+
+/* Dock menu / bell — same surface as search chrome (no dark patch). */
+.search-dock-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 42px; height: 42px; min-width: 42px; border-radius: 12px;
+  flex: 0 0 auto; align-self: center;
+  border: 1.5px solid rgba(20,48,38,.12);
+  background: transparent;
+  color: var(--c-forest, #143026); font-size: 16px; cursor: pointer;
+  box-shadow: none;
+}
+.catalogue-search-sticky.is-docked .search-dock-icon-row { align-items: center; gap: 6px; }
+.search-dock-icon-btn:hover {
+  border-color: var(--c-leaf, #2E6B41);
+  color: var(--c-leaf, #2E6B41);
+  background: rgba(46, 107, 65, .06);
+}
+
+/* Once the search bar has docked under the header (see initSearchDock()
+   in portal.html), fade out the hamburger, notification bell and profile
+   avatar so the search bar reads as if it slid into the header row. Their
+   layout space collapses right after (JS, on transitionend) so no empty
+   gap is left; both reverse in the same order the instant the page
+   scrolls back up past the banner. */
+.nav-logo,
+.nav-profile-wrap,
+.nav-right .nav-btn {
+  transition: opacity .28s cubic-bezier(.4,0,.2,1), transform .28s cubic-bezier(.4,0,.2,1);
+}
+.nav.search-docked .nav-logo,
+.nav.search-docked .nav-profile-wrap,
+.nav.search-docked .nav-right .nav-btn {
+  opacity: 0;
+  transform: scale(.75);
+  pointer-events: none;
+}
+/* Height is intentionally NOT fixed here — it's auto, driven entirely by
+   the ad image/video's own aspect ratio at 100% width (see img/video rule
+   below), so nothing ever gets cropped or stretched no matter what the
+   admin uploads. The search bar right after it in the DOM just follows
+   however tall that natural render ends up being. */
+.trade-banner {
+  margin: 0;                     /* search bar sits flush against the ad's bottom edge */
+  width: 100%;
+  overflow: hidden;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  box-shadow: none;
+  background: var(--color-surface-raised);
+}
+/* Full-bleed to the actual screen edge only makes sense on mobile — on
+   desktop the sidebar means the content column doesn't start at the
+   browser's left edge, so `100vw` here would overflow under/past it
+   (same fix as .ax-search-bar in catalogue-ui.css). Desktop just uses
+   width:100% of its column, which is edge-to-edge within that column. */
+@media (max-width: 768px) {
+  .trade-banner {
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+  }
+}
+.trade-banner[hidden] { display: none; }
+/* portal-marketplace.js (mpRenderBanner) injects its own ad markup into
+   #tradeBannerSlot, and that markup brings its own rounded-corner/shadow
+   styling that overrides .trade-banner's flush edges above. Force every
+   descendant back to the same flush treatment .dash-banner.portal-bleed
+   uses on the dashboard, regardless of what wrapper/class the injected
+   markup uses — this way the fix doesn't depend on the exact structure
+   mpRenderBanner happens to output. */
+.trade-banner,
+.trade-banner * {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.trade-banner img,
+.trade-banner video,
+.trade-banner a,
+.trade-banner > div {
+  border: none !important;
+  width: 100% !important;
+  height: auto;
+  display: block;
+}
+/* Only hide the brand logo/name in the header while the Trade panel is
+   open (see switchPanel() toggling .on-trade-panel on <nav>); every other
+   panel keeps showing it as usual. */
+.nav.on-trade-panel .nav-logo { display: none; }
+
+/* ── Nav icons: inline SVG (Home) / Font Awesome glyphs (rest), swapped
+   via innerHTML by syncNavIcons() + tap/active animation ──
+   FA glyphs and inline SVG both follow `currentColor`, so active =
+   solid brand-green is pure CSS — no rasters, no network, no filters.
+   Works identically on the sidebar and the mobile bottom nav since both
+   share .nav-anim-icon. */
+.nav-anim-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+.nav-anim-icon svg,
+.nav-anim-icon img {
+  width: 20px;
+  height: 20px;
+  display: block;
+  object-fit: contain;
+}
+.nav-anim-icon svg,
+.nav-anim-icon i {
+  color: #6b7280;                 /* dark gray — inactive */
+  transition: color .15s ease;
+}
+.nav-anim-icon i {
+  font-size: 19px;
+  line-height: 1;
+}
+.mobile-nav-btn:active .nav-anim-icon,
+.sidebar-nav-item:active .nav-anim-icon {
+  transform: scale(.85);
+}
+@keyframes navIconPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35) rotate(-6deg); }
+  70%  { transform: scale(.92) rotate(3deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+.nav-anim-icon.pop {
+  animation: navIconPop .45s cubic-bezier(.34,1.56,.64,1);
+}
+/* Active tab: SOLID brand-green icon (+ green label via the button's own
+   `color`), no background patch behind it — on the bottom nav and the
+   sidebar/menu alike. */
+.mobile-nav-btn.active .nav-anim-icon svg,
+.mobile-nav-btn.active .nav-anim-icon i,
+.sidebar-nav-item.active .nav-anim-icon svg,
+.sidebar-nav-item.active .nav-anim-icon i {
+  color: var(--c-leaf, #2E6B41);
+}
+.trade-banner img, .trade-banner video { display: block; width: 100%; height: auto; }
+.dash-banner-img-wrap video { display: block; width: 100%; height: auto; }
+
+/* ── Standard ad ratio ──────────────────────────────────────────────────
+   Every uploaded ad is fitted into ONE standard aspect ratio (--ax-ad-ratio,
+   default 16:9) via object-fit:cover, so ads of different sizes stop rendering
+   at mismatched heights. Overflow is cropped to the ratio (the admin should
+   design to it); nothing stretches. Applies to the Trade banner and the
+   dashboard/feed ad banners (.dash-banner-rounded is the class mpRenderBanner
+   puts on real ad banners — the plain text CTA banner is untouched). */
+.trade-banner,
+.dash-banner.dash-banner-rounded {
+  aspect-ratio: var(--ax-ad-ratio, 16 / 9);
+  height: auto;
+}
+.trade-banner > a,
+.trade-banner .dash-banner-img-wrap,
+.dash-banner.dash-banner-rounded > a,
+.dash-banner.dash-banner-rounded .dash-banner-img-wrap {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.trade-banner img,
+.trade-banner video,
+.dash-banner.dash-banner-rounded img,
+.dash-banner.dash-banner-rounded video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  display: block;
+}
+.banner-media-fallback { display: none; padding: var(--s5); color: var(--color-text-secondary); text-align: center; }
+.banner-media-failed .banner-media-fallback { display: block; }
+
+/* ── Trade tab: user-name/welcome text overlaid on the ad itself, replacing
+   the old separate "Trade Hub / Order or Sell..." page-header block. ── */
+.ax-trade-hero-wrap { position: relative; }
+.ax-trade-welcome-chip {
+  /* Bottom-left of the ad (the header icons now float over the ad's top
+     edge, so the chip moved down to stay clear of them). Solid tint —
+     backdrop blur was an extra per-frame repaint over the ad. */
+  position: absolute; bottom: 12px; left: 12px; top: auto; z-index: 4;
+  background: rgba(20, 48, 38, .78);
+  color: #fff; padding: 8px 16px; border-radius: 12px;
+  max-width: 75%;
+}
+.ax-trade-welcome-eyebrow {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 9.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  opacity: .8; margin-bottom: 3px;
+}
+.ax-trade-welcome-name { font-size: 14px; font-weight: 700; line-height: 1.2; }
+@media (min-width: 769px) {
+  .ax-trade-welcome-chip { top: 18px; left: 18px; padding: 10px 20px; }
+  .ax-trade-welcome-name { font-size: 17px; }
+}
+
+.product-card { background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; overflow: visible !important; display: flex; flex-direction: column; gap: var(--s2); }
+.product-card-media { border-radius: var(--r-md); background: var(--color-surface-raised); box-shadow: var(--sh-sm); overflow: hidden; }
+.product-card-body { border-radius: var(--r-md); background: var(--color-surface-base); border: none; box-shadow: none; overflow: hidden; }
+.product-card-body { padding: var(--s3); }
+.product-card:hover { box-shadow: none !important; }
+/* Trade / Favourites grid: the card should read as JUST the rounded product
+   image with the text description sitting plainly underneath — no filled
+   "box" (surface panel) behind the text whose corners peek out beside the
+   rounded image. So the body becomes transparent there. */
+:is(#panel-trade, #panel-favourites) .product-card-body {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+#portalFilterDropdown { display: none; position: absolute; inset: auto 0 auto 0; top: calc(100% + var(--s1)); z-index: 15; background: var(--color-surface-raised); border: 1px solid var(--color-border-subtle); border-radius: var(--r-md); box-shadow: var(--sh-md); padding: var(--s2); }
+.catalogue-search-unified:focus-within #portalFilterDropdown, #portalFilterDropdown.is-open { display: block; }
+.catalogue-search-unified { position: relative; }
+/* (Old fixed-112px-per-button layout removed — portal-base.css's pill nav
+   sizes buttons itself: 46px circles, active one auto-widens.) */
+
+/* ── KYC role cards — fix overlap ── */
+.kyc-choices {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: var(--s3) !important;
+}
+
+.kyc-choice {
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  padding: 16px !important;
+  min-width: 0 !important;
+  flex: unset !important;
+  min-height: 120px !important;
+  background: var(--c-white) !important;
+  border: 1.5px solid rgba(20, 48, 38, 0.08) !important;
+}
+
+.kyc-choice .choice-icon {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 12px !important;
+  font-size: 16px !important;
+}
+
+.kyc-choice .choice-text strong {
+  font-size: 13px !important;
+}
+
+.kyc-choice .choice-text span {
+  font-size: 11.5px !important;
+  line-height: 1.45 !important;
+}
+
+@media (max-width: 768px) {
+  .kyc-choices {
+    grid-template-columns: 1fr !important;
+  }
+
+  .kyc-choice {
+    min-height: 0 !important;
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+}
+
+/* ── Shop product rows — mobile layout fix ── */
+.shop-prod-row {
+  grid-template-columns: 48px 1fr auto !important;
+  grid-template-rows: auto auto;
+  gap: 10px 12px !important;
+  align-items: center !important;
+}
+
+.shop-prod-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.shop-prod-row .shop-prod-status {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-text3);
+  white-space: nowrap;
+}
+
+.shop-prod-row .shop-prod-actions {
+  grid-column: 2 / -1;
+  justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+  .shop-prod-row {
+    grid-template-columns: 44px 1fr !important;
+  }
+
+  .shop-prod-row .shop-prod-status {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .shop-prod-row .shop-prod-actions {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .shop-prod-row .shop-prod-actions button {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+}
+
+/* ── Toast above mobile nav ── moved to components.css (single source
+   of truth for #toast styling, all breakpoints — see that file's
+   header comment for why the old portal-ui-pro.css + portal-ui.css
+   duplication was deleted rather than left to shadow each other). */
+
+/* ── reCAPTCHA spacing ── */
+.recaptcha-wrap {
+  margin: var(--s3) 0;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.recaptcha-wrap .g-recaptcha {
+  transform-origin: left top;
+}
+
+@media (max-width: 400px) {
+  .recaptcha-wrap .g-recaptcha {
+    transform: scale(0.88);
+  }
+}
+
+/* ── Profile hero polish ── */
+@media (max-width: 768px) {
+  .profile-hero {
+    padding: var(--s3);
+    gap: var(--s3);
+  }
+
+  .profile-photo-wrap {
+    width: 84px;
+    height: 84px;
+  }
+}
+
+/* ── Shop header bar mobile ── */
+@media (max-width: 768px) {
+  .shop-header-bar {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 12px;
+  }
+
+  .shop-header-bar > div:last-child {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .shop-header-bar .btn-primary {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ═══ Portal enhancements — notifications, maps, tabs, mobile grid ═══ */
+
+.nav-notif-pulse { position: relative; }
+.nav-notif-pulse.has-unread i { animation: bellRing 1.2s ease-in-out infinite; }
+/* Single unread indicator: the bell icon already carries its own dot (the small
+   circle top-right of the glyph). On unread we simply tint THAT dot red instead
+   of stacking a second white-bordered dot on top of it. */
+.nav-notif-pulse.has-unread .ax-ico-line circle,
+.nav-notif-pulse.has-unread .ax-ico-fill circle {
+  stroke: var(--c-red, #D93644);
+  fill: var(--c-red, #D93644);
+}
+@keyframes bellRing {
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(-12deg); }
+  30% { transform: rotate(12deg); }
+  45% { transform: rotate(-8deg); }
+  60% { transform: rotate(8deg); }
+}
+
+.notif-nav-badge {
+  position: absolute;
+  top: -2px; right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  line-height: 1;
+}
+
+#flyingLetterHost {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  overflow: hidden;
+}
+.flying-letter {
+  position: fixed;
+  right: 18%;
+  bottom: 28%;
+  font-size: 28px;
+  color: var(--c-gold, #C7993A);
+  animation: letterFly 2s cubic-bezier(.22,1,.36,1) forwards;
+  filter: drop-shadow(0 8px 16px rgba(199,153,58,.35));
+}
+@keyframes letterFly {
+  0% { opacity: 0; transform: translate(120px, 80px) scale(.4) rotate(-20deg); }
+  35% { opacity: 1; transform: translate(40px, -20px) scale(1) rotate(8deg); }
+  100% { opacity: 0; transform: translate(-8px, -90px) scale(.7) rotate(0deg); }
+}
+
+.notif-alert-popup {
+  position: fixed; inset: 0;
+  z-index: 1100;
+  background: rgba(13,11,8,.45);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 72px 16px 24px;
+}
+.notif-alert-popup.open { display: flex; }
+.notif-alert-box {
+  width: min(480px, 100%);
+  max-height: min(78vh, 640px);
+  background: #fff;
+  border-radius: var(--r-md, 20px);
+  box-shadow: var(--sh-lg, 0 32px 80px rgba(13,11,8,.18));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: panelPop .35s cubic-bezier(.22,1,.36,1);
+}
+@keyframes panelPop {
+  from { opacity: 0; transform: translateY(16px) scale(.96); }
+  to { opacity: 1; transform: none; }
+}
+.notif-alert-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, #143026 0%, #1a3d2b 100%);
+  color: #fff;
+}
+.notif-alert-head h3 { font-family: var(--f-display); font-size: 17px; margin: 0; }
+.notif-alert-count { font-size: 12px; opacity: .75; margin-top: 4px; }
+.notif-alert-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.notif-alert-list { overflow-y: auto; padding: 8px 0; flex: 1; }
+.notif-alert-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--c-border, #E4DBCA);
+}
+.notif-alert-item.unread { background: rgba(46,107,65,.06); border-left: 3px solid var(--c-leaf2, #3E9159); }
+.notif-alert-item.unread .notif-alert-title { font-weight: 800; position: relative; padding-left: 12px; }
+.notif-alert-item.unread .notif-alert-title::before {
+  content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 6px; height: 6px; border-radius: 50%; background: var(--c-leaf2, #3E9159);
+}
+.notif-alert-item:not(.unread) .notif-alert-title { font-weight: 600; opacity: .72; }
+.notif-alert-item:not(.unread) .notif-alert-text { opacity: .72; }
+.notif-alert-item.otp-item { background: linear-gradient(135deg, #FEF9EC, #EDF4EF); }
+@media (max-width: 768px) {
+  .notif-alert-actions button { min-width: 40px; min-height: 40px; }
+}
+.notif-alert-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: rgba(46,107,65,.12);
+  color: var(--c-leaf2, #3E9159);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.notif-alert-title { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+.notif-alert-text { font-size: 12.5px; color: var(--c-text2, #3D3428); line-height: 1.55; white-space: pre-line; }
+.notif-alert-time { font-size: 11px; color: var(--c-text4, #A89F94); margin-top: 6px; }
+.notif-alert-empty { text-align: center; padding: 32px 20px; color: var(--c-text3); }
+.otp-copy-btn {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--c-gold, #C7993A);
+  background: #fff;
+  color: var(--c-leaf, #2E6B41);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.otp-copy-btn:hover { background: rgba(199,153,58,.1); }
+
+.profile-tab-bar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: var(--s4, 21px);
+}
+@media (min-width: 769px) {
+  .profile-tab-bar { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.profile-tab-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: var(--r-sm, 10px);
+  border: 1.5px solid rgba(20,48,38,.1);
+  background: #fff;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-text2, #3D3428);
+  transition: all .2s ease;
+}
+.profile-tab-btn i { color: var(--c-leaf2, #3E9159); font-size: 16px; }
+.profile-tab-btn.active {
+  border-color: var(--c-leaf2, #3E9159);
+  background: rgba(46,107,65,.08);
+  color: var(--c-leaf, #2E6B41);
+  box-shadow: 0 8px 24px rgba(46,107,65,.12);
+}
+
+.form-compact-shell { margin-bottom: var(--s4, 21px); }
+.form-compact-card {
+  padding: 18px;
+  border-radius: var(--r, 16px);
+  border: 1px solid rgba(46,107,65,.18);
+  background: linear-gradient(135deg, rgba(237,244,239,.95), rgba(252,249,241,.98));
+}
+.form-compact-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--c-leaf, #2E6B41);
+  margin-bottom: 12px;
+}
+.form-compact-summary .compact-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px dashed rgba(20,48,38,.08);
+  font-size: 13px;
+}
+.form-compact-summary .compact-row span { color: var(--c-text3, #7A6E60); }
+.compact-empty { font-size: 13px; color: var(--c-text3); margin: 0; }
+
+/* Simple rounded ad box — no decorative wave-edge SVGs. Height is driven
+   entirely by the image's own aspect ratio (width:100%; height:auto),
+   capped so a very tall image doesn't dominate the dashboard. */
+.dash-banner-rounded {
+  position: relative;
+  overflow: hidden;
+  background: #143026;
+  border-radius: var(--r-lg, 16px);
+}
+.dash-banner-rounded .dash-banner-default {
+  padding: 34px 24px;
+  text-align: center;
+  color: #fff;
+}
+.dash-banner-rounded .dash-banner-default h3 {
+  font-family: var(--f-display);
+  font-size: clamp(20px, 4vw, 28px);
+  margin-bottom: 8px;
+}
+.dash-banner-rounded .dash-banner-default p {
+  font-size: 14px;
+  opacity: .88;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.dash-banner-rounded img {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  display: block;
+  border-radius: inherit;
+}
+.dash-banner-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+  color: #F8F3D6; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22);
+  padding: 5px 14px; border-radius: 999px; margin-bottom: 12px;
+}
+.dash-banner-cta-btn {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 16px;
+  padding: 11px 24px; border-radius: 999px; border: none; cursor: pointer;
+  background: var(--g-gold, linear-gradient(135deg,#F0C97A,#E2B65C 45%,#C7993A));
+  color: var(--c-earth, #16120C); font-size: 13.5px; font-weight: 700;
+  box-shadow: var(--sh-gold, 0 8px 28px rgba(199,153,58,.30)); transition: transform .2s, box-shadow .2s;
+}
+.dash-banner-cta-btn:hover { transform: translateY(-2px); box-shadow: var(--sh-gold-hover, 0 12px 36px rgba(199,153,58,.45)); }
+.dash-banner-sponsored-chip {
+  position: absolute; top: 14px; left: 14px; z-index: 3;
+  background: rgba(255,255,255,.92); backdrop-filter: blur(8px);
+  color: var(--c-text2, #3D3428); font-size: 9.5px; font-weight: 800;
+  letter-spacing: .1em; text-transform: uppercase;
+  padding: 4px 11px; border-radius: 999px;
+}
+
+.cta-icon.delivery,
+.cta-card .cta-icon[style*="3E9159"] i,
+.cta-card .fa-truck-fast {
+  color: #fff !important;
+}
+
+#trackMapCanvas,
+#deliveryMapCanvas {
+  width: 100%;
+  height: 260px;
+  min-height: 220px;
+  background: var(--c-mist, #EDF4EF);
+}
+.delivery-map-block { margin-bottom: var(--s3, 13px); }
+
+@media (max-width: 768px) {
+  /* Same compact 3-per-row product grid on the Favourites tab as on
+     Trade — Favourites was still falling through to the base one-column
+     mobile grid, so a single liked product filled the whole screen. */
+  :is(#panel-trade, #panel-favourites) .product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  /* Everything below sizes the redesigned card down for the 3-per-row
+     mobile grid above — narrower cards (~110px) need the image-overlay
+     footer (qty label + Buy bolt) and the text underneath compacted, or
+     they overflow past the card edge into the next column. */
+  :is(#panel-trade, #panel-favourites) .product-card-media-footer {
+    padding: 16px 7px 6px; gap: 4px;
+  }
+  :is(#panel-trade, #panel-favourites) .product-card-qty-chip {
+    font-size: 9px; max-width: 55%;
+  }
+  :is(#panel-trade, #panel-favourites) .product-card-add-btn {
+    width: 26px; height: 26px;
+  }
+  :is(#panel-trade, #panel-favourites) .product-card-add-btn i { font-size: 14px; }
+  :is(#panel-trade, #panel-favourites) .product-card-badge-rated {
+    font-size: 8px; padding: 3px 7px 3px 6px;
+  }
+  :is(#panel-trade, #panel-favourites) .product-card-body { padding: 8px 9px 9px; }
+  :is(#panel-trade, #panel-favourites) .product-card-price-now { font-size: 15px; }
+  :is(#panel-trade, #panel-favourites) .product-card-discount-note { font-size: 8.5px; margin: 2px 0; padding: 3px 12px; }
+  :is(#panel-trade, #panel-favourites) .product-card-name {
+    font-size: 10.5px;
+    line-height: 1.25;
+    margin: 1px 0 3px;
+    min-height: 2.2em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  :is(#panel-trade, #panel-favourites) .product-card-rating { margin-bottom: 2px; }
+  :is(#panel-trade, #panel-favourites) .product-card-rating .ax-star { width: 10px; height: 10px; }
+  :is(#panel-trade, #panel-favourites) .product-card-rating .rating-count,
+  :is(#panel-trade, #panel-favourites) .rating-count-new { font-size: 9px; }
+  :is(#panel-trade, #panel-favourites) .product-card-stock { font-size: 8px; }
+  .mobile-nav-inner {
+    display: flex !important;
+  }
+  /* (No per-button flex stretching here anymore — the pill nav in
+     portal-base.css sizes buttons itself: fixed circles for inactive
+     tabs, the active one auto-widens into the labelled capsule. Hidden
+     buttons are excluded by flex automatically either way.) */
+}
+
+.places-hint {
+  font-size: 11px;
+  color: var(--c-text3);
+  margin-top: 6px;
+}
+.places-hint i { color: var(--c-leaf2); margin-right: 4px; }
+
+/* ── Live delivery tracking card (buyer's Track panel + delivery
+   partner's Active Delivery panel) — shared look, Zomato-style
+   "who's on the way / who I'm delivering to" summary. ── */
+.live-track-card {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 14px 16px; margin: 0 0 var(--s3);
+  background: var(--c-mist, #EDF4EF);
+  border: 1px solid var(--c-border, #E4DBCA);
+  border-radius: var(--r, 14px);
+}
+.live-track-card .ltc-avatar {
+  width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, #4EA86A, #2E6B41);
+  color: #fff; display: grid; place-items: center; font-size: 16px; font-weight: 700;
+}
+.live-track-card .ltc-main { flex: 1; min-width: 140px; }
+.live-track-card .ltc-name { font-size: 14px; font-weight: 700; color: var(--c-text, #1C160D); }
+.live-track-card .ltc-sub { font-size: 12px; color: var(--c-text3, #7A6E60); margin-top: 2px; }
+.live-track-card .ltc-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+.live-track-card .ltc-stat { text-align: center; }
+.live-track-card .ltc-stat strong { display: block; font-size: 15px; font-weight: 800; color: var(--c-leaf, #2E6B41); }
+.live-track-card .ltc-stat span { font-size: 10px; color: var(--c-text3, #7A6E60); text-transform: uppercase; letter-spacing: .04em; }
+.live-track-card .ltc-call {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+  border-radius: 999px; background: var(--c-leaf, #2E6B41); color: #fff;
+  font-size: 13px; font-weight: 700; text-decoration: none; flex-shrink: 0;
+}
+.live-track-card .ltc-call:hover { background: var(--c-forest, #143026); }
+.live-track-card .ltc-fresh { font-size: 10.5px; color: var(--c-text3, #7A6E60); width: 100%; }
+@media (max-width: 480px) {
+  .live-track-card { flex-direction: column; align-items: flex-start; }
+  .live-track-card .ltc-call { width: 100%; justify-content: center; }
+}
+
+/* ── Top Shops Leaderboard Section ── */
+.top-shops-section {
+  margin-bottom: 40px;
+  background: var(--c-white, #fff);
+  border: 1.5px solid var(--c-border, #E3DAC8);
+  border-radius: var(--r-lg, 24px);
+  padding: 24px;
+  box-shadow: var(--sh, 0 6px 28px rgba(26,18,8,.07));
+}
+
+.top-shops-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.top-shops-title {
+  font-family: var(--f-display, var(--font-display, Georgia, serif));
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--c-earth, var(--earth, #14100A));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.top-shops-title i {
+  color: var(--c-gold, var(--gold, #C7993A));
+  font-size: 20px;
+}
+
+.top-shops-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--c-border, #E3DAC8);
+  border-radius: 999px;
+  background: var(--c-mist, #EAF2EC);
+  color: var(--c-forest, var(--forest, #143026));
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.top-shops-toggle:hover {
+  background: var(--c-leaf, var(--leaf, #2E6B41));
+  color: #fff;
+  border-color: var(--c-leaf, var(--leaf, #2E6B41));
+}
+
+.top-shops-content {
+  max-height: 400px;
+  overflow: hidden;
+  transition: max-height .4s cubic-bezier(.22,1,.36,1);
+}
+
+.top-shops-content.expanded {
+  max-height: 1200px;
+}
+
+.top-shop-featured {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(46,107,65,.08), rgba(199,153,58,.08));
+  border: 2px solid var(--c-gold, var(--gold, #C7993A));
+  border-radius: var(--r-lg, 24px);
+  margin-bottom: 20px;
+  position: relative;
+  cursor: pointer;
+  transition: all .25s;
+}
+
+.top-shop-featured:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sh-md, 0 14px 48px rgba(26,18,8,.12));
+}
+
+.top-shop-featured-badge {
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  background: var(--c-gold, var(--gold, #C7993A));
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(199,153,58,.3);
+}
+
+.top-shop-featured-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--c-leaf, var(--leaf, #2E6B41)), var(--c-forest, var(--forest, #143026)));
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.top-shop-featured-info {
+  flex: 1;
+}
+
+.top-shop-featured-name {
+  font-family: var(--f-display, var(--font-display, Georgia, serif));
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--c-earth, var(--earth, #14100A));
+  margin-bottom: 6px;
+}
+
+.top-shop-featured-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.top-shop-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-gold, var(--gold, #C7993A));
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.top-shop-reviews {
+  font-size: 12px;
+  color: var(--c-text3, var(--text3, #8B7C6A));
+}
+
+.top-shop-likes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--c-text2, var(--text2, #4C4236));
+  font-weight: 500;
+}
+
+.top-shop-likes i {
+  color: #E1435A;
+}
+
+.top-shop-like-btn {
+  padding: 8px 16px;
+  border: 1.5px solid var(--c-border, #E3DAC8);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--c-text2, var(--text2, #4C4236));
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.top-shop-like-btn:hover {
+  border-color: #E1435A;
+  color: #E1435A;
+  background: rgba(225,67,90,.06);
+}
+
+.top-shop-like-btn.liked {
+  color: #E1435A;
+  border-color: #E1435A;
+  background: rgba(225,67,90,.1);
+}
+
+.top-shops-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.top-shop-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1.5px solid var(--c-border, #E3DAC8);
+  border-radius: var(--r, 16px);
+  background: #fff;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.top-shop-card:hover {
+  border-color: var(--c-leaf, var(--leaf, #2E6B41));
+  transform: translateY(-2px);
+  box-shadow: var(--sh, 0 6px 28px rgba(26,18,8,.07));
+}
+
+.top-shop-rank {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--c-mist, #EAF2EC);
+  color: var(--c-forest, var(--forest, #143026));
+  display: grid;
+  place-items: center;
+  font-family: var(--f-display, var(--font-display, Georgia, serif));
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.top-shop-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--c-mist, #EAF2EC), #dde8de);
+  color: var(--c-leaf, var(--leaf, #2E6B41));
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.top-shop-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.top-shop-card-name {
+  font-family: var(--f-display, var(--font-display, Georgia, serif));
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-earth, var(--earth, #14100A));
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-shop-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--c-text3, var(--text3, #8B7C6A));
+}
+
+.top-shop-card-like-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--c-border, #E3DAC8);
+  background: #fff;
+  color: #9AA39C;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+
+.top-shop-card-like-btn:hover {
+  border-color: #E1435A;
+  color: #E1435A;
+}
+
+.top-shop-card-like-btn.liked {
+  color: #E1435A;
+  border-color: #E1435A;
+  background: rgba(225,67,90,.1);
+}
+
+.top-shops-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--c-text3, var(--text3, #8B7C6A));
+}
+
+.top-shops-empty i {
+  font-size: 36px;
+  color: var(--c-border, #E3DAC8);
+  margin-bottom: 12px;
+}
+
+.top-shops-empty p {
+  font-size: 14px;
+}
+
+@media (max-width: 640px) {
+  .top-shops-section {
+    padding: 18px;
+    border-radius: var(--r, 16px);
+  }
+  
+  .top-shop-featured {
+    flex-direction: column;
+    text-align: center;
+    gap: 14px;
+  }
+  
+  .top-shop-featured-badge {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .top-shop-featured-meta {
+    justify-content: center;
+  }
+  
+  .top-shops-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .top-shop-card {
+    padding: 12px;
+  }
+}
+
+/* ── AX category quick-grid — full-screen, white-blurred, opened by
+   focusing/clicking the Trade or Favourites search bars. Carries its own
+   real search input (see .ax-category-grid-searchrow) so typing keeps
+   working while this full-screen layer is up. ── */
+.ax-category-grid-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+}
+.ax-category-grid-overlay.open {
+  display: block;
+}
+.ax-category-grid-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(18, 22, 20, .72);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+html:not([data-theme="dark"]) .ax-category-grid-backdrop {
+  background: rgba(20, 30, 24, .55);
+}
+.ax-category-grid-panel {
+  position: relative;
+  z-index: 1;
+  max-width: 560px;
+  margin: 8vh auto 0;
+  padding: 0 var(--s4, 20px) var(--s5, 24px);
+  max-height: 84vh;
+  overflow-y: auto;
+  animation: axGridIn .25s cubic-bezier(.22, 1, .36, 1);
+}
+@keyframes axGridIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.ax-category-grid-searchrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 4px 6px 4px 18px;
+  box-shadow: 0 8px 28px rgba(20, 48, 38, .12);
+  border: 1px solid rgba(20, 48, 38, .08);
+  margin-bottom: 22px;
+  position: sticky;
+  top: 0;
+}
+.ax-category-grid-searchrow i.fa-magnifying-glass {
+  color: var(--c-text3, #8B7C6A);
+  font-size: 16px;
+}
+.ax-category-grid-searchrow input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 14px 0;
+  color: var(--c-text, #1C160D);
+}
+.ax-category-grid-searchrow button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--c-mist, #EAF2EC);
+  color: var(--c-forest, #143026);
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.ax-category-grid-searchrow button:hover {
+  background: rgba(46, 107, 65, .16);
+}
+.ax-category-grid-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--c-text3, #8B7C6A);
+  margin-bottom: 16px;
+}
+.ax-category-grid-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--c-text3, #8B7C6A);
+  font-size: 14px;
+  padding: var(--s6, 32px) 0;
+}
+.ax-category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.ax-category-grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  color: var(--c-text2, #4C4236);
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  border: none;
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Rounded boxes matching Trade product cards (12px) — image on top, name below */
+.ax-category-grid-item .cat-icon-circle {
+  width: 100%;
+  aspect-ratio: 6 / 7;
+  height: auto;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  color: var(--c-leaf, #2E6B41);
+  background: rgba(46, 107, 65, .08);
+  border: none;
+  transition: transform .15s ease, background .15s ease;
+}
+.ax-category-grid-item .cat-icon-circle.cat-icon-photo {
+  background-color: var(--c-mist, #EAF2EC);
+  background-size: cover;
+  background-position: center;
+  border: none;
+}
+.ax-category-grid-item:hover .cat-icon-circle:not(.cat-icon-photo),
+.ax-category-grid-item:active .cat-icon-circle:not(.cat-icon-photo) {
+  background: rgba(46, 107, 65, .16);
+  color: var(--c-leaf, #2E6B41);
+}
+.ax-category-grid-item:hover .cat-icon-circle,
+.ax-category-grid-item:active .cat-icon-circle {
+  transform: scale(.98);
+}
+.ax-category-grid-item:hover .cat-icon-circle.cat-icon-photo,
+.ax-category-grid-item:active .cat-icon-circle.cat-icon-photo {
+  filter: brightness(.96);
+}
+.ax-category-grid-item .label {
+  margin-top: 8px;
+  padding: 0 2px;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--c-earth, #143026);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+html[data-theme="dark"] .ax-category-grid-item .label { color: var(--neutral-900, #f3f3ee); }
+@media (prefers-reduced-motion: reduce) {
+  .ax-category-grid-panel { animation: none; }
+  .ax-category-grid-item .cat-icon-circle { transition: none; }
+}
+
+/* ── Logged-out state: the hamburger, notification bell and bottom nav do
+   nothing before sign-in, so they simply don't exist on the login screen
+   — and the login page reclaims their space, filling the full viewport.
+   portal-auth.js adds .is-signed-in to <body> in onSignedIn(). ── */
+body:not(.is-signed-in) .nav-right,
+body:not(.is-signed-in) .nav-profile-wrap,
+body:not(.is-signed-in) .mobile-nav { display: none !important; }
+body:not(.is-signed-in) .app-shell { padding-top: 0 !important; padding-bottom: 0 !important; }
+body:not(.is-signed-in) #loginScreen { min-height: 100vh; min-height: 100dvh; }
+
+/* ── Header + bottom-nav auto-hide on scroll — mobile only. ONE class on
+   <body> (toggled by initAutoHideChrome in portal-nav.js) drives every
+   piece of chrome, and every hide/show is a pure transform: transforms
+   never change layout, so toggling them can't shift the page under the
+   user's finger and re-trigger the scroll handler — that feedback loop
+   was the root of the flicker. The sticky search bar (docked or not)
+   glides out with the header and back in with it, as one unit. ── */
+@media (max-width: 768px) {
+  .nav,
+  #mobileNav,
+  .catalogue-search-sticky {
+    transition: transform .3s cubic-bezier(.33, 0, .2, 1);
+  }
+  body.ax-chrome-hidden .nav {
+    transform: translateY(-105%);
+  }
+  body.ax-chrome-hidden #mobileNav {
+    transform: translateY(105%);
+  }
+  /* Large fixed offset covers both states: the docked bar sits at top:0
+     (its own height is enough), the undocked sticky bar sits at top:58px
+     (needs height + 58px to fully clear the viewport). */
+  body.ax-chrome-hidden .catalogue-search-sticky {
+    transform: translateY(calc(-100% - 60px));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav,
+  #mobileNav,
+  .catalogue-search-sticky {
+    transition: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FLUSH-TOP AD (mobile) — on Home + Trade the ad starts at the very
+   top screen edge; the header collapses to floating icon buttons that
+   sit ON the ad: hamburger + notification bell on the LEFT, profile
+   avatar on the RIGHT. body.ax-flush-top is toggled by switchPanel()
+   (portal-nav.js) and gated behind .is-signed-in so the login screen
+   keeps its normal header spacing.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  body.is-signed-in.ax-flush-top .app-shell { padding-top: 0; }
+  body.is-signed-in.ax-flush-top .content-inner { padding-top: 0; }
+  body.is-signed-in.ax-flush-top .nav {
+    background: transparent;
+    border-bottom: none;
+    box-shadow: none;
+  }
+  /* Icon arrangement over the ad: menu + bell left, profile right. */
+  .nav-inner { justify-content: flex-start; }
+  .nav-profile-wrap { order: 2; margin-left: auto; margin-right: 0; }
+  .nav-right { order: 1; margin-left: 0; }
+  /* Ad flows straight into the content — no rounding, no gap. */
+  body.is-signed-in.ax-flush-top #dashBannerSlot { margin-top: 0; }
+}
+
+/* Trade: search bar glued to the ad's bottom edge (no padding strip). */
+#panel-trade .catalogue-search-sticky { padding-top: 0; }
+#panel-trade .catalogue-search-sticky .cat-header.catalogue-search-unified { margin-top: 0; }
+/* Home search bar flush under the ad, exactly like Trade (no top padding, no
+   top margin) so it "sticks" to the ad's bottom edge. */
+#panel-dashboard .catalogue-search-sticky { padding-top: 0; }
+#panel-dashboard .catalogue-search-sticky .cat-header.catalogue-search-unified { margin-top: 0; }
+
+/* ═══════════════════════════════════════════════════════════════
+   STAR PERFORMER SHOPS — full-bleed white band, 3×3 grid.
+   Replaces the old bordered "Top Shops" leaderboard card + featured
+   row + expand toggle. Cells open the shop profile on tap.
+   ═══════════════════════════════════════════════════════════════ */
+.ax-star-shops {
+  background: #fff;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: var(--s5, 24px) var(--s3, 14px) var(--s4, 20px);
+  margin: 0 0 var(--s4, 20px);
+}
+.ax-star-shops-title {
+  font-family: var(--f-display, Georgia, serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--c-earth, #14100A);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: var(--s4, 20px);
+  text-align: center;
+}
+.ax-star-shops-title i { color: var(--c-gold, #C7993A); font-size: 18px; }
+.ax-star-shops-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 8px;
+}
+.ax-star-shop-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 4px;
+  border: none;
+  background: none;
+  border-radius: 14px;
+  cursor: pointer;
+  min-width: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .15s ease;
+}
+.ax-star-shop-cell:active { background: var(--c-mist, #EAF2EC); }
+.ax-star-shop-photo {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  object-fit: cover;
+  border: 1px solid rgba(46, 107, 65, .16);
+  box-shadow: 0 6px 16px rgba(20, 48, 38, .12);
+  flex-shrink: 0;
+}
+.ax-star-shop-initials {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #4EA86A, #2E6B41);
+  color: #fff;
+  font-family: var(--f-display, Georgia, serif);
+  font-size: 20px;
+  font-weight: 700;
+}
+.ax-star-shop-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-earth, #14100A);
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ax-star-shop-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-text3, #8B7C6A);
+}
+.ax-star-shop-rating i { color: var(--c-gold, #C7993A); }
+.ax-star-shop-likes i { color: #E1435A; }
+@media (min-width: 769px) {
+  .ax-star-shops { padding: 28px 24px; }
+  .ax-star-shop-photo { width: 72px; height: 72px; }
+  .ax-star-shop-name { font-size: 13px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SHOP PROFILE — true full screen at every size: flush to all four
+   edges, no rounded corners, contents scroll inside.
+   ═══════════════════════════════════════════════════════════════ */
+#shopProfileModal.pd-modal-overlay {
+  padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
+}
+#shopProfileModal .pd-modal-box {
+  width: 100%;
+  max-width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  border-radius: 0;
+  border: none;
+  margin: 0;
+}
+
+/* Buy button on shop-profile product cards */
+.shop-mini-buy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: calc(100% - 16px);
+  margin: 0 8px 8px;
+  padding: 8px 0;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #4EA86A, #2E6B41);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.shop-mini-buy-btn:active { transform: scale(.97); }
+
+/* Only the Order CATALOGUE starts with the ad — the Step-2 order form
+   (still order mode, so flush-top stays on) starts with regular content
+   and needs the header's height back so it doesn't slide under the
+   floating icons. Sell/Shop modes turn flush-top off entirely (see
+   switchTradeMode in portal-nav.js). */
+@media (max-width: 768px) {
+  body.is-signed-in.ax-flush-top #orderStep2 {
+    padding-top: 58px;
+  }
+}
