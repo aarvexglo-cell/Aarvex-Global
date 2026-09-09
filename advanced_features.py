@@ -2287,11 +2287,18 @@ def handle_web_order(event: dict) -> dict:
     # page is on Cashfree's own domain and needs no whitelisting). Payment is
     # still confirmed by the server webhook. Falls back to the session if no
     # hosted link exists, so online pay is never worse than before.
+    # The JS SDK can ONLY run from the one Cashfree-whitelisted origin
+    # (dskm35im55r5u.cloudfront.net); at the app's localhost (and any other
+    # origin) it throws "Broken Link — domain not enabled". So send the JS-SDK
+    # session ONLY for that origin. Everywhere else, hand over the hosted link
+    # (when available) and NEVER the session — so the app can't fall into the
+    # localhost SDK error even when the hosted link is missing (it then shows a
+    # plain "payment not completed", not Cashfree's scary broken-link screen).
+    # NOTE: the hosted link needs Cashfree's "Payment Links" API enabled on the
+    # account; while it's disabled, online pay is unavailable everywhere off the
+    # cloudfront origin — use COD until Cashfree enables link_creation_api.
     _sdk_whitelisted_origin = "dskm35im55r5u.cloudfront.net" in _origin
-    if _have_hosted_link and not _sdk_whitelisted_origin:
-        _client_session_id = ""
-    else:
-        _client_session_id = order_session.get("payment_session_id", "")
+    _client_session_id = order_session.get("payment_session_id", "") if _sdk_whitelisted_origin else ""
     logger.warning("[WEB_ORDER][PAYFLOW] origin=%r sdk_wl=%s have_link=%s -> session_sent=%s",
                    _origin, _sdk_whitelisted_origin, _have_hosted_link, bool(_client_session_id))
     return _json_response(200, {
