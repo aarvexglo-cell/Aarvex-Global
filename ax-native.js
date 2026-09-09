@@ -49,6 +49,33 @@
      visible on the order/sell/KYC forms. Runs unconditionally off axIsNativeApp(). */
   try { if (window.axIsNativeApp()) document.documentElement.classList.add('ax-native'); } catch (e) {}
 
+  /* ── CRITICAL: confirm this bundle to Capgo (notifyAppReady) OUTSIDE the
+     isNativePlatform() gate below. ────────────────────────────────────────────
+     If this depended on isNativePlatform() (which can be false/late in the
+     WebView), a single missed detection would leave notifyAppReady() uncalled,
+     so Capgo auto-rolls-back EVERY OTA bundle after appReadyTimeout — meaning no
+     update (not even this fix) could ever stick, and the app is frozen on its
+     baked bundle forever. So poll for the updater plugin and confirm as soon as
+     it exists, regardless of the native-detection result. No-op on the web (the
+     plugin never exists there) and harmless to call more than once. */
+  (function () {
+    var _confirmed = false;
+    function _confirm() {
+      if (_confirmed) return true;
+      try {
+        var C = window.Capacitor;
+        var CU = C && C.Plugins && C.Plugins.CapacitorUpdater;
+        if (CU && CU.notifyAppReady) { _confirmed = true; CU.notifyAppReady(); return true; }
+      } catch (e) {}
+      return false;
+    }
+    if (!_confirm()) {
+      var tries = 0;
+      var iv = setInterval(function () { if (_confirm() || ++tries > 45) clearInterval(iv); }, 200); // ~9s < appReadyTimeout 10s
+      window.addEventListener('load', _confirm);
+    }
+  })();
+
   // DIAGNOSTIC — readable state so a failing Google login can be understood straight
   // from the phone (no USB/chrome://inspect). Call window.axDiag(), or just tap
   // "Continue with Google" when the native path can't run: an alert shows what's missing.
