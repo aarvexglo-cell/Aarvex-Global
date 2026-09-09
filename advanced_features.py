@@ -2277,12 +2277,23 @@ def handle_web_order(event: dict) -> dict:
     # Web (aarvexglobal.in / CloudFront) keeps the in-page JS-SDK modal unchanged.
     _hdrs = {str(k).lower(): v for k, v in (event.get("headers") or {}).items()}
     _origin = str(_hdrs.get("origin") or _hdrs.get("referer") or "")
-    _is_app_origin = (
-        "localhost" in _origin or "127.0.0.1" in _origin
-        or _origin.startswith("capacitor:") or _origin.startswith("file:")
-    )
     _have_hosted_link = bool(ticket.get("razorpay_payment_link_url"))
-    _client_session_id = "" if (_is_app_origin and _have_hosted_link) else order_session.get("payment_session_id", "")
+    # The Cashfree JS SDK only works from an origin whitelisted in the Cashfree
+    # dashboard — and the ONLY whitelisted origin is dskm35im55r5u.cloudfront.net.
+    # Everywhere else (the app's https://localhost, aarvexglobal.in, or an origin
+    # header we can't read) the SDK throws "Broken Link — domain not enabled". So
+    # keep the JS-SDK session ONLY for that whitelisted origin; everywhere else
+    # withhold it so the frontend opens the HOSTED Cashfree link instead (that
+    # page is on Cashfree's own domain and needs no whitelisting). Payment is
+    # still confirmed by the server webhook. Falls back to the session if no
+    # hosted link exists, so online pay is never worse than before.
+    _sdk_whitelisted_origin = "dskm35im55r5u.cloudfront.net" in _origin
+    if _have_hosted_link and not _sdk_whitelisted_origin:
+        _client_session_id = ""
+    else:
+        _client_session_id = order_session.get("payment_session_id", "")
+    logger.warning("[WEB_ORDER][PAYFLOW] origin=%r sdk_wl=%s have_link=%s -> session_sent=%s",
+                   _origin, _sdk_whitelisted_origin, _have_hosted_link, bool(_client_session_id))
     return _json_response(200, {
         "success": True,
         "arn": ticket.get("arn"),
