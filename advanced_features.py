@@ -45,21 +45,46 @@ except Exception as _mp_err:
     MARKETPLACE_AVAILABLE = False
     logger.warning("[MARKETPLACE] import failed: %s", _mp_err)
 
+# Prefer marketplace's gsi1-backed prefix reader (indexed Query with an automatic
+# raw-scan fallback) over our own full-table scan. Kept OUT of the tuple import
+# above on purpose: a missing symbol here must not flip MARKETPLACE_AVAILABLE off
+# (that would disable auth). None => our local raw scan is used (unchanged).
+_mp_scan_by_pk_prefix = None
+if MARKETPLACE_AVAILABLE:
+    try:
+        from marketplace import _scan_by_pk_prefix as _mp_scan_by_pk_prefix
+    except Exception:
+        _mp_scan_by_pk_prefix = None
+
 DYNAMODB_TABLE = os.environ.get("DYNAMODB_TABLE_NAME") or os.environ.get("DYNAMODB_TABLE", "aarvex-social-bot-state")
 GRAPH_API_VERSION = os.environ.get("GRAPH_API_VERSION", "v20.0")
 WA_PHONE_NUMBER_ID = os.environ.get("WA_PHONE_NUMBER_ID", "")
-WA_ACCESS_TOKEN = os.environ.get("WA_ACCESS_TOKEN", "")
 ADMIN_WHATSAPP_NUMBER = os.environ.get("ADMIN_WHATSAPP_NUMBER", "")
-ADMIN_TOTP_SECRET = os.environ.get("ADMIN_TOTP_SECRET", "")
 
+# Secrets from Lambda env or Secrets Manager — never hard-code.
+# Hydrate BEFORE reading into module constants.
+try:
+    from aws_secrets import ensure_env_from_sm
+    ensure_env_from_sm([
+        "ADMIN_TOTP_SECRET",
+        "CASHFREE_APP_ID",
+        "CASHFREE_SECRET_KEY",
+        "CASHFREE_WEBHOOK_SECRET",
+        "RAZORPAY_KEY_ID",
+        "RAZORPAY_KEY_SECRET",
+        "RAZORPAY_WEBHOOK_SECRET",
+        "RECAPTCHA_SECRET_KEY",
+        "WA_ACCESS_TOKEN",
+    ])
+except ImportError:
+    pass
+
+WA_ACCESS_TOKEN = os.environ.get("WA_ACCESS_TOKEN", "")
+ADMIN_TOTP_SECRET = os.environ.get("ADMIN_TOTP_SECRET", "")
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET", "")
 RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
 # ── Cashfree Payment Gateway (replaces Razorpay as the live gateway) ──
-# Set these in the Lambda environment (see deploy notes). App ID + Secret
-# come from Cashfree dashboard → Developers → API Keys. CASHFREE_ENV picks
-# the sandbox vs production host. The webhook signature is verified with the
-# secret key, so CASHFREE_WEBHOOK_SECRET defaults to the secret key.
 CASHFREE_APP_ID = os.environ.get("CASHFREE_APP_ID", "")
 CASHFREE_SECRET_KEY = os.environ.get("CASHFREE_SECRET_KEY", "")
 CASHFREE_ENV = (os.environ.get("CASHFREE_ENV", "test") or "test").strip().lower()
@@ -270,6 +295,12 @@ def _safe_product_id(value: str) -> str:
 
 
 def _scan_by_pk_prefix(prefix: str) -> list[dict]:
+    # Indexed read via marketplace's gsi1 helper when bound — it Queries the index
+    # and falls back to a raw scan internally if the index is missing or an item
+    # hasn't been backfilled, so results are identical either way. Only when the
+    # shared helper is unavailable do we run our own full-table scan.
+    if _mp_scan_by_pk_prefix is not None:
+        return _mp_scan_by_pk_prefix(prefix)
     items = []
     kwargs = {"FilterExpression": Attr("pk").begins_with(prefix)}
     while True:
@@ -571,10 +602,18 @@ def _calculate_amount(product: dict, qty: Decimal, order_type: str, currency: st
         amount_inr = ADV_SAMPLE_PRICE_INR
     else:
         lot_size = _decimal(product.get("lot_size_kg", 0))
-        if lot_size > 0:
+        if order_type == "limit":
+            # Buyer chose an exact quantity → base is qty × per-kg rate, regardless
+            # of any lot_size, then the same fee/delivery/GST breakdown is applied.
+            rate = _decimal(product.get("price_per_kg"))
+            lot_price = rate * qty if rate > 0 else ADV_BULK_DEPOSIT_INR
+        elif lot_size > 0:
             lot_price = _decimal(product.get("lot_price", 0))
             if lot_price <= 0:
                 lot_price = _decimal(product.get("price_per_kg", 0)) * lot_size
+        else:
+            lot_price = None
+        if lot_price is not None:
             if PLATFORM_UTILS:
                 bd = calc_payment_breakdown(
                     lot_price,
@@ -598,7 +637,8 @@ def _calculate_breakdown(product: dict, qty: Decimal, order_type: str, delivery_
                 "platform_fee_pct": 0, "subtotal": ADV_SAMPLE_PRICE_INR, "gst_amount": Decimal("0"),
                 "gst_rate_pct": 0, "total": ADV_SAMPLE_PRICE_INR, "currency": "INR"}
     lot_size = _decimal(product.get("lot_size_kg", 0))
-    if lot_size > 0:
+    # "limit" always prices as qty × per-kg rate (never the whole-lot price).
+    if lot_size > 0 and order_type != "limit":
         lot_price = _decimal(product.get("lot_price", 0)) or _decimal(product.get("price_per_kg", 0)) * lot_size
     else:
         lot_price = _decimal(product.get("price_per_kg")) * qty if _decimal(product.get("price_per_kg")) > 0 else ADV_BULK_DEPOSIT_INR
@@ -745,6 +785,7 @@ def create_razorpay_payment_link(ticket: dict) -> dict:
         "notes": {
             "arn": ticket.get("arn"),
             "ticket_id": ticket.get("ticket_id"),
+            "user_sub": str(ticket.get("user_sub") or ""),
             "product": ticket.get("product_name"),
             "quantity": str(ticket.get("quantity_kg")),
         },
@@ -804,6 +845,7 @@ def create_cashfree_payment_link(ticket: dict) -> dict:
         "link_notes": {
             "arn": str(ticket.get("arn") or ""),
             "ticket_id": str(ticket.get("ticket_id") or ""),
+            "user_sub": str(ticket.get("user_sub") or ""),
             "product": str(ticket.get("product_name") or "")[:60],
             "quantity": str(ticket.get("quantity_kg") or ""),
         },
@@ -885,6 +927,7 @@ def create_cashfree_order(ticket: dict) -> dict:
         "order_tags": {
             "arn": str(ticket.get("arn") or ""),
             "ticket_id": str(ticket.get("ticket_id") or ""),
+            "user_sub": str(ticket.get("user_sub") or ""),
         },
         "order_note": (f"Order {ticket.get('arn')} - {ticket.get('product_name')}")[:200],
     }
@@ -1066,21 +1109,35 @@ def _finalize_captured_payment(notes: dict, payment_id: str) -> dict:
 
     # Shop subscription payment (notes.ticket_id = subscription_id)
     if ticket_id:
-        for row in table.scan(FilterExpression=Attr("pk").begins_with("SUBSCRIPTION#")).get("Items", []):
-            if row.get("subscription_id") == ticket_id and row.get("status") == "pending":
-                import time as _time
-                expires = int(_time.time()) + 30 * 86400
-                table.update_item(
-                    Key={"pk": row["pk"]},
-                    UpdateExpression="SET #s = :a, paid_at = :p, expires_at_ts = :e, expires_at = :ed",
-                    ExpressionAttributeNames={"#s": "status"},
-                    ExpressionAttributeValues={
-                        ":a": "active", ":p": _now(),
-                        ":e": expires, ":ed": datetime.fromtimestamp(expires, timezone.utc).isoformat(),
-                    },
-                )
-                return _json_response(200, {"success": True, "type": "subscription"})
-                break
+        sub_row = None
+        # Fast path: notes.user_sub gives the exact PK -> O(1) get_item (no scan).
+        # Subscription PK is SUBSCRIPTION#USER#{user_sub}; user_sub is stamped into
+        # the gateway notes/order_tags at subscription-order creation time.
+        _us = notes.get("user_sub")
+        if _us:
+            _cand = table.get_item(Key={"pk": f"SUBSCRIPTION#USER#{_us}"}).get("Item")
+            if _cand and _cand.get("subscription_id") == ticket_id and _cand.get("status") == "pending":
+                sub_row = _cand
+        # Fallback: legacy/in-flight payments without user_sub in notes. Routed
+        # through the gsi1-backed reader so it's an indexed Query, not a full scan.
+        if sub_row is None:
+            for row in _scan_by_pk_prefix("SUBSCRIPTION#"):
+                if row.get("subscription_id") == ticket_id and row.get("status") == "pending":
+                    sub_row = row
+                    break
+        if sub_row is not None:
+            import time as _time
+            expires = int(_time.time()) + 30 * 86400
+            table.update_item(
+                Key={"pk": sub_row["pk"]},
+                UpdateExpression="SET #s = :a, paid_at = :p, expires_at_ts = :e, expires_at = :ed",
+                ExpressionAttributeNames={"#s": "status"},
+                ExpressionAttributeValues={
+                    ":a": "active", ":p": _now(),
+                    ":e": expires, ":ed": datetime.fromtimestamp(expires, timezone.utc).isoformat(),
+                },
+            )
+            return _json_response(200, {"success": True, "type": "subscription"})
 
     if not ticket_id:
         return _json_response(200, {"handled": False, "reason": "ticket_id missing"})
@@ -1687,6 +1744,8 @@ def get_admin_api_handler(event: dict) -> dict:
             return _ax_tel.handle_admin_telemetry_ack(event)
         if path.endswith("/setup-map") and method == "GET":
             return _ax_tel.handle_admin_setup_map(event)
+        if path.endswith("/app-pulse") and method == "GET":
+            return _ax_tel.handle_admin_app_pulse(event)
     except Exception as _tel_e:
         logger.warning("[TELEMETRY] admin route failed: %s", _tel_e)
 
@@ -1918,10 +1977,19 @@ def handle_web_order(event: dict) -> dict:
         return _json_response(400, {"error": f"Missing required fields: {', '.join(missing)}"})
 
     recaptcha_token = (body.get("recaptcha_token") or "").strip()
-    if not verify_recaptcha(recaptcha_token):
+    # Native app sends 'native-app' (Cloudflare Turnstile can't load in the WebView's
+    # capacitor://localhost origin). Accept it ONLY for an authenticated request - a
+    # session token is HMAC-signed and unforgeable, so anonymous web bots still must
+    # pass the real captcha. Orders already require auth, so captcha here is redundant
+    # for logged-in native users.
+    _native_ok = (recaptcha_token == "native-app" and MARKETPLACE_AVAILABLE and _auth_user(event) is not None)
+    if not _native_ok and not verify_recaptcha(recaptcha_token):
         return _json_response(400, {"error": "Captcha verification failed. Please try again."})
 
-    if order_type not in ("sample", "bulk"):
+    # "limit" = buyer-chosen exact quantity, capped at free stock (handled by the
+    # manual-qty branch below, same as bulk-without-fraction). Keep it as a valid
+    # type so it is not silently rewritten to "bulk".
+    if order_type not in ("sample", "bulk", "limit"):
         order_type = "bulk"
 
     if not EMAIL_RE.match(email):
@@ -2199,6 +2267,22 @@ def handle_web_order(event: dict) -> dict:
         except Exception as e:
             logger.warning("[WEB_ORDER] referral reward hook failed: %s", e)
 
+    # The native app (Capacitor WebView) runs at the https://localhost origin,
+    # which the Cashfree JS SDK rejects ("domain not enabled / Broken Link") and
+    # which CANNOT be whitelisted in the Cashfree dashboard (it wants a real,
+    # publicly-verifiable website). So for app requests we withhold the
+    # payment_session_id: the frontend then falls back to opening the HOSTED
+    # Cashfree payment link (payment_link), which lives on Cashfree's own domain
+    # and needs no whitelisting. Payment is still confirmed by the server webhook.
+    # Web (aarvexglobal.in / CloudFront) keeps the in-page JS-SDK modal unchanged.
+    _hdrs = {str(k).lower(): v for k, v in (event.get("headers") or {}).items()}
+    _origin = str(_hdrs.get("origin") or _hdrs.get("referer") or "")
+    _is_app_origin = (
+        "localhost" in _origin or "127.0.0.1" in _origin
+        or _origin.startswith("capacitor:") or _origin.startswith("file:")
+    )
+    _have_hosted_link = bool(ticket.get("razorpay_payment_link_url"))
+    _client_session_id = "" if (_is_app_origin and _have_hosted_link) else order_session.get("payment_session_id", "")
     return _json_response(200, {
         "success": True,
         "arn": ticket.get("arn"),
@@ -2208,8 +2292,9 @@ def handle_web_order(event: dict) -> dict:
         "payment_link": ticket.get("razorpay_payment_link_url", ""),
         "payment_link_url": ticket.get("razorpay_payment_link_url", ""),
         "payment_method": "cod" if is_cod else "online",
-        # In-app Cashfree checkout (frontend JS SDK opens the modal with these):
-        "payment_session_id": order_session.get("payment_session_id", ""),
+        # In-app Cashfree checkout (frontend JS SDK opens the modal with these);
+        # blanked for the localhost app origin so it uses the hosted link instead.
+        "payment_session_id": _client_session_id,
         "cf_order_id": order_session.get("order_id", ""),
         "payment_mode": order_session.get("mode", ""),
         "breakdown": ticket.get("payment_breakdown", {}),
@@ -2263,7 +2348,10 @@ def handle_web_sell(event: dict) -> dict:
         return _json_response(400, {"error": f"Missing required fields: {', '.join(missing)}"})
 
     recaptcha_token = (body.get("recaptcha_token") or "").strip()
-    if not verify_recaptcha(recaptcha_token):
+    # Native app: 'native-app' marker accepted only for an authenticated request
+    # (unforgeable HMAC session token); web still needs the real captcha. See order handler.
+    _native_ok = (recaptcha_token == "native-app" and MARKETPLACE_AVAILABLE and _auth_user(event) is not None)
+    if not _native_ok and not verify_recaptcha(recaptcha_token):
         return _json_response(400, {"error": "Captcha verification failed. Please try again."})
 
     qty = _decimal(quantity_available_kg, Decimal("-1"))
