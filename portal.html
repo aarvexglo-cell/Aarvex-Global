@@ -104,8 +104,10 @@
   </script>
   <script src="https://accounts.google.com/gsi/client" async></script>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-  <!-- Cashfree JS SDK v3 — in-app payment modal for online orders + shop subscription -->
-  <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+  <!-- Cashfree JS SDK v3 — lazy-loaded on demand by axCashfreeCheckout()
+       (portal-helpers.js) only when a payment starts, so it no longer blocks
+       every page load. -->
+
 
   <link rel="stylesheet" href="portal-base.css?v=32">
   <!-- Loaded AFTER the inline styles above (not before, as previously) so
@@ -3117,7 +3119,7 @@
 
   </script>
   <script src="portal-auth.js?v=24" defer></script>
-  <script src="portal-helpers.js?v=14" defer></script>
+  <script src="portal-helpers.js?v=15" defer></script>
   <script src="portal-nav.js?v=34" defer></script>
   <script src="ax-2026-smart.js?v=3" defer></script>
   <script src="portal-catalogue-render.js?v=49" defer></script>

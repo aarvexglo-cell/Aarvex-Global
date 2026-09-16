@@ -30,7 +30,7 @@ function axCount(n) {
 function axAvatarHtml(name, photo, cls) {
   const initial = axEsc((name || 'A').trim().charAt(0).toUpperCase());
   return photo
-    ? '<img class="' + cls + '" src="' + axEsc(photo) + '" alt="" loading="lazy">'
+    ? '<img class="' + cls + '" src="' + axEsc(photo) + '" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement(\'span\'),{className:this.className+\' ax-avatar-initial\',textContent:\'' + initial + '\'}))">'
     : '<span class="' + cls + ' ax-avatar-initial">' + initial + '</span>';
 }
 
@@ -47,29 +47,106 @@ async function axLoadFeed(reset) {
   const list = document.getElementById('axFeedList');
   if (!list || _axFeedLoading) return;
   _axFeedLoading = true;
-  if (reset !== false) { _axFeedPosts = []; _axFeedNextOffset = null; }
-  if (!_axFeedPosts.length) {
-    if (typeof axShowLoader === 'function') {
-      if (!list.innerHTML.trim()) list.innerHTML = '<div style="min-height:180px"></div>';
-      axShowLoader(list, 'Loading community feed…');
-    } else {
-      list.innerHTML = (typeof axLoaderHtml === 'function')
-        ? axLoaderHtml('Loading community feed…', 96)
-        : '<div class="ax-feed-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading community feed…</div>';
-      if (typeof axMountLoaders === 'function') axMountLoaders(list);
-    }
+  const isReset = reset !== false;
+  if (isReset) {
+    _axFeedPosts = []; _axFeedNextOffset = null;
+    // First paint: per-post neon skeleton cards (no single whole-feed loader) so
+    // posts stream in one-by-one as their media loads.
+    list.innerHTML = axFeedSkeletonHtml(1); // single skeleton card — no second one below
+    document.body.classList.add('ax-feed-skel'); // hide floating overlays while loading
   }
+  axUpdateFeedSentinel();
   try {
     const url = '/feed?limit=10' + (_axFeedNextOffset ? '&offset=' + _axFeedNextOffset : '');
     const data = await mpApi(url);
     const fresh = (data && data.posts) || [];
+    const startIndex = _axFeedPosts.length;
     _axFeedPosts = _axFeedNextOffset ? _axFeedPosts.concat(fresh) : fresh;
     _axFeedNextOffset = data ? data.next_offset : null;
-    axRenderFeed();
+    if (isReset) axRenderFeed();
+    else axAppendFeed(fresh, startIndex);
   } catch (e) {
     if (!_axFeedPosts.length) list.innerHTML = '<div class="ax-feed-loading">Could not load the feed — pull to refresh.</div>';
   }
+  document.body.classList.remove('ax-feed-skel'); // skeleton replaced → restore overlays
   _axFeedLoading = false;
+  axInitFeedInfiniteScroll();
+  axUpdateFeedSentinel();
+}
+
+/* Skeleton placeholder cards — a neon-green ring inside a post-sized media box —
+   shown while the first batch loads, keeping the per-post loading aesthetic. */
+function axFeedSkeletonHtml(n) {
+  const card =
+    '<div class="ax-post-card ax-fsk-card" aria-hidden="true">' +
+      '<div class="ax-fsk-head">' +
+        '<span class="ax-fsk ax-fsk-av"></span>' +
+        '<span class="ax-fsk-hlines">' +
+          '<span class="ax-fsk ax-fsk-line" style="width:42%"></span>' +
+          '<span class="ax-fsk ax-fsk-line ax-fsk-sm" style="width:26%"></span>' +
+        '</span>' +
+      '</div>' +
+      '<div class="ax-fsk-body">' +
+        '<span class="ax-fsk ax-fsk-line" style="width:92%"></span>' +
+        '<span class="ax-fsk ax-fsk-line" style="width:70%"></span>' +
+      '</div>' +
+      '<span class="ax-fsk ax-fsk-media"></span>' +
+      '<div class="ax-fsk-acts">' +
+        '<span class="ax-fsk ax-fsk-pill"></span>' +
+        '<span class="ax-fsk ax-fsk-pill"></span>' +
+        '<span class="ax-fsk ax-fsk-pill"></span>' +
+      '</div>' +
+    '</div>';
+  let h = '';
+  for (let i = 0; i < (n || 2); i++) h += card;
+  return h;
+}
+
+/* Append ONLY the newly-fetched posts (infinite scroll) — no full re-render, so
+   scroll position and already-loaded media are preserved. */
+function axAppendFeed(newPosts, startIndex) {
+  const list = document.getElementById('axFeedList');
+  if (!list || !newPosts || !newPosts.length) return;
+  const mySub = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.sub : '';
+  let html = '';
+  newPosts.forEach(function (p, j) {
+    const i = startIndex + j;                 // global index → keeps the every-2nd-post strip correct
+    html += axPostCardHtml(p, mySub);
+    if ((i + 1) % 2 === 0) html += axFeedShopsStripHtml(((i + 1) / 2) - 1);
+  });
+  const tpl = document.createElement('template');
+  tpl.innerHTML = html;
+  list.appendChild(tpl.content);
+  axObserveViews();                            // re-observe new cards for view counting (idempotent)
+  requestAnimationFrame(function () { axSyncPostClamps(list); });
+}
+
+/* Auto-load the next page when the sentinel nears the viewport (infinite scroll).
+   Observer attached once; the manual "Load more" button stays as a fallback. */
+let _axFeedScrollObs = null;
+function axInitFeedInfiniteScroll() {
+  if (_axFeedScrollObs || !('IntersectionObserver' in window)) return;
+  const sentinel = document.getElementById('axFeedMore');
+  if (!sentinel) return;
+  _axFeedScrollObs = new IntersectionObserver(function (entries) {
+    if (entries[0].isIntersecting && _axFeedNextOffset != null && !_axFeedLoading) axLoadFeed(false);
+  }, { rootMargin: '600px 0px' });
+  _axFeedScrollObs.observe(sentinel);
+}
+
+/* The sentinel doubles as the "loading more" spinner + end-of-feed marker. */
+function axUpdateFeedSentinel() {
+  const more = document.getElementById('axFeedMore');
+  if (!more) return;
+  const hasMore = _axFeedNextOffset != null;
+  // No load-more skeleton at all — it kept collapsing, so it's removed. Just show
+  // the "Load more posts" button when there are more posts and we're not loading;
+  // otherwise the sentinel is hidden. (Infinite scroll still calls axLoadFeed.)
+  const showBtn = hasMore && !_axFeedLoading;
+  more.style.display = showBtn ? '' : 'none';
+  more.innerHTML = showBtn
+    ? '<button type="button" class="btn-sm-outline" onclick="axLoadFeed(false)"><i class="fa-solid fa-angles-down"></i> Load more posts</button>'
+    : '';
 }
 
 function axRenderFeed() {
@@ -96,7 +173,7 @@ function axRenderFeed() {
     if ((i + 1) % 2 === 0) html += axFeedShopsStripHtml(((i + 1) / 2) - 1);
   });
   list.innerHTML = html;
-  if (more) more.style.display = _axFeedNextOffset != null ? '' : 'none';
+  axUpdateFeedSentinel();
   // Standalone Star Performer band stays hidden on Home — the Top Shops strip
   // was moved into the Trade tab's sectioned feed (Batch B5). It's kept in the
   // DOM only so loadTopShops() can still populate window._axTopShops for the
@@ -127,18 +204,20 @@ function axPostMediaHtml(p) {
   const types = (p.media_types && p.media_types.length) ? p.media_types : (p.media_type ? [p.media_type] : []);
   if (!urls.length) return '';
   if (urls.length === 1) {
-    return '<div class="ax-post-media-wrap">' + (types[0] === 'video'
-      ? '<video class="ax-post-media" src="' + axEsc(urls[0]) + '" controls playsinline preload="metadata" onloadedmetadata="axFitPostMedia(this)"></video>'
-      : '<img class="ax-post-media" src="' + axEsc(urls[0]) + '" alt="" loading="lazy" onload="axFitPostMedia(this)" onclick="axOpenPost(\'' + axEsc(p.post_id) + '\')">') + '</div>';
+    return '<div class="ax-post-media-wrap ax-media-loading">' +
+      '<span class="ax-post-skel"><span class="ax-neon-ring ax-post-neon"></span></span>' + (types[0] === 'video'
+      ? '<video class="ax-post-media" src="' + axEsc(urls[0]) + '#t=0.1" controls playsinline preload="metadata" onloadedmetadata="axFitPostMedia(this);axMediaLoaded(this)" onloadeddata="axMediaLoaded(this)" onerror="axMediaError(this)"></video>'
+      : '<img class="ax-post-media" src="' + axEsc(urls[0]) + '" alt="" loading="lazy" onload="axFitPostMedia(this);axMediaLoaded(this)" onerror="axMediaError(this)" onclick="axOpenPost(\'' + axEsc(p.post_id) + '\')">') + '</div>';
   }
   const arr = '[' + urls.map(function (x) { return "'" + axEsc(x) + "'"; }).join(',') + ']';
   const slides = urls.map(function (u, i) {
     return '<div class="ax-carousel-slide">' + (types[i] === 'video'
-      ? '<video class="ax-post-media" src="' + axEsc(u) + '" controls playsinline preload="metadata"></video>'
-      : '<img class="ax-post-media" src="' + axEsc(u) + '" alt="" loading="lazy" onclick="axLightbox(' + arr + ',' + i + ')">') + '</div>';
+      ? '<video class="ax-post-media" src="' + axEsc(u) + '" controls playsinline preload="metadata" onloadedmetadata="axMediaLoaded(this)"></video>'
+      : '<img class="ax-post-media" src="' + axEsc(u) + '" alt="" loading="lazy" onload="axMediaLoaded(this)" onerror="axMediaError(this)" onclick="axLightbox(' + arr + ',' + i + ')">') + '</div>';
   }).join('');
   const dots = urls.map(function (u, i) { return '<span class="ax-carousel-dot' + (i === 0 ? ' active' : '') + '"></span>'; }).join('');
-  return '<div class="ax-post-media-wrap ax-carousel" data-idx="0" data-count="' + urls.length + '">' +
+  return '<div class="ax-post-media-wrap ax-carousel ax-media-loading" data-idx="0" data-count="' + urls.length + '">' +
+    '<span class="ax-post-skel"><span class="ax-neon-ring ax-post-neon"></span></span>' +
     '<div class="ax-carousel-track">' + slides + '</div>' +
     '<button type="button" class="ax-carousel-nav prev" onclick="axCarouselMove(this,-1)" aria-label="Previous"><i class="fa-solid fa-chevron-left"></i></button>' +
     '<button type="button" class="ax-carousel-nav next" onclick="axCarouselMove(this,1)" aria-label="Next"><i class="fa-solid fa-chevron-right"></i></button>' +
@@ -146,6 +225,36 @@ function axPostMediaHtml(p) {
     '<span class="ax-carousel-count">1/' + urls.length + '</span>' +
     '</div>';
 }
+/* Size a carousel wrap to its CURRENT slide's image height, so full (uncropped)
+   images of any ratio show without empty space; it animates on swipe. */
+function axCarouselFitHeight(car) {
+  if (!car || !car.classList || !car.classList.contains('ax-carousel')) return;
+  const idx = parseInt(car.dataset.idx || '0', 10);
+  const slide = car.querySelectorAll('.ax-carousel-slide')[idx];
+  const media = slide && slide.querySelector('.ax-post-media');
+  if (!media) return;
+  const h = media.getBoundingClientRect().height;
+  if (h > 0) car.style.height = Math.round(h) + 'px';
+}
+window.axCarouselFitHeight = axCarouselFitHeight;
+
+/* A post's media finished loading → drop the neon skeleton and fade the media in. */
+function axMediaLoaded(el) {
+  const wrap = el && el.closest ? el.closest('.ax-post-media-wrap') : null;
+  if (wrap) {
+    wrap.classList.remove('ax-media-loading');
+    if (wrap.classList.contains('ax-carousel')) axCarouselFitHeight(wrap);
+  }
+}
+/* Broken media → drop the skeleton and show a graceful fallback (no spinner stuck). */
+function axMediaError(el) {
+  const wrap = el && el.closest ? el.closest('.ax-post-media-wrap') : null;
+  if (wrap) { wrap.classList.remove('ax-media-loading'); wrap.classList.add('ax-media-error'); }
+  if (el) el.style.display = 'none';
+}
+window.axMediaLoaded = axMediaLoaded;
+window.axMediaError = axMediaError;
+
 function axCarouselGo(car, idx) {
   const count = parseInt(car.dataset.count || '1', 10);
   idx = ((idx % count) + count) % count;
@@ -155,6 +264,7 @@ function axCarouselGo(car, idx) {
   car.querySelectorAll('.ax-carousel-dot').forEach(function (d, i) { d.classList.toggle('active', i === idx); });
   const cnt = car.querySelector('.ax-carousel-count');
   if (cnt) cnt.textContent = (idx + 1) + '/' + count;
+  axCarouselFitHeight(car); // resize the frame to the new slide (no crop, no gap)
 }
 function axCarouselMove(btn, dir) {
   const car = btn.closest('.ax-carousel');
@@ -172,6 +282,14 @@ setInterval(function () {
     }
   });
 }, 4500);
+/* Re-fit carousel heights when the viewport changes (rotate / resize). */
+var _axCarResizeT;
+window.addEventListener('resize', function () {
+  clearTimeout(_axCarResizeT);
+  _axCarResizeT = setTimeout(function () {
+    document.querySelectorAll('.ax-carousel').forEach(axCarouselFitHeight);
+  }, 150);
+});
 /* Manual swipe (touch drag) for feed carousels — complements the prev/next
    arrows and the auto-advance. Attached once and delegated on document so it
    also covers carousels appended later by infinite scroll. A horizontal drag
@@ -250,10 +368,10 @@ function axPostCardHtml(p, mySub) {
         axReactionFace(p.my_reaction) +
         ' <span class="ax-react-count" onclick="event.stopPropagation();axShowLikers(\'' + pid + '\')">' + axCount(p.like_count) + '</span></button>' +
       '<button type="button" class="ax-post-act" onclick="axOpenComments(\'' + pid + '\')">' +
-        '<i class="fa-regular fa-comment"></i> <span>' + axCount(p.comment_count) + '</span></button>' +
+        '<svg class="ax-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5c0 4.4-4 8-9 8-1.3 0-2.5-.2-3.6-.7L3 20l1.3-4.3C3.5 14.4 3 13 3 11.5c0-4.4 4-8 9-8s9 3.6 9 8Z"/></svg> <span>' + axCount(p.comment_count) + '</span></button>' +
       '<button type="button" class="ax-post-act" onclick="axSharePost(\'' + pid + '\')">' +
-        '<i class="fa-solid fa-arrow-up-from-bracket"></i></button>' +
-      '<span class="ax-post-views"><i class="fa-regular fa-eye"></i> ' + axCount(p.view_count) + '</span>' +
+        '<svg class="ax-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.5 2.5 10.8 13.2"/><path d="M21.5 2.5 14.7 21.5l-3.9-8.3-8.3-3.9Z"/></svg></button>' +
+      '<span class="ax-post-views"><svg class="ax-ico ax-ico-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.6"/></svg> ' + axCount(p.view_count) + '</span>' +
     '</div>' +
     // Caption is clamped to 2 lines; "more" (and tapping the post) opens the
     // expanded view with the full text + reactions + comments.
@@ -332,19 +450,13 @@ function axObserveViews() {
 
 /* ── like / comment / share ── */
 /* ══════════════════ POST MEDIA RATIO + EXPANDED VIEW ══════════════════ */
-/* Instagram-style framing: clamp every post's media between 1.91:1 (widest)
-   and 3:4 (tallest). Anything outside that range is cover-cropped into the
-   frame, so no single post can dominate the feed with a giant portrait. */
-const AX_MEDIA_MIN_RATIO = 1 / 1.91; // height / width for the widest allowed
-const AX_MEDIA_MAX_RATIO = 4 / 3;    // height / width for 3:4 portrait
+/* Show media at its TRUE aspect ratio (no crop, no black filler): once loaded
+   we just flag the wrapper `is-fitted`, which drops the placeholder aspect-ratio
+   so the box hugs the media's natural height. Width is capped by the feed
+   column (narrow + centered on desktop) so a tall reel never dominates. */
 function axFitPostMedia(el) {
-  const w = el.naturalWidth || el.videoWidth || 0;
-  const h = el.naturalHeight || el.videoHeight || 0;
   const wrap = el.parentElement;
-  if (!w || !h || !wrap) return;
-  const ratio = Math.max(AX_MEDIA_MIN_RATIO, Math.min(AX_MEDIA_MAX_RATIO, h / w));
-  wrap.style.aspectRatio = (1 / ratio).toFixed(4);   // CSS wants width / height
-  wrap.classList.add('is-fitted');
+  if (wrap) wrap.classList.add('is-fitted');
 }
 
 /* Reveal the "… more" affordance only on captions that actually overflow the
@@ -370,7 +482,7 @@ async function axOpenPost(postId) {
   const media = p.media_url
     ? '<div class="ax-post-media-wrap">' + (p.media_type === 'video'
         ? '<video class="ax-post-media" src="' + axEsc(p.media_url) + '" controls playsinline onloadedmetadata="axFitPostMedia(this)"></video>'
-        : '<img class="ax-post-media" src="' + axEsc(p.media_url) + '" alt="" onload="axFitPostMedia(this)">') + '</div>'
+        : '<img class="ax-post-media" src="' + axEsc(p.media_url) + '" alt="" loading="lazy" onload="axFitPostMedia(this)">') + '</div>'
     : '';
   ov.innerHTML =
     '<div class="ax-postdetail-box">' +
@@ -387,10 +499,10 @@ async function axOpenPost(postId) {
             axReactionFace(p.my_reaction) +
             ' <span class="ax-react-count" onclick="event.stopPropagation();axShowLikers(\'' + axEsc(postId) + '\')">' + axCount(p.like_count) + '</span></button>' +
           '<button type="button" class="ax-post-act" onclick="document.getElementById(\'axPostDetailInput\').focus()">' +
-            '<i class="fa-regular fa-comment"></i> <span>' + axCount(p.comment_count) + '</span></button>' +
+            '<svg class="ax-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5c0 4.4-4 8-9 8-1.3 0-2.5-.2-3.6-.7L3 20l1.3-4.3C3.5 14.4 3 13 3 11.5c0-4.4 4-8 9-8s9 3.6 9 8Z"/></svg> <span>' + axCount(p.comment_count) + '</span></button>' +
           '<button type="button" class="ax-post-act" onclick="axSharePost(\'' + axEsc(postId) + '\')">' +
-            '<i class="fa-solid fa-arrow-up-from-bracket"></i></button>' +
-          '<span class="ax-post-views"><i class="fa-regular fa-eye"></i> ' + axCount(p.view_count) + '</span>' +
+            '<svg class="ax-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.5 2.5 10.8 13.2"/><path d="M21.5 2.5 14.7 21.5l-3.9-8.3-8.3-3.9Z"/></svg></button>' +
+          '<span class="ax-post-views"><svg class="ax-ico ax-ico-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.6"/></svg> ' + axCount(p.view_count) + '</span>' +
         '</div>' +
         (p.description
           ? '<p class="ax-post-desc ax-post-desc-full"><b>' + axEsc(p.user_name) + '</b> ' + axEsc(p.description) + '</p>'
@@ -424,7 +536,7 @@ const AX_REACTIONS = [
   { key: 'care', emoji: '🤗', label: 'Care' },
 ];
 function axReactionFace(reaction) {
-  if (!reaction) return '<i class="fa-regular fa-heart"></i>';
+  if (!reaction) return '<svg class="ax-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.3S3.6 15 3.6 9.2c0-2.6 2-4.6 4.5-4.6 1.7 0 3.1.9 3.9 2.3.8-1.4 2.2-2.3 3.9-2.3 2.5 0 4.5 2 4.5 4.6 0 5.8-8.4 11.1-8.4 11.1Z"/></svg>';
   const r = AX_REACTIONS.find(function (x) { return x.key === reaction; });
   return '<span class="ax-react-face">' + (r ? r.emoji : '👍') + '</span>';
 }
@@ -1057,7 +1169,18 @@ async function axLoadMyPosts() {
 function axApplyCover(url) {
   const cover = document.getElementById('axProfileCover');
   if (!cover) return;
-  cover.style.backgroundImage = url ? 'url("' + url + '")' : '';
+  // The cover's CSS gradient is set with `!important` (theme accent header), which
+  // beats a plain inline background-image — so the uploaded photo never showed.
+  // Set the image (and sizing) as inline `!important` so it wins over that gradient.
+  if (url) {
+    cover.style.setProperty('background-image', 'url("' + url + '")', 'important');
+    cover.style.setProperty('background-size', 'cover', 'important');
+    cover.style.setProperty('background-position', 'center', 'important');
+  } else {
+    cover.style.removeProperty('background-image');
+    cover.style.removeProperty('background-size');
+    cover.style.removeProperty('background-position');
+  }
   cover.classList.toggle('has-cover', !!url);
 }
 async function axUploadCover(input) {

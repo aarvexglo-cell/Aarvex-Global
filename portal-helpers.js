@@ -23,8 +23,31 @@
      { available:true, paid:false, cancelled:true } → buyer closed / payment failed
    NOTE: the authoritative confirmation is still the server-side webhook — this
    result is only used to drive the UI (never to fulfil the order client-side). */
+/* Lazy-load the Cashfree v3 SDK only when a payment actually starts, so it
+   never blocks normal page loads. Caches the load promise; resolves true once
+   the global Cashfree() is available, false if the script can't load (caller
+   then falls back to the hosted payment link). */
+let _axCfSdkPromise = null;
+function _axLoadCashfreeSDK() {
+  if (typeof Cashfree !== 'undefined') return Promise.resolve(true);
+  if (_axCfSdkPromise) return _axCfSdkPromise;
+  _axCfSdkPromise = new Promise(function (resolve) {
+    try {
+      const s = document.createElement('script');
+      s.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
+      s.async = true;
+      s.onload = function () { resolve(typeof Cashfree !== 'undefined'); };
+      s.onerror = function () { _axCfSdkPromise = null; resolve(false); };
+      document.head.appendChild(s);
+    } catch (e) { _axCfSdkPromise = null; resolve(false); }
+  });
+  return _axCfSdkPromise;
+}
+
 async function axCashfreeCheckout(paymentSessionId, mode) {
-  if (!paymentSessionId || typeof Cashfree === 'undefined') return { available: false, paid: false };
+  if (!paymentSessionId) return { available: false, paid: false };
+  await _axLoadCashfreeSDK();               // load on demand (was a blocking <script>)
+  if (typeof Cashfree === 'undefined') return { available: false, paid: false };
   try {
     const cashfree = Cashfree({ mode: mode === 'production' ? 'production' : 'sandbox' });
     // "_modal" keeps the whole flow inside the current page as an overlay.
@@ -117,7 +140,7 @@ async function loadTopShops() {
 
   try {
     const res = await fetch(LAMBDA_URL + '/shops/top', {
-      headers: { Accept: 'application/json', Authorization: 'Bearer ' + (localStorage.getItem('ax_google_token') || '') }
+      headers: { Accept: 'application/json', Authorization: 'Bearer ' + axGetAuthToken() }
     });
     const data = typeof safeFetchJson === 'function' ? await safeFetchJson(res) : await res.json();
 
@@ -186,7 +209,7 @@ async function likeShop(shopId, btn) {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + (localStorage.getItem('ax_google_token') || '')
+        'Authorization': 'Bearer ' + axGetAuthToken()
       },
       body: JSON.stringify({ shop_id: shopId })
     });

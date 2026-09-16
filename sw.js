@@ -11,7 +11,7 @@
  *     long-term; on failure return a clear offline JSON, not a broken page.
  *   - Bump SW_VERSION on every deploy so old caches purge on activate.
  */
-const SW_VERSION = 'aarvex-v64';
+const SW_VERSION = 'aarvex-v65';
 const SHELL_CACHE = 'shell-' + SW_VERSION;
 
 // Both HTML entry points are precached so each paints instantly AND is served as
