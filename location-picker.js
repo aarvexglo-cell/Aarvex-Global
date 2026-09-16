@@ -85,6 +85,9 @@
     document.getElementById('lpCity').value = a.city || a.town || a.village || a.county || a.suburb || '';
     document.getElementById('lpState').value = a.state || '';
     document.getElementById('lpPincode').value = a.postcode || '';
+    // Real district (for local ad targeting) — state_district is Nominatim's
+    // district; county is the fallback. Kept on the modal, not shown as a field.
+    if (_modalEl) _modalEl.dataset.district = a.state_district || a.county || '';
   }
 
   function reverseGeocode(lat, lng) {
@@ -206,7 +209,7 @@
 
   function initMapUi(startLat, startLng) {
     _map = global.L.map('lpMapHost').setView([startLat, startLng], startLat === DEFAULT_CENTER[0] ? 5 : 16);
-    global.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    global.L.tileLayer(((window.AX_MAP&&AX_MAP.tileUrl)||'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'), {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors',
     }).addTo(_map);
@@ -278,6 +281,7 @@
           address: address,
           city: city,
           state: state,
+          district: (_modalEl && _modalEl.dataset.district) || opts.district || '',
           pincode: document.getElementById('lpPincode').value.trim(),
           lat: pos.lat,
           lng: pos.lng,

@@ -59,6 +59,19 @@
     return sub ? 'ax_addrbook_' + sub : null;
   }
 
+  /* The viewer's current area (state + real district) for local ad targeting.
+     Written whenever an address is selected/saved so ax-geo-district.js can
+     read one stable key instead of guessing from the address list order. */
+  function saveUserArea(state, district, city) {
+    var sub = userSub();
+    if (!sub) return;
+    try {
+      localStorage.setItem('ax_user_area_' + sub, JSON.stringify({
+        state: state || '', district: district || '', city: city || '', ts: Date.now()
+      }));
+    } catch (e) { /* ignore */ }
+  }
+
   function getAddresses() {
     var key = storeKey();
     if (!key) return [];
@@ -88,6 +101,7 @@
       city: profile.city,
       state: profile.state,
       pincode: profile.pincode || '',
+      district: profile.district || '',
       lat: profile.address_lat || '',
       lng: profile.address_lng || ''
     };
@@ -141,6 +155,9 @@
     sv(prefix + '_pincode', addr.pincode || '');
     sv(prefix + '_address_lat', addr.lat || '');
     sv(prefix + '_address_lng', addr.lng || '');
+    // Keep the ad-targeting area in sync with the chosen address. Fall back to
+    // city when an older saved address has no district captured.
+    saveUserArea(addr.state, addr.district || addr.city, addr.city);
     if (!silent) renderList(prefix);
   }
 
@@ -205,7 +222,7 @@
     if (!el || !global.L) return;
     if (!pickerMap) {
       pickerMap = global.L.map(el).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
-      global.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      global.L.tileLayer(((window.AX_MAP&&AX_MAP.tileUrl)||'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'), {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors'
       }).addTo(pickerMap);
@@ -239,8 +256,15 @@
     sv('addrPickerCity', addr.city || addr.town || addr.village || addr.suburb || addr.county || '');
     sv('addrPickerState', addr.state || '');
     sv('addrPickerPincode', addr.postcode || '');
-    if (lat != null) global.document.getElementById('addrPickerMap').dataset.lat = lat;
-    if (lng != null) global.document.getElementById('addrPickerMap').dataset.lng = lng;
+    var mapEl = global.document.getElementById('addrPickerMap');
+    if (mapEl) {
+      // Real district for local ad targeting. Nominatim exposes the district as
+      // state_district (county is the fallback). This is NOT the same as city —
+      // a town/village sits inside a bigger district — so capture it separately.
+      mapEl.dataset.district = addr.state_district || addr.county || '';
+      if (lat != null) mapEl.dataset.lat = lat;
+      if (lng != null) mapEl.dataset.lng = lng;
+    }
   }
 
   function reverseGeocode(lat, lng) {
@@ -324,11 +348,13 @@
     var mapEl = document.getElementById('addrPickerMap');
     var lat = (lastPickedLatLng && lastPickedLatLng.lat) || mapEl.dataset.lat || '';
     var lng = (lastPickedLatLng && lastPickedLatLng.lng) || mapEl.dataset.lng || '';
+    var district = (mapEl && mapEl.dataset.district) || '';
     var list = getAddresses();
     var addr = {
       id: 'addr_' + Date.now(),
       label: label || ('Address ' + (list.length + 1)),
       address: address, city: city, state: state, pincode: pincode,
+      district: district,
       lat: lat, lng: lng
     };
     list.unshift(addr);

@@ -16,9 +16,11 @@ async function loadAddressBook() {
   const box = document.getElementById('addressBookList');
   if (!box) return;
   box.innerHTML = '<p style="color:var(--c-text3);font-size:13px;padding:8px 0">Loading your saved addresses…</p>';
-  // Ensure auth before address APIs (expired Google token was blocking selection).
+  // Ensure auth before address APIs — but only when NEITHER the session token
+  // nor the Google token is valid (the session token alone is enough; don't pop
+  // an interactive Google sign-in every hour).
   if (typeof window.ensureFreshGoogleToken === 'function'
-      && typeof isGoogleTokenExpired === 'function' && isGoogleTokenExpired()) {
+      && typeof axAuthExpired === 'function' && axAuthExpired()) {
     await window.ensureFreshGoogleToken({ interactive: true });
   }
   const data = await mpApi('/address/list');
@@ -85,6 +87,9 @@ function selectAddress(addressId) {
   const err = document.getElementById('addressBookError');
   if (err) err.style.display = 'none';
   if (typeof updateOrderSectionStatus === 'function') updateOrderSectionStatus('delivery');
+  // The chosen delivery area drives local ad targeting — refresh the banners so
+  // the viewer sees ads for their district (falls back to state/national).
+  if (typeof window.axReloadAdsForArea === 'function') { try { window.axReloadAdsForArea(); } catch (e) { /* ignore */ } }
 }
 
 function getSelectedAddress() {
@@ -115,6 +120,7 @@ function editAddress(addressId, ev) {
     address: a.address,
     city: a.city,
     state: a.state,
+    district: a.district,
     pincode: a.pincode,
     lat: a.lat,
     lng: a.lng,

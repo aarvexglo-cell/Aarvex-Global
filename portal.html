@@ -595,6 +595,15 @@
                   <span class="menu-sub">Invite &amp; Earn</span>
                 </span>
               </button>
+              <button class="sidebar-nav-item menu-tile" data-accent="refer" type="button"
+                onclick="if(typeof axOpenAdBooking==='function')axOpenAdBooking();closeMobileSidebar()">
+                <div class="nav-icon"><i class="fa-solid fa-bullhorn"></i></div>
+                <span class="menu-chev" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
+                <span class="menu-tile-text">
+                  <span class="nav-label">Advertise</span>
+                  <span class="menu-sub">Promote in your district</span>
+                </span>
+              </button>
             </div>
 
             <div class="sidebar-section-title">More</div>
@@ -3163,7 +3172,15 @@
   <script src="catalogue-ui.js?v=16" defer></script>
   <script src="product-modal.js?v=40" defer></script>
   <script src="portal-listings.js?v=15" defer></script>
-  <script src="portal-marketplace.js?v=46" defer></script>
+  <!-- District resolver for local ad targeting — must load before
+       portal-marketplace.js so mpLoadBanner can read axDistrictQS(). -->
+  <script src="ax-geo-district.js?v=1" defer></script>
+  <script src="portal-marketplace.js?v=48" defer></script>
+  <!-- Self-serve ad booking (Phase 3) — window.axOpenAdBooking(); uses mpApi +
+       axCashfreeCheckout, both loaded above/below before it is ever called. -->
+  <!-- India state→district data for the advertise picker — before ax-advertise.js. -->
+  <script src="ax-india-districts.js?v=1" defer></script>
+  <script src="ax-advertise.js?v=2" defer></script>
   <!-- Delivery V2 rollout flags (Phase 0). Flip AX_DELIVERY_V2=false to fall
        back to the pre-V2 delivery code path with no redeploy. AX_DIST_ENGINE
        picks the distance source ('osrm' = free, self-consistent; 'google' =

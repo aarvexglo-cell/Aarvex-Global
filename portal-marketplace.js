@@ -192,6 +192,24 @@ function mpSyncSearchStickyState() {
   searchBar.classList.toggle('banner-active', hasAd);
 }
 
+/* Phase 2 ad analytics: count an impression or click for a campaign ad. Only
+   campaign ads carry an ad_id; Phase-1 single ads have none, so this no-ops for
+   them. Fire-and-forget (keepalive) so it never blocks the UI. */
+const _axAdSeen = {};
+function mpTrackAd(adId, type) {
+  if (!adId) return;
+  // De-dupe impressions per ad per page load; always allow clicks.
+  if (type === 'impression') { if (_axAdSeen[adId]) return; _axAdSeen[adId] = 1; }
+  try {
+    fetch(LAMBDA_URL + '/ad/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ad_id: adId, type: type }),
+      keepalive: true,
+    }).catch(function () { /* analytics is best-effort */ });
+  } catch (e) { /* ignore */ }
+}
+
 function mpRenderBanner(ad, targetId) {
   const banner = document.getElementById(targetId || 'dashBannerSlot');
   if (!banner || !ad || !ad.image_url) return false;
@@ -214,6 +232,12 @@ function mpRenderBanner(ad, targetId) {
   banner.innerHTML = link
     ? '<a href="' + link + '" target="_blank" rel="noopener sponsored">' + inner + '</a>'
     : inner;
+  // Campaign analytics: one impression on render, a click when the ad is tapped.
+  if (ad.ad_id) {
+    mpTrackAd(ad.ad_id, 'impression');
+    const a = banner.querySelector('a');
+    if (a) a.addEventListener('click', function () { mpTrackAd(ad.ad_id, 'click'); });
+  }
   mpSyncSearchStickyState();
   return true;
 }
@@ -225,7 +249,7 @@ async function mpLoadBanner(placement, targetId) {
   if (!banner) return;
 
   try {
-    const res = await fetch(LAMBDA_URL + '/banner/active?placement=' + encodeURIComponent(placement) + '&t=' + Date.now(), {
+    const res = await fetch(LAMBDA_URL + '/banner/active?placement=' + encodeURIComponent(placement) + (typeof axDistrictQS === 'function' ? axDistrictQS() : '') + '&t=' + Date.now(), {
       headers: { Accept: 'application/json' },
       cache: 'no-store',
     });
@@ -256,7 +280,7 @@ async function mpLoadBanner(placement, targetId) {
 /* Fetch a single placement's active ad (API first, localStorage fallback). */
 async function mpFetchBannerAd(placement) {
   try {
-    const res = await fetch(LAMBDA_URL + '/banner/active?placement=' + encodeURIComponent(placement) + '&t=' + Date.now(), {
+    const res = await fetch(LAMBDA_URL + '/banner/active?placement=' + encodeURIComponent(placement) + (typeof axDistrictQS === 'function' ? axDistrictQS() : '') + '&t=' + Date.now(), {
       headers: { Accept: 'application/json' }, cache: 'no-store',
     });
     const text = await res.text();
@@ -318,10 +342,17 @@ async function mpLoadTradeMidCarousel(targetId) {
 
   const track = document.getElementById('axMidAdTrack');
   if (!track) return;
+  // Campaign analytics: impression for the slide actually shown, click on tap.
+  function _midImpress(i) { if (ads[i] && ads[i].ad_id) mpTrackAd(ads[i].ad_id, 'impression'); }
+  _midImpress(0);
+  slot.querySelectorAll('.ax-midad-slide').forEach(function (el, i) {
+    el.addEventListener('click', function () { if (ads[i] && ads[i].ad_id) mpTrackAd(ads[i].ad_id, 'click'); });
+  });
   track.addEventListener('scroll', function () {
     const i = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
     const ds = slot.querySelectorAll('.ax-midad-dot');
     for (let k = 0; k < ds.length; k++) ds[k].classList.toggle('on', k === i);
+    _midImpress(i);
   });
   slot.querySelectorAll('.ax-midad-dot').forEach(function (d) {
     d.addEventListener('click', function () {

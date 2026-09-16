@@ -113,7 +113,7 @@ p { margin:0; }
 /* ---------- 3. LAYOUT UTILITIES ------------------------------------------ */
 .nx-sec { position:relative; padding:var(--s7) var(--s5); }
 .nx-sec > .nx-head, .nx-market > .nx-head, .nx-sec-in, .nx-hero-in,
-.nx-proof, .nx-foot-in, .nx-cta-band, .nx-theater-shell, .nx-cinema-stage,
+.nx-proof, .nx-foot-in, .nx-cta-band, .nx-cinema-stage,
 .nx-grid, .nx-cats, .nx-shops, .nx-head-row, .nx-live { max-width:var(--container); margin-inline:auto; }
 @media (max-width:720px){ .nx-sec{ padding:var(--s6) var(--s4); } }
 
@@ -581,62 +581,242 @@ body.nx-cursor-on textarea, body.nx-cursor-on [role="button"], body.nx-cursor-on
 .nx-step-n { font-size:clamp(44px,4vw + 20px,64px); line-height:1; opacity:.17; left:20px; top:8px; letter-spacing:-.03em; }
 @media (max-width:820px){ .nx-steps{ grid-template-columns:1fr; } .nx-steps-line{ display:none; } }
 
-/* ---------- THEATER ------------------------------------------------------ */
-.nx-theater-shell { border:1px solid var(--line); border-radius:var(--r-xl); overflow:hidden; background:var(--surface); box-shadow:var(--shadow); }
-.nx-theater-tabs { display:flex; gap:0; border-bottom:1px solid var(--line); overflow-x:auto; }
-.nx-ttab { flex:1; min-width:110px; display:inline-flex; flex-direction:column; align-items:center; gap:6px;
-  padding:16px 10px; background:none; border:none; border-bottom:2px solid transparent; color:var(--ink-3);
-  font-family:var(--f-body); font-size:var(--t-sm); font-weight:600; cursor:pointer; transition:all .2s; }
-.nx-ttab i { font-size:17px; }
-.nx-ttab:hover { color:var(--ink); background:var(--bg-2); }
-.nx-ttab.on { color:var(--accent); border-bottom-color:var(--accent);
-  text-shadow:0 0 18px var(--glow-lime); }
-.nx-theater-stage { display:grid; grid-template-columns:38.2% 61.8%; }
-.nx-theater-visual { position:relative; min-height:340px; background:var(--grad-media);
-  background-size:cover; background-position:center; display:grid; place-items:center; padding:var(--s6); }
-.nx-theater-badge { position:absolute; top:16px; left:16px; font-family:var(--f-mono); font-size:var(--t-cap);
-  text-transform:uppercase; letter-spacing:.1em; color:var(--brand-green); background:color-mix(in srgb,var(--brand-green) 12%,transparent);
-  border:1px solid color-mix(in srgb,var(--brand-green) 38%,transparent); border-radius:var(--r-pill); padding:5px 12px; }
-.nx-theater-copy { padding:var(--s6); display:flex; flex-direction:column; gap:var(--s3); justify-content:center; }
-.nx-theater-copy h3 { font-size:var(--t-h3); }
-.nx-theater-copy p { color:var(--ink-2); line-height:1.6; }
-.nx-theater-copy ul { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
-.nx-theater-copy li { display:flex; align-items:flex-start; gap:10px; font-size:var(--t-sm); color:var(--ink-2); }
-.nx-theater-copy li::before { content:"\2713"; color:var(--brand-gold); font-weight:700; }
-.nx-theater-copy .nx-btn { align-self:flex-start; margin-top:var(--s3); }
-@media (max-width:820px){ .nx-theater-stage{ grid-template-columns:1fr; } .nx-theater-visual{ min-height:220px; } }
-/* Pinned scrollytelling (desktop + motion-friendly only): #theater becomes a tall
-   scroll track and the shell PINS, so wheel scroll steps through the tabs
-   (Trade→Sell) before the page continues. Mobile / reduced-motion keep native flow
-   and just tap tabs. JS (initTheaterScroll) maps scroll progress → active tab. */
-@media (min-width:821px) and (pointer:fine) and (prefers-reduced-motion:no-preference){
-  #theater.nx-theater{ min-height:320vh; }
-  #theater .nx-theater-pin{ position:sticky; top:78px; }
+/* ---------- THEATER — compact capability showcase (tap to switch) -------- */
+/* A contained dark "keynote" band (premium in both themes): full-bleed width,
+   normal height (no scroll-jack). Tap a tab to switch; it also auto-advances
+   Trade→Sell while in view and pauses on interaction. */
+#theater.nx-theater { padding:var(--s7) 0 var(--s7); }
+#theater > .nx-head { padding-inline:var(--s5); }
+
+.nx-theater-pin { position:relative; }
+.nx-theater-shell {
+  /* local dark palette so the panel reads cinematic in light AND dark theme */
+  --th-ink:#F3F8F1; --th-ink-2:#B4C9BC; --th-ink-3:#7F978A;
+  --th-line:rgba(212,237,107,.16); --th-glass:rgba(9,17,12,.62);
+  --th-dark:#0A130E;
+  position:relative; overflow:hidden; isolation:isolate; color:var(--th-ink);
+  border:none; border-radius:0; box-shadow:none;
+  display:flex; flex-direction:column; min-height:clamp(500px,66vh,620px);
+  background:
+    radial-gradient(90% 70% at 82% -12%, rgba(100,196,132,.20), transparent 58%),
+    radial-gradient(80% 70% at -8% 112%, rgba(212,237,107,.12), transparent 55%),
+    linear-gradient(158deg,#0D1913 0%,#0A130E 58%,#070D09 100%);
+}
+/* Slow-drifting aurora + fine grain for depth (paused under reduced-motion). */
+.nx-theater-aurora {
+  position:absolute; inset:-30% -10%; z-index:0; pointer-events:none; opacity:.6;
+  background:
+    radial-gradient(38% 46% at 26% 30%, rgba(100,196,132,.30), transparent 60%),
+    radial-gradient(34% 40% at 74% 66%, rgba(212,237,107,.18), transparent 62%),
+    radial-gradient(30% 38% at 60% 12%, rgba(62,145,89,.22), transparent 60%);
+  filter:blur(30px); animation:nxThAurora 26s ease-in-out infinite alternate; }
+.nx-theater-shell > * { position:relative; z-index:1; }
+@keyframes nxThAurora {
+  0%   { transform:translate3d(-3%,-2%,0) rotate(0deg) scale(1.05); }
+  50%  { transform:translate3d(4%,3%,0) rotate(8deg) scale(1.12); }
+  100% { transform:translate3d(-2%,2%,0) rotate(-6deg) scale(1.08); } }
+
+/* ── Segmented-control tab rail ── */
+.nx-theater-tabs {
+  z-index:6; flex:0 0 auto; display:flex; flex-direction:column;
+  padding:clamp(var(--s4),3vw,var(--s5)) clamp(var(--s4),4vw,var(--s6)) 0;
+}
+.nx-th-track {
+  position:relative; display:flex; gap:2px; padding:5px;
+  border-radius:var(--r-pill); border:1px solid var(--th-line);
+  background:rgba(255,255,255,.05);
+  overflow-x:auto; overflow-y:hidden; scrollbar-width:none; -webkit-overflow-scrolling:touch;
+}
+.nx-th-track::-webkit-scrollbar { display:none; }
+/* sliding highlight pill — JS sets left/width to the active segment */
+.nx-ttab-ind {
+  position:absolute; top:5px; bottom:5px; left:0; width:0; border-radius:var(--r-pill); z-index:0;
+  background:var(--grad-brand); box-shadow:0 6px 22px var(--glow-lime), inset 0 1px 0 rgba(255,255,255,.4);
+  transition:left .42s var(--e-expo), width .42s var(--e-expo); }
+.nx-ttab {
+  position:relative; z-index:1; flex:1 0 auto; min-width:100px;
+  display:inline-flex; align-items:center; justify-content:center; gap:9px;
+  padding:12px 16px; background:none; border:none; color:var(--th-ink-3);
+  font-family:var(--f-body); font-size:var(--t-sm); font-weight:600; cursor:pointer; white-space:nowrap;
+  border-radius:var(--r-pill); transition:color .3s var(--e-out); }
+.nx-ttab i { font-size:16px; transition:transform .3s var(--e-spring); }
+.nx-ttab:hover { color:var(--th-ink); }
+.nx-ttab.on { color:var(--th-dark); }
+.nx-ttab.on i { transform:scale(1.12); }
+/* auto-advance progress line beneath the control */
+.nx-th-progress { height:2px; margin:12px auto 11px; width:min(240px,60%); border-radius:2px;
+  background:rgba(255,255,255,.10); overflow:hidden; }
+.nx-th-progress > i { display:block; height:100%; width:0; border-radius:2px;
+  background:var(--grad-brand); box-shadow:0 0 12px var(--glow-lime); }
+
+/* ── Stage ── */
+.nx-theater-stage {
+  flex:1 1 auto; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.02fr);
+  gap:clamp(var(--s5),4vw,var(--s7)); align-items:stretch;
+  padding:clamp(var(--s4),3.2vw,var(--s5)) clamp(var(--s4),4vw,var(--s6)) clamp(var(--s5),3.5vw,var(--s6)); }
+
+/* framed, floating media with a true crossfade between two layers */
+.nx-theater-visual {
+  position:relative; height:100%; min-height:280px; border-radius:var(--r-lg);
+  overflow:hidden; isolation:isolate; background:var(--grad-media);
+  border:1px solid var(--th-line);
+  box-shadow:0 32px 80px -28px rgba(0,0,0,.85), 0 2px 0 rgba(255,255,255,.05) inset;
+  transform:perspective(1400px) rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg));
+  transition:transform .4s var(--e-out); }
+.nx-th-layer {
+  position:absolute; inset:0; z-index:0; background-size:cover; background-position:center;
+  opacity:0; transform:scale(1.04); transition:opacity .8s var(--e-out); will-change:opacity, transform; }
+.nx-th-layer.is-on { opacity:1; }
+@media (prefers-reduced-motion:no-preference){
+  .nx-th-layer.is-on { animation:nxThKen 14s ease-out both; } }
+@keyframes nxThKen { from { transform:scale(1.12); } to { transform:scale(1.02); } }
+.nx-th-scrim { position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(180deg, rgba(6,11,8,.30) 0%, transparent 32%, transparent 55%, rgba(6,11,8,.72) 100%),
+            linear-gradient(100deg, rgba(6,11,8,.42), transparent 46%); }
+.nx-theater-badge {
+  position:absolute; z-index:2; top:18px; left:18px; font-family:var(--f-mono); font-size:var(--t-cap);
+  text-transform:uppercase; letter-spacing:.14em; color:#eafce0;
+  background:rgba(9,17,12,.5); border:1px solid rgba(255,255,255,.24); border-radius:var(--r-pill);
+  padding:7px 15px; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+.nx-th-media-foot { position:absolute; z-index:2; left:18px; bottom:16px; }
+.nx-th-live { display:inline-flex; align-items:center; gap:8px; font-size:var(--t-cap); color:#dcecdf;
+  font-family:var(--f-mono); letter-spacing:.06em; }
+.nx-th-live i { width:7px; height:7px; border-radius:50%; background:var(--brand-lime);
+  box-shadow:0 0 0 0 var(--glow-lime); animation:nxThPulse 2.2s var(--e-out) infinite; }
+@keyframes nxThPulse { 0%{ box-shadow:0 0 0 0 rgba(212,237,107,.5); } 70%{ box-shadow:0 0 0 9px transparent; } 100%{ box-shadow:0 0 0 0 transparent; } }
+
+/* editorial copy column */
+.nx-theater-copy { position:relative; min-width:0; display:flex; flex-direction:column; gap:var(--s3);
+  justify-content:center; }
+.nx-theater-copy > * { max-width:100%; }
+.nx-th-index { display:flex; align-items:baseline; gap:.5em; line-height:1; margin-bottom:2px; }
+.nx-th-index b { font-family:var(--f-display); font-weight:600; letter-spacing:-.02em;
+  font-size:clamp(2.6rem,1rem + 6vw,5rem);
+  background:var(--grad-brand); -webkit-background-clip:text; background-clip:text;
+  color:transparent; -webkit-text-fill-color:transparent; opacity:.9; }
+.nx-th-index span { font-family:var(--f-mono); font-size:.78rem; letter-spacing:.22em; color:var(--th-ink-3); }
+.nx-theater-copy h3 { color:var(--th-ink); font-size:clamp(1.8rem,.9rem + 2.6vw,3rem); line-height:1.07;
+  letter-spacing:-.02em; overflow-wrap:break-word; text-wrap:balance; }
+.nx-theater-copy p { color:var(--th-ink-2); line-height:1.65; max-width:46ch; overflow-wrap:break-word;
+  font-size:clamp(1rem,.92rem + .35vw,1.15rem); }
+.nx-theater-copy ul { list-style:none; padding:0; margin:var(--s2) 0 0; display:flex; flex-direction:column; }
+.nx-theater-copy li { display:flex; align-items:center; gap:13px; padding:12px 0; font-size:var(--t-base);
+  color:var(--th-ink); border-top:1px solid var(--th-line); }
+.nx-theater-copy li:first-child { border-top:none; }
+.nx-theater-copy li::before {
+  content:"\2713"; flex:0 0 auto; width:26px; height:26px; display:grid; place-items:center;
+  border-radius:50%; font-size:12px; font-weight:800; color:var(--th-dark);
+  background:var(--grad-brand); box-shadow:0 3px 12px var(--glow-lime); }
+.nx-th-actions { display:flex; align-items:center; gap:var(--s3) var(--s4); flex-wrap:wrap; margin-top:var(--s4); }
+.nx-theater-copy .nx-btn { align-self:flex-start; }
+.nx-theater-copy .nx-btn i { margin-left:8px; transition:transform .3s var(--e-spring); }
+.nx-theater-copy .nx-btn:hover i { transform:translateX(5px); }
+/* Hint always drops to its own line so it can never be clipped at the edge. */
+.nx-th-hint { flex:1 0 100%; font-family:var(--f-mono); font-size:var(--t-cap); letter-spacing:.04em;
+  color:var(--th-ink-3); overflow-wrap:break-word; }
+
+/* ── swap animation — JS toggles .is-swapping on the stage each change ── */
+@keyframes nxThUp { from { opacity:0; transform:translateY(22px); } to { opacity:1; transform:none; } }
+@keyframes nxThClip { from { opacity:0; clip-path:inset(0 0 100% 0); transform:translateY(14px); }
+                      to   { opacity:1; clip-path:inset(0 0 0 0);    transform:none; } }
+.is-swapping .nx-th-index      { animation:nxThUp .5s var(--e-out) both; }
+.is-swapping #nxTheaterTitle   { animation:nxThClip .7s .05s var(--e-out) both; }
+.is-swapping #nxTheaterBody    { animation:nxThUp .6s .16s var(--e-out) both; }
+.is-swapping #nxTheaterBullets li { animation:nxThUp .55s var(--e-out) both; }
+.is-swapping #nxTheaterBullets li:nth-child(1){ animation-delay:.24s; }
+.is-swapping #nxTheaterBullets li:nth-child(2){ animation-delay:.31s; }
+.is-swapping #nxTheaterBullets li:nth-child(3){ animation-delay:.38s; }
+.is-swapping #nxTheaterBullets li:nth-child(4){ animation-delay:.45s; }
+.is-swapping .nx-th-actions    { animation:nxThUp .55s .5s var(--e-out) both; }
+
+/* ── Mobile / tablet — stacked, natural height ── */
+@media (max-width:860px){
+  .nx-theater-shell { min-height:0; }
+  .nx-theater-stage { grid-template-columns:1fr; grid-template-rows:auto auto; align-items:start;
+    gap:var(--s4); padding:var(--s4) var(--s4) var(--s5); }
+  .nx-theater-visual { height:clamp(200px,42vw,300px); }
+  .nx-ttab { min-width:84px; font-size:.82rem; padding:11px 13px; gap:7px; }
+  .nx-theater-copy { justify-content:flex-start; gap:var(--s2); }
+  .nx-th-index b { font-size:clamp(2.2rem,6vw,3rem); }
+  .nx-theater-copy li { padding:10px 0; font-size:var(--t-sm); }
 }
 
-/* ---------- CINEMA / SPOTLIGHT ------------------------------------------- */
+/* Desktop scroll-swipe: a short scroll track pins the card and JS steps the tabs
+   Trade→Sell as you scroll — the "scroll = swipe" feel. The pinned card nearly
+   fills the viewport (full-bleed width, ~88vh tall) so it covers cleanly on all
+   sides, with the dense content filling it (no empty panel). */
+@media (min-width:861px) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+  #theater.nx-theater{ min-height:260vh; padding:0; }
+  #theater > .nx-head{ padding-top:var(--s7); }
+  #theater .nx-theater-pin{ position:sticky; top:5vh; }
+  #theater .nx-theater-shell{ min-height:90vh; }
+}
+@media (prefers-reduced-motion:reduce){
+  .nx-theater-aurora { animation:none; }
+  .is-swapping .nx-th-index, .is-swapping #nxTheaterTitle, .is-swapping #nxTheaterBody,
+  .is-swapping #nxTheaterBullets li, .is-swapping .nx-th-actions { animation:none!important; }
+}
+@media (prefers-reduced-motion:reduce){
+  .is-swapping .nx-theater-visual::after,
+  .is-swapping .nx-theater-badge,
+  .is-swapping #nxTheaterTitle, .is-swapping #nxTheaterBody,
+  .is-swapping #nxTheaterBullets li, .is-swapping #nxTheaterCta { animation:none!important; }
+}
+
+/* ---------- CINEMA / SPOTLIGHT — full-bleed hero, text over image --------- */
 .nx-cinema { padding:0; }
-.nx-cinema-stage { position:relative; min-height:520px; overflow:hidden; display:grid; align-items:end; background:var(--grad-media); }
-.nx-cinema-media { position:absolute; inset:0; background-size:cover; background-position:center; z-index:0; }
-.nx-cinema-veil { position:absolute; inset:0; z-index:1;
-  background:linear-gradient(to top, var(--bg) 4%, color-mix(in srgb,var(--bg) 40%, transparent) 45%, transparent 78%); }
+.nx-cinema-stage { position:relative; min-height:min(78vh,620px); overflow:hidden; display:grid; align-items:end;
+  background:var(--grad-media); }
+/* Full-colour hero image (deliberate focal point; overrides the site duotone). */
+.nx-cinema-media { position:absolute; inset:0; background-size:cover; background-position:center; z-index:0;
+  filter:saturate(1.05) contrast(1.02); }
+/* Veil fades the image toward the page ground at the bottom so the text reads. */
+.nx-cinema-veil { position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(to top, var(--bg) 3%, color-mix(in srgb,var(--bg) 42%, transparent) 46%, transparent 80%),
+            linear-gradient(105deg, color-mix(in srgb,var(--bg) 55%, transparent), transparent 52%); }
 .nx-cinema-info { position:relative; z-index:2; max-width:var(--container); margin-inline:auto;
   width:100%; padding:var(--s7) var(--s5); }
-.nx-spot-cat { font-family:var(--f-mono); font-size:var(--t-sm); color:var(--accent); letter-spacing:.06em; text-transform:uppercase; }
-.nx-cinema-name { font-size:var(--t-h1); line-height:1.05; margin:var(--s2) 0; max-width:14ch; }
-.nx-cinema-meta { color:var(--ink-2); }
-.nx-cinema-price { font-family:var(--f-mono); font-size:var(--t-h3); font-weight:700; color:var(--ink); margin:var(--s3) 0; }
+
+/* Reserve fixed space for the variable fields so the price, buttons, arrows,
+   dots and progress bar stay locked in place while only the text + image swap. */
+.nx-spot-cat { font-family:var(--f-mono); font-size:var(--t-sm); color:var(--accent); letter-spacing:.06em;
+  text-transform:uppercase; display:block; min-height:1.3em; }
+.nx-cinema-name { font-size:var(--t-h1); line-height:1.06; margin:var(--s2) 0; max-width:16ch; color:var(--ink);
+  min-height:calc(2 * 1.06em); display:flex; align-items:flex-end; overflow-wrap:break-word; }
+.nx-cinema-meta { color:var(--ink-2); min-height:1.5em; max-width:42ch;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nx-cinema-price { font-family:var(--f-mono); font-size:var(--t-h3); font-weight:700; color:var(--ink);
+  margin:var(--s3) 0; min-height:1.35em; line-height:1.35; }
+.nx-cinema-price small { color:var(--ink-2); font-weight:600; }
+.nx-cinema-price s { color:var(--ink-3); font-weight:400; margin-left:.5ch; }
+
 .nx-cinema-actions { display:flex; align-items:center; gap:var(--s4); flex-wrap:wrap; margin-top:var(--s3); }
 .nx-cinema-nav { display:flex; gap:8px; }
 .nx-round { width:44px; height:44px; border-radius:50%; border:1px solid var(--line); background:var(--surface);
-  color:var(--ink); cursor:pointer; transition:all .2s; display:grid; place-items:center; }
-.nx-round:hover { border-color:var(--accent); color:var(--accent); }
-.nx-spot-dots { display:flex; gap:7px; margin-top:var(--s4); }
-.nx-spot-dots i { width:7px; height:7px; border-radius:50%; background:var(--ink-3); cursor:pointer; transition:all .2s; }
-.nx-spot-dots i.on { background:var(--accent); width:20px; border-radius:var(--r-pill); }
+  color:var(--ink); cursor:pointer; transition:all .2s var(--e-out); display:grid; place-items:center; }
+.nx-round:hover { border-color:var(--accent); color:var(--accent); transform:translateY(-1px); }
+
+.nx-spot-dots { display:flex; gap:8px; margin-top:var(--s4); }
+.nx-spot-dots button { width:9px; height:9px; padding:0; border:none; border-radius:50%;
+  background:var(--ink-3); cursor:pointer; transition:all .25s var(--e-out); }
+.nx-spot-dots button.on { background:var(--accent); width:24px; border-radius:var(--r-pill); }
 .nx-cinema-bar { height:3px; background:var(--line); border-radius:2px; margin-top:var(--s4); max-width:220px; overflow:hidden; }
-.nx-cinema-bar > i { display:block; height:100%; width:0; background:var(--accent); }
-@media (max-width:720px){ .nx-cinema-stage{ min-height:440px; } }
+.nx-cinema-bar > i { display:block; height:100%; width:0; background:var(--accent); border-radius:2px; }
+
+/* Text-only swap reveal (JS replays .is-swap); the controls below never animate. */
+.nx-cinema-info.is-swap .nx-spot-cat,
+.nx-cinema-info.is-swap .nx-cinema-name,
+.nx-cinema-info.is-swap .nx-cinema-meta,
+.nx-cinema-info.is-swap .nx-cinema-price { animation:nxSpotSwap .55s var(--e-out) both; }
+.nx-cinema-info.is-swap .nx-cinema-name { animation-delay:.05s; }
+.nx-cinema-info.is-swap .nx-cinema-meta { animation-delay:.1s; }
+.nx-cinema-info.is-swap .nx-cinema-price { animation-delay:.14s; }
+@keyframes nxSpotSwap { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+@media (prefers-reduced-motion:reduce){
+  .nx-cinema-info.is-swap .nx-spot-cat, .nx-cinema-info.is-swap .nx-cinema-name,
+  .nx-cinema-info.is-swap .nx-cinema-meta, .nx-cinema-info.is-swap .nx-cinema-price { animation:none; } }
+
+@media (max-width:720px){ .nx-cinema-stage{ min-height:min(72vh,560px); } }
 
 /* ---------- FEATURES BENTO ---------------------------------------------- */
 .nx-bento { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s4); max-width:var(--container); margin-inline:auto; }
@@ -842,27 +1022,30 @@ body.nx-cursor-on textarea, body.nx-cursor-on [role="button"], body.nx-cursor-on
    lot of dead vertical space. Trim the band's inner padding (s8→s6, above) and
    the section's own top/bottom padding so Questions follows soon after. */
 #sell.nx-sec { padding-top:var(--s5); padding-bottom:var(--s5); }
+/* The band is ALWAYS the lime gradient (theme-independent), so all its text and
+   controls are fixed DARK ink for strong contrast in both light and dark mode. */
+.nx-cta-band { --cta-ink:#0A130E; }
 .nx-cta-band .nx-kicker { color:var(--brand-green-deep); }
 .nx-cta-band .nx-kicker::before { background:var(--brand-green-deep); }
-.nx-cta-band .nx-h2 { color:var(--bg); }
-.nx-cta-band .nx-lead { color:color-mix(in srgb, var(--bg) 72%, transparent); margin-inline:auto; }
+.nx-cta-band .nx-h2 { color:var(--cta-ink); }
+.nx-cta-band .nx-lead { color:color-mix(in srgb, var(--cta-ink) 80%, transparent); margin-inline:auto; }
 .nx-cta-glow { position:absolute; inset:0; z-index:0; pointer-events:none;
-  background:radial-gradient(50% 60% at 50% 0%, var(--red-wash), transparent 60%); }
+  background:radial-gradient(50% 60% at 50% 0%, rgba(255,255,255,.18), transparent 60%); }
 .nx-cta-band > * { position:relative; z-index:1; }
 .nx-cta-actions { display:flex; gap:var(--s3); justify-content:center; flex-wrap:wrap; margin-top:var(--s5); }
-/* CTA band = inverted ink panel: glass sweeps paper in, primary sweeps ink in. */
-.nx-cta-band .nx-btn-glass { background:transparent; border-color:color-mix(in srgb, var(--bg) 32%, transparent); color:var(--bg); }
-.nx-cta-band .nx-btn-glass::before { background:var(--bg); transform:translateY(101%); }
-.nx-cta-band .nx-btn-glass:hover { border-color:var(--bg); color:var(--ink); }
-.nx-cta-band .nx-btn-glass:hover::before { transform:translateY(0); }
-.nx-cta-band .nx-btn-amber { background:var(--bg); color:var(--ink); }
-.nx-cta-band .nx-btn-amber::before { background:var(--ink); transform:translateY(101%); }
-.nx-cta-band .nx-btn-amber:hover { color:var(--bg); }
+/* Primary = solid dark pill (pops on lime); secondary = dark-outline glass. */
+.nx-cta-band .nx-btn-amber { background:var(--cta-ink); color:#EAF6D6; border-color:var(--cta-ink); }
+.nx-cta-band .nx-btn-amber::before { background:#000; transform:translateY(101%); }
+.nx-cta-band .nx-btn-amber:hover { color:#fff; }
 .nx-cta-band .nx-btn-amber:hover::before { transform:translateY(0); }
+.nx-cta-band .nx-btn-glass { background:transparent; border-color:color-mix(in srgb, var(--cta-ink) 34%, transparent); color:var(--cta-ink); }
+.nx-cta-band .nx-btn-glass::before { background:var(--cta-ink); transform:translateY(101%); }
+.nx-cta-band .nx-btn-glass:hover { border-color:var(--cta-ink); color:#EAF6D6; }
+.nx-cta-band .nx-btn-glass:hover::before { transform:translateY(0); }
 
 /* ---------- FOOTER ------------------------------------------------------- */
 .nx-foot { border-top:1px solid color-mix(in srgb,var(--brand-lime) 18%,var(--line)); padding:var(--s7) var(--s5) var(--s5);
-  background:radial-gradient(90% 120% at 50% 0%, rgba(100,196,132,.10), transparent 55%), linear-gradient(180deg,#0A1610,#06100B); }
+  background:radial-gradient(90% 120% at 50% 0%, rgba(100,196,132,.10), transparent 55%), linear-gradient(180deg, var(--bg-2), var(--bg-3)); }
 .nx-foot-in { display:grid; grid-template-columns:1.4fr 2fr; gap:var(--s7); max-width:var(--container); margin-inline:auto; }
 .nx-logo-foot .nx-logo-svg { height:34px; }
 .nx-foot-meta { color:var(--ink-2); font-size:var(--t-sm); line-height:1.6; margin:var(--s4) 0; max-width:42ch; }

@@ -1,0 +1,16 @@
+fcm-service-account.json
+*firebase-adminsdk*.json
+
+# Tier 4 minify build output + tool deps
+dist/
+tools/node_modules/
+
+# Android build artifacts (Capgo OTA bundles, built APK/AAB, staging dirs) —
+# regenerable by build-bundle.ps1 / gradle; the real bundles live on S3.
+android-app/aarvex-*.zip
+android-app/bundle-*/
+android-app/*.apk
+android-app/*.aab
+# Signing keystore & secrets — NEVER commit
+android-app/*.jks
+android-app/**/keystore.properties

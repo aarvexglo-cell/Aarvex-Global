@@ -141,6 +141,7 @@ SOCIAL_LINKS = [
     ("social_instagram", "Instagram",  "📸", "https://www.instagram.com/aarvexglobal"),
     ("social_facebook",  "Facebook",   "📘", "https://www.facebook.com/profile.php?id=61590539051710"),
     ("social_whatsapp",  "WhatsApp",   "💬", "https://wa.link/o0a5u0"),
+    ("social_wa_channel", "WhatsApp Channel", "📢", "https://whatsapp.com/channel/0029VbDAZRg8F2pJSjntD800"),
     ("social_linkedin",  "LinkedIn",   "💼", "https://www.linkedin.com/in/aarvex-global-994305415/"),
     ("social_x",         "X (Twitter)","✖️", "https://x.com/aarvexglobal"),
     ("social_telegram",  "Telegram",   "✈️", "https://t.me/aarvexglobal_bot"),
@@ -768,6 +769,7 @@ def lambda_handler(event, context):
 
     # ── Marketplace / Portal routes (before Meta webhook signature check) ──
     _portal_paths = (
+        "/auth/session", "/config/maps", "/app-update",
         "/kyc/submit", "/kyc/status",
         "/shop/create", "/shop/update", "/shop/delete", "/shop/subscribe", "/shop/info", "/shop/toggle", "/shop/products",
         "/account/summary", "/account/delete", "/order/invoice",
@@ -784,6 +786,9 @@ def lambda_handler(event, context):
         "/review/submit", "/reviews",
         "/notifications", "/notifications/read", "/notifications/delete",
         "/banner/active", "/banner/upload", "/banner/remove",
+        "/campaign/list", "/campaign/save", "/campaign/delete", "/campaign/toggle", "/campaign/approve", "/ad/event",
+        "/ad/booking/quote", "/ad/booking/create", "/ad/booking/mine",
+        "/campaign/rates",
         "/category/images", "/category/image/upload", "/category/image/remove",
         "/category/list", "/category/rename", "/category/delete",
         "/feed", "/feed/post", "/feed/edit", "/feed/delete", "/feed/like", "/feed/likers",
@@ -792,7 +797,7 @@ def lambda_handler(event, context):
         "/feed/comment", "/feed/comment/like", "/feed/comments", "/feed/view", "/feed/share",
         "/user/profile", "/user/search", "/user/block", "/user/blocklist", "/user/report", "/privacy/update",
         "/chat/send", "/chat/thread", "/chat/list", "/chat/read",
-        "/chat/conv", "/chat/message", "/chat/starred", "/chat/broadcast",
+        "/chat/conv", "/chat/message", "/chat/starred", "/chat/broadcast", "/chat/forward",
         "/user/username", "/user/by-username", "/connect/request", "/chat/group/create",
         "/call/start", "/call/incoming", "/call/signal", "/call/signals", "/call/end",
         "/chat/e2e/register", "/chat/e2e/key",
@@ -813,6 +818,7 @@ def lambda_handler(event, context):
         "/delivery/my-claims", "/delivery/cancel",
         "/address/list", "/address/save", "/address/delete",
         "/telemetry/report",
+        "/push/register",
     )
     if request_path in _portal_paths:
         if http_method == "OPTIONS":

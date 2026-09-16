@@ -29,8 +29,37 @@ logger = logging.getLogger()
 DYNAMODB_TABLE = os.environ.get("DYNAMODB_TABLE_NAME") or os.environ.get("DYNAMODB_TABLE", "aarvex-social-bot-state")
 S3_BUCKET = os.environ.get("S3_BUCKET_FOR_INVOICES") or os.environ.get("S3_BUCKET_FOR_CATALOGUE_MEDIA") or "aarvex-invoices-prod"
 CLOUDFRONT_BASE = os.environ.get("CLOUDFRONT_BASE_URL", "https://dskm35im55r5u.cloudfront.net")
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "357965071326-2q1lss2e83ckuainhgrd0878p9i0oa3v.apps.googleusercontent.com")
-ADMIN_TOTP_SECRET = os.environ.get("ADMIN_TOTP_SECRET", "")
+
+# Secrets: env first, then Secrets Manager (never hard-code secret material).
+try:
+    from aws_secrets import ensure_env_from_sm, get_secret_env_or_sm
+    ensure_env_from_sm([
+        "GOOGLE_CLIENT_ID",
+        "ADMIN_TOTP_SECRET",
+        "RECAPTCHA_SECRET_KEY",
+    ])
+except ImportError:
+    get_secret_env_or_sm = None  # type: ignore
+
+GOOGLE_CLIENT_ID = (
+    os.environ.get("GOOGLE_CLIENT_ID")
+    or (get_secret_env_or_sm("GOOGLE_CLIENT_ID") if get_secret_env_or_sm else "")
+    or ""
+)
+# Public OAuth client id is not a secret; keep as last-resort so portal login
+# keeps working if env/SM is not wired yet. Never put AWS keys / Cashfree
+# secrets / TOTP here.
+if not GOOGLE_CLIENT_ID:
+    GOOGLE_CLIENT_ID = "357965071326-2q1lss2e83ckuainhgrd0878p9i0oa3v.apps.googleusercontent.com"
+    logger.warning(
+        "[AUTH] GOOGLE_CLIENT_ID missing from env/SM — using public OAuth client fallback."
+    )
+
+ADMIN_TOTP_SECRET = (
+    os.environ.get("ADMIN_TOTP_SECRET")
+    or (get_secret_env_or_sm("ADMIN_TOTP_SECRET") if get_secret_env_or_sm else "")
+    or ""
+)
 if not ADMIN_TOTP_SECRET:
     logger.critical(
         "[SECURITY] ADMIN_TOTP_SECRET is not set — admin endpoints will DENY ALL requests "
@@ -323,56 +352,240 @@ def admin_cc_apply_patch(event: dict) -> dict:
     if "diff --git" not in patch_text:
         return _json_response(400, {"error": "Patch text contains no valid diff sections"})
 
-    repo_root = os.path.dirname(os.path.abspath(__file__))
-    git_exe = shutil.which("git")
-    if not git_exe:
-        return _json_response(500, {"error": "git executable not found on server"})
-
     try:
-        clean = subprocess.run([git_exe, "status", "--porcelain"], cwd=repo_root, capture_output=True, text=True, check=True)
-        if clean.stdout.strip():
-            return _json_response(409, {"error": "Working tree is not clean. Please commit or stash changes before applying a patch."})
-    except subprocess.CalledProcessError as exc:
-        return _json_response(500, {"error": "Could not determine working tree state", "details": exc.stderr.strip()})
+        from admin_patch_engine import PatchEngine
+    except ImportError:
+        return _json_response(500, {"error": "admin_patch_engine module missing"})
 
+    engine = PatchEngine(
+        repo_root=os.path.dirname(os.path.abspath(__file__)),
+        table=table,
+        s3_client=s3,
+        s3_bucket=os.environ.get("FRONTEND_BUCKET") or os.environ.get("S3_FRONTEND_BUCKET") or "",
+        cloudfront_id=os.environ.get("CLOUDFRONT_DISTRIBUTION") or os.environ.get("CLOUDFRONT_ID") or "",
+        backend_lambda=os.environ.get("BACKEND_LAMBDA") or os.environ.get("LAMBDA_FUNCTION_NAME") or "",
+        json_response=_json_response,
+    )
+    result = engine.apply(
+        patch_text,
+        dry_run=bool(body.get("dry_run")),
+        auto_commit=False,  # AWS-only — no git commit
+        commit_message=str(body.get("commit_message") or "Command Center AWS patch"),
+        source=str(body.get("source") or "command-center"),
+        admin=str(body.get("admin") or "admin"),
+    )
+    status = int(result.pop("status", 200 if result.get("success") else 500))
+    return _json_response(status, result)
+
+
+def admin_cc_patch_history(event: dict) -> dict:
+    if not _admin_authorized(event):
+        return _json_response(403, {"error": "Unauthorized"})
     try:
-        subprocess.run([git_exe, "apply", "--check", "-"], input=patch_text, cwd=repo_root, capture_output=True, text=True, check=True)
-    except subprocess.CalledProcessError as exc:
-        return _json_response(400, {"error": "Patch validation failed", "details": exc.stderr.strip()})
+        from admin_patch_engine import PatchEngine
+    except ImportError:
+        return _json_response(500, {"error": "admin_patch_engine module missing"})
+    qs = event.get("queryStringParameters") or {}
+    limit = int(qs.get("limit") or 25)
+    engine = PatchEngine(
+        repo_root=os.path.dirname(os.path.abspath(__file__)),
+        table=table,
+        s3_client=s3,
+        s3_bucket=os.environ.get("FRONTEND_BUCKET") or os.environ.get("S3_FRONTEND_BUCKET") or "",
+        cloudfront_id=os.environ.get("CLOUDFRONT_DISTRIBUTION") or os.environ.get("CLOUDFRONT_ID") or "",
+        backend_lambda=os.environ.get("BACKEND_LAMBDA") or os.environ.get("LAMBDA_FUNCTION_NAME") or "",
+    )
+    return _json_response(200, engine.list_history(limit=limit))
 
+
+def admin_cc_patch_rollback(event: dict) -> dict:
+    if not _admin_authorized(event):
+        return _json_response(403, {"error": "Unauthorized"})
+    body = _event_body(event)
+    history_id = str(body.get("history_id") or body.get("id") or "").strip()
+    if not history_id:
+        return _json_response(400, {"error": "history_id required"})
     try:
-        subprocess.run([git_exe, "apply", "-"], input=patch_text, cwd=repo_root, capture_output=True, text=True, check=True)
-    except subprocess.CalledProcessError as exc:
-        return _json_response(500, {"error": "Applying patch failed", "details": exc.stderr.strip()})
+        from admin_patch_engine import PatchEngine
+    except ImportError:
+        return _json_response(500, {"error": "admin_patch_engine module missing"})
+    engine = PatchEngine(
+        repo_root=os.path.dirname(os.path.abspath(__file__)),
+        table=table,
+        s3_client=s3,
+        s3_bucket=os.environ.get("FRONTEND_BUCKET") or os.environ.get("S3_FRONTEND_BUCKET") or "",
+        cloudfront_id=os.environ.get("CLOUDFRONT_DISTRIBUTION") or os.environ.get("CLOUDFRONT_ID") or "",
+        backend_lambda=os.environ.get("BACKEND_LAMBDA") or os.environ.get("LAMBDA_FUNCTION_NAME") or "",
+    )
+    result = engine.rollback(history_id)
+    status = int(result.pop("status", 200 if result.get("success") else 500))
+    return _json_response(status, result)
 
+
+def admin_cc_explain_error(event: dict) -> dict:
+    """Explain a telemetry row: stack → file:line + safe/unsafe triage + suggested AWS patch."""
+    if not _admin_authorized(event):
+        return _json_response(403, {"error": "Unauthorized"})
+    body = _event_body(event)
+    message = str(body.get("message") or "")
+    cause = str(body.get("cause") or "")
+    stack = str(body.get("stack") or body.get("stacktrace") or "")
+    feature = str(body.get("feature") or "")
+    tab = str(body.get("tab") or "")
+    blob = "\n".join([message, cause, stack, feature, tab])
     try:
-        diff_files = subprocess.run([git_exe, "diff", "--name-only"], cwd=repo_root, capture_output=True, text=True, check=True).stdout.strip().splitlines()
-    except subprocess.CalledProcessError as exc:
-        diff_files = []
+        from admin_patch_engine import parse_stack_locations
+        locations = parse_stack_locations(blob)
+    except ImportError:
+        locations = []
 
-    if not diff_files:
-        return _json_response(500, {"error": "Patch applied, but unable to detect changed files"})
+    unsafe_keys = ("payment", "cashfree", "razorpay", "otp", "auth", "password", "delete account", "invoice")
+    lower = blob.lower()
+    unsafe = any(k in lower for k in unsafe_keys)
+    safe = not unsafe and bool(locations or message)
 
-    if body.get("auto_commit"):
-        commit_message = str(body.get("commit_message") or "Command Center auto patch apply").strip()
-        try:
-            subprocess.run([git_exe, "add", "--"] + diff_files, cwd=repo_root, capture_output=True, text=True, check=True)
-            subprocess.run([git_exe, "commit", "-m", commit_message], cwd=repo_root, capture_output=True, text=True, check=True)
-            commit_sha = subprocess.run([git_exe, "rev-parse", "HEAD"], cwd=repo_root, capture_output=True, text=True, check=True).stdout.strip()
-        except subprocess.CalledProcessError as exc:
-            return _json_response(500, {"error": "Patch applied but commit failed", "details": exc.stderr.strip()})
-        return _json_response(200, {
-            "success": True,
-            "message": f"Patch applied and committed: {commit_sha}",
-            "files_changed": diff_files,
-            "commit_sha": commit_sha,
-        })
+    explanation = []
+    if locations:
+        explanation.append(
+            "Likely source: " + ", ".join(
+                f"{x['file']}" + (f":{x['line']}" if x.get("line") else "") for x in locations[:4]
+            )
+        )
+    else:
+        explanation.append("No file:line found in stack — match by message keywords in Smart plan.")
+    if unsafe:
+        explanation.append("Triage: NEEDS HUMAN — payment/auth related. Do not auto-apply.")
+    else:
+        explanation.append("Triage: may be safe — Dry-run then Apply to AWS (S3).")
+    if "popup" in lower or "window.open" in lower:
+        explanation.append("Hint: browser blocked popup — prefer in-app sheet OAuth.")
+    if "notif" in lower:
+        explanation.append("Hint: open notifications sheet must call mpLoadNotifications().")
+    if "insertbefore" in lower:
+        explanation.append("Hint: guard DOM insertBefore with parent/reference checks.")
+
+    suggested = _cc_suggest_patch(lower, feature, tab) if not unsafe else None
+    if suggested:
+        explanation.append(f"Suggested fix: {suggested.get('title')} → Apply to AWS after Dry-run.")
 
     return _json_response(200, {
         "success": True,
-        "message": "Patch applied to repository working tree.",
-        "files_changed": diff_files,
+        "locations": locations,
+        "safe": bool(safe and not unsafe and suggested),
+        "needs_human": unsafe,
+        "severity_guess": "critical" if unsafe else (body.get("severity") or "error"),
+        "explanation": " ".join(explanation),
+        "suggested_patch": (suggested or {}).get("patch") or "",
+        "suggested_title": (suggested or {}).get("title") or "",
+        "suggested_files": (suggested or {}).get("files") or [],
+        "recommended_actions": (
+            ["Mark needs-human", "Manual review", "Do not auto-apply"]
+            if unsafe else
+            (
+                ["Dry-run suggested fix", "Apply to AWS (S3)", "Verify App Pulse"]
+                if suggested else
+                ["Generate plan", "Dry-run patch", "Apply after review"]
+            )
+        ),
     })
+
+
+def _cc_suggest_patch(lower: str, feature: str = "", tab: str = "") -> dict | None:
+    """Map common errors → ready AWS unified-diff patches."""
+    recipes = [
+        {
+            "match": lambda t: "notif" in t or "notification" in t or "axnotif" in t,
+            "title": "Notifications sheet load fix",
+            "files": ["ax-social.js"],
+            "patch": (
+                "diff --git a/ax-social.js b/ax-social.js\n"
+                "--- a/ax-social.js\n"
+                "+++ b/ax-social.js\n"
+                "@@\n"
+                "   axNotifSheetDrag();\n"
+                "+  if (typeof mpLoadNotifications === 'function') {\n"
+                "+    try { mpLoadNotifications(); } catch (e) {}\n"
+                "+  }\n"
+            ),
+        },
+        {
+            "match": lambda t: "cart" in t or "checkout" in t or ("btn-primary" in t and "white" in t),
+            "title": "Cart Checkout dark ink on lime",
+            "files": ["ax-ux-polish.css"],
+            "patch": (
+                "diff --git a/ax-ux-polish.css b/ax-ux-polish.css\n"
+                "--- a/ax-ux-polish.css\n"
+                "+++ b/ax-ux-polish.css\n"
+                "@@\n"
+                "+#axCartFoot .btn-primary,\n"
+                "+html[data-theme=\"dark\"] #axCartFoot .btn-primary {\n"
+                "+  background: var(--brand-lime, #D4ED6B) !important;\n"
+                "+  color: var(--brand-lime-ink, #0A0A0A) !important;\n"
+                "+}\n"
+            ),
+        },
+        {
+            "match": lambda t: "insertbefore" in t,
+            "title": "Guard DOM insertBefore",
+            "files": ["portal-order-flow.js"],
+            "patch": (
+                "diff --git a/portal-order-flow.js b/portal-order-flow.js\n"
+                "--- a/portal-order-flow.js\n"
+                "+++ b/portal-order-flow.js\n"
+                "@@\n"
+                "-    parent.insertBefore(newNode, referenceNode);\n"
+                "+    if (parent && referenceNode && referenceNode.parentNode === parent) {\n"
+                "+      parent.insertBefore(newNode, referenceNode);\n"
+                "+    } else if (parent) {\n"
+                "+      parent.appendChild(newNode);\n"
+                "+    }\n"
+            ),
+        },
+        {
+            "match": lambda t: "failed to fetch" in t or "networkerror" in t or "net::err" in t or "503" in t,
+            "title": "Telemetry flush retry",
+            "files": ["ax-telemetry.js"],
+            "patch": (
+                "diff --git a/ax-telemetry.js b/ax-telemetry.js\n"
+                "--- a/ax-telemetry.js\n"
+                "+++ b/ax-telemetry.js\n"
+                "@@\n"
+                "+  function retryFlush() { setTimeout(flushCloud, 5000); }\n"
+                "   fetch(base + '/telemetry/report', {\n"
+                "     method: 'POST',\n"
+                "     headers: headers,\n"
+                "     body: JSON.stringify({ events: batch }),\n"
+                "     keepalive: true\n"
+                "   }).catch(function () {\n"
+                "+    console.warn('Telemetry flush failed — retrying in 5s');\n"
+                "+    retryFlush();\n"
+            ),
+        },
+        {
+            "match": lambda t: "menu" in t and ("active" in t or "accent" in t or "solid" in t),
+            "title": "Menu accent ink (no solid fill)",
+            "files": ["portal-menu.css"],
+            "patch": (
+                "diff --git a/portal-menu.css b/portal-menu.css\n"
+                "--- a/portal-menu.css\n"
+                "+++ b/portal-menu.css\n"
+                "@@\n"
+                "+.menu-tile.active,\n"
+                "+.sidebar-nav-item.active {\n"
+                "+  background: transparent !important;\n"
+                "+  color: var(--accent) !important;\n"
+                "+}\n"
+            ),
+        },
+    ]
+    blob = f"{lower} {feature} {tab}".lower()
+    for r in recipes:
+        try:
+            if r["match"](blob):
+                return {"title": r["title"], "files": r["files"], "patch": r["patch"]}
+        except Exception:
+            continue
+    return None
 
 
 def _get_bearer_token(event: dict) -> str:
@@ -389,6 +602,7 @@ def verify_google_token(token: str) -> dict | None:
         return None
     import urllib.parse
     import urllib.request
+    import urllib.error
     try:
         url = f"https://oauth2.googleapis.com/tokeninfo?id_token={urllib.parse.quote(token)}"
         with urllib.request.urlopen(url, timeout=10) as resp:
@@ -403,15 +617,182 @@ def verify_google_token(token: str) -> dict | None:
             "name": data.get("name", ""),
             "picture": data.get("picture", ""),
         }
+    except urllib.error.HTTPError as e:
+        # Log Google's ACTUAL error + token shape so we can see WHY it's a 400:
+        #   segments==3 → a JWT id-token (expected); segments==1 → an access token
+        #   was sent by mistake (opaque, tokeninfo rejects it).
+        try:
+            gbody = e.read().decode("utf-8", "ignore")[:400]
+        except Exception:
+            gbody = ""
+        tok = token or ""
+        logger.error("[AUTH] Google tokeninfo HTTP %s | google_says=%s | tokenLen=%d segments=%d prefix=%s",
+                     e.code, gbody, len(tok), tok.count(".") + 1, tok[:16])
+        return None
     except Exception as e:
         logger.error("[AUTH] Google token verify failed: %s", e)
         return None
+
+
+# ── Long-lived Aarvex session tokens ────────────────────────────────────────
+# Google ID tokens expire in ~1 hour, and we used to send that short-lived token
+# as the API bearer on every request — so an active user got kicked to a
+# "Session expired → sign in again" prompt every hour. Fix: right after a Google
+# login the client exchanges the Google ID token for a signed, 30-day Aarvex
+# session token (issued here) and sends THAT as the bearer instead. The session
+# token is HMAC-signed with a server-only secret (reuses ADMIN_TOTP_SECRET — no
+# new env needed) and carries the resolved user claims, so verifying it needs no
+# Google round-trip. The Google-token path stays fully working as a fallback.
+_SESSION_SECRET = (
+    os.environ.get("AX_SESSION_SECRET")
+    or ADMIN_TOTP_SECRET
+    or GOOGLE_CLIENT_ID
+    or "aarvex-session-fallback"
+)
+_SESSION_TTL_DAYS = 30
+
+
+def _sess_b64u(b: bytes) -> str:
+    return base64.urlsafe_b64encode(b).decode().rstrip("=")
+
+
+def _sess_b64u_dec(s: str) -> bytes:
+    return base64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
+
+
+def issue_session_token(user: dict) -> str:
+    import hashlib
+    import hmac
+    now = int(time.time())
+    payload = {
+        "sub": user.get("sub", ""),
+        "email": user.get("email", ""),
+        "name": user.get("name", ""),
+        "picture": user.get("picture", ""),
+        "provider": user.get("provider", "google"),
+        "iat": now,
+        "exp": now + _SESSION_TTL_DAYS * 86400,
+    }
+    body = _sess_b64u(json.dumps(payload, separators=(",", ":")).encode())
+    sig = _sess_b64u(hmac.new(_SESSION_SECRET.encode(), body.encode(), hashlib.sha256).digest())
+    return "axs1." + body + "." + sig
+
+
+def verify_session_token(token: str) -> dict | None:
+    import hashlib
+    import hmac
+    try:
+        if not token or not token.startswith("axs1."):
+            return None
+        _, body, sig = token.split(".", 2)
+        expected = _sess_b64u(hmac.new(_SESSION_SECRET.encode(), body.encode(), hashlib.sha256).digest())
+        if not hmac.compare_digest(sig, expected):
+            return None
+        claims = json.loads(_sess_b64u_dec(body))
+        if int(claims.get("exp", 0)) < int(time.time()) or not claims.get("sub"):
+            return None
+        return {
+            "sub": claims.get("sub", ""),
+            "email": claims.get("email", ""),
+            "name": claims.get("name", ""),
+            "picture": claims.get("picture", ""),
+            "provider": claims.get("provider", "google"),
+        }
+    except Exception as e:
+        logger.warning("[AUTH] session token verify failed: %s", e)
+        return None
+
+
+def handle_auth_session(event: dict) -> dict:
+    """Exchange the current valid auth (a fresh Google ID token, or an existing
+    still-valid session token being rolled over) for a 30-day Aarvex session
+    token, so the client no longer needs hourly Google re-auth."""
+    user, err = _require_auth(event)
+    if err:
+        return err
+    return _json_response(200, {
+        "session_token": issue_session_token(user),
+        "expires_days": _SESSION_TTL_DAYS,
+    })
+
+
+def handle_config_maps(event: dict) -> dict:
+    """Public map-provider config for the client. The keys already live in the
+    Lambda env (GOOGLE_MAPS_API_KEY / MAPPLS_API_KEY) but there was NO endpoint
+    delivering them, so the client always fell back to the free public
+    OSM/OSRM servers. This serves them so the keyed India-optimized Mappls (and
+    Google) maps actually activate. These are client-side map keys by design —
+    restrict them by HTTP referrer (CloudFront domain) in the provider console.
+    No auth: the map keys are needed before/around sign-in (address picker)."""
+    return _json_response(200, {
+        "google_maps_key": os.environ.get("GOOGLE_MAPS_API_KEY", ""),
+        "mappls_key": os.environ.get("MAPPLS_API_KEY", ""),
+    })
+
+
+def _semver_gt(a: str, b: str) -> bool:
+    """True if version `a` is newer than `b` (dotted-numeric compare)."""
+    def parts(v):
+        out = []
+        for p in str(v or "0").split("."):
+            digits = "".join(ch for ch in p if ch.isdigit())
+            out.append(int(digits) if digits else 0)
+        return out
+    pa, pb = parts(a), parts(b)
+    n = max(len(pa), len(pb))
+    pa += [0] * (n - len(pa))
+    pb += [0] * (n - len(pb))
+    return pa > pb
+
+
+def handle_app_update(event: dict) -> dict:
+    """Capgo self-hosted OTA endpoint. The app POSTs its current bundle version;
+    we compare with the latest recorded at s3://FRONTEND_BUCKET/mobile/latest.json
+    (written by the build/upload pipeline) and return {version, url, checksum}
+    when a newer bundle exists, else up_to_date. The bundle is served over HTTPS
+    from our own CloudFront; the checksum lets the device verify integrity before
+    it applies the update."""
+    body = {}
+    try:
+        body = _event_body(event) or {}
+    except Exception:
+        pass
+    device_version = str(body.get("version") or "0.0.0")
+    try:
+        bucket = os.environ.get("FRONTEND_BUCKET") or ""
+        if not bucket:
+            return _json_response(200, {"kind": "up_to_date", "message": "No bundle configured"})
+        s3 = boto3.client("s3")
+        raw = s3.get_object(Bucket=bucket, Key="mobile/latest.json")["Body"].read()
+        latest = json.loads(raw)
+    except Exception as e:
+        logger.warning("[APP_UPDATE] latest.json unavailable: %s", e)
+        return _json_response(200, {"kind": "up_to_date", "message": "No new version available"})
+    latest_version = str(latest.get("version") or "0.0.0")
+    url = latest.get("url") or ""
+    if url and _semver_gt(latest_version, device_version):
+        return _json_response(200, {
+            "version": latest_version,
+            "url": url,
+            "checksum": latest.get("checksum", ""),
+            "kind": "update",
+            "message": latest.get("message", "Update available"),
+        })
+    return _json_response(200, {"kind": "up_to_date", "message": "No new version available"})
 
 
 def _auth_user(event: dict) -> dict | None:
     token = _get_bearer_token(event)
     if not token:
         logger.warning("[AUTH] No Bearer token in request")
+        return None
+    # Long-lived Aarvex session token (minted after a Google login) → no Google
+    # round-trip and no hourly expiry. Falls through to Google verify otherwise.
+    if token.startswith("axs1."):
+        sess = verify_session_token(token)
+        if sess and sess.get("sub"):
+            return sess
+        logger.warning("[AUTH] Session token invalid/expired")
         return None
     user = verify_google_token(token)
     if not user or not user.get("sub"):
@@ -461,6 +842,51 @@ def upsert_profile(user_sub: str, data: dict) -> None:
     item["gsi1pk"] = "PROFILE"
     item["gsi1sk"] = f"{joined}#{user_sub}"
     table.put_item(Item=item)
+
+
+def register_push_token(event: dict) -> dict:
+    """M7: store the device's FCM push token on the user's profile so the
+    backend can send order / OTP / delivery notifications to their phone(s).
+    De-duplicated, bounded list of {token, platform, updated}."""
+    user, err = _require_auth(event)
+    if err:
+        return err
+    try:
+        body = _event_body(event) or {}
+    except Exception:
+        body = {}
+    token = (body.get("token") or "").strip()
+    if not token:
+        return _json_response(400, {"error": "token required"})
+    platform = (str(body.get("platform") or "android"))[:16]
+    prof = get_profile(user["sub"])
+    toks = prof.get("fcm_tokens") or []
+    if not isinstance(toks, list):
+        toks = []
+    toks = [t for t in toks if isinstance(t, dict) and t.get("token") != token]
+    toks.insert(0, {"token": token, "platform": platform, "updated": _now()})
+    toks = toks[:10]
+    upsert_profile(user["sub"], {"fcm_tokens": toks})
+    return _json_response(200, {"ok": True})
+
+
+def notify_user_push(user_sub: str, title: str, body: str, data: dict = None) -> None:
+    """M7: send an FCM push to all of a user's registered devices, then prune
+    any tokens FCM reports as dead. No-op (logged) if push isn't configured."""
+    try:
+        prof = get_profile(user_sub)
+        toks_meta = prof.get("fcm_tokens") or []
+        tokens = [t.get("token") for t in toks_meta if isinstance(t, dict) and t.get("token")]
+        if not tokens:
+            return
+        import fcm_push
+        res = fcm_push.send_to_tokens(tokens, title, body, data)
+        dead = set(res.get("dead") or [])
+        if dead:
+            kept = [t for t in toks_meta if isinstance(t, dict) and t.get("token") not in dead]
+            upsert_profile(user_sub, {"fcm_tokens": kept})
+    except Exception as e:
+        logger.warning("[PUSH] notify_user_push failed: %s", e)
 
 
 def register_portal_user(user: dict) -> None:
@@ -737,6 +1163,15 @@ def create_notification(user_sub: str, ntype: str, title: str, body: str, **extr
         _dispatch_external_notification(user_sub, ntype, title, body)
     except Exception as e:
         logger.warning("[NOTIFY] external dispatch failed: %s", e)
+    # M7: also push to the user's phone(s) via FCM. Safe no-op if not configured
+    # or the user has no app tokens; never breaks the in-app notification write.
+    try:
+        _push_data = {"type": ntype}
+        if extra.get("arn"):
+            _push_data["arn"] = str(extra["arn"])
+        notify_user_push(user_sub, title, body, _push_data)
+    except Exception as e:
+        logger.warning("[NOTIFY] push dispatch failed: %s", e)
     return nid
 
 
@@ -1319,7 +1754,10 @@ def handle_kyc_submit(event: dict) -> dict:
     if not body.get("declaration_accepted"):
         return _json_response(400, {"error": "Declaration must be accepted"})
     recaptcha_token = (body.get("recaptcha_token") or "").strip()
-    if not verify_recaptcha(recaptcha_token):
+    # Native app: 'native-app' marker accepted only for an authenticated request.
+    # `user` here is already the verified caller, so this is unforgeable; web keeps captcha.
+    _native_ok = (recaptcha_token == "native-app" and bool(user))
+    if not _native_ok and not verify_recaptcha(recaptcha_token):
         return _json_response(400, {"error": "Captcha verification failed. Please try again."})
 
     register_portal_user(user)
@@ -1411,10 +1849,25 @@ def handle_kyc_status(event: dict) -> dict:
 
 
 def _owner_address(user_sub: str) -> dict:
-    """A2 — a shop's address is NOT typed separately: it is always the owner's
-    permanent address from Personal Information, so pickup location, invoices
-    and the public shop profile can never drift apart."""
+    """A2 / Delivery V2 — the shop's PICKUP address.
+
+    Historically a shop's address was always the owner's Personal Information
+    address. V2 lets a seller set a DEDICATED Shop Pickup Address (shop_* on the
+    profile) that is separate from their personal / delivery address. When that
+    is set we use it; otherwise we fall back to the personal address (legacy
+    behaviour), so existing shops keep working with no migration."""
     p = get_profile(user_sub) or {}
+    _slat = str(p.get("shop_lat", "") or "").strip()
+    _slng = str(p.get("shop_lng", "") or "").strip()
+    if _slat and _slng:
+        return {
+            "address_full": p.get("shop_address", "") or p.get("address", "") or "",
+            "address_city": p.get("shop_city", "") or p.get("city", "") or "",
+            "address_state": p.get("shop_state", "") or p.get("state", "") or "",
+            "address_pincode": p.get("shop_pincode", "") or p.get("pincode", "") or "",
+            "address_lat": _slat,
+            "address_lng": _slng,
+        }
     return {
         "address_full": p.get("address", "") or "",
         "address_city": p.get("city", "") or "",
@@ -3056,6 +3509,9 @@ def handle_profile_update(event: dict) -> dict:
     for k in (
         "name", "phone", "mobile", "email", "company_name", "address", "city", "state",
         "pincode", "country", "gst_number", "farm_location", "address_lat", "address_lng",
+        # Delivery V2 — dedicated Shop Pickup Address, separate from the personal
+        # / delivery address so the delivery triangle's shop leg is correct.
+        "shop_address", "shop_city", "shop_state", "shop_pincode", "shop_lat", "shop_lng",
         "dob", "gender", "saved_addresses",
         # delivery partner's vehicle number — shown to the importer on the
         # Track strip so they can identify the rider (like Zomato/Swiggy).
@@ -3096,6 +3552,23 @@ def handle_profile_update(event: dict) -> dict:
                         allowed["address_lng"] = str(g[1])
                 except Exception:
                     pass
+    # Delivery V2: geocode the dedicated Shop Pickup Address from its pincode
+    # when the seller set a shop address/pincode but no map pin.
+    if allowed and (allowed.get("shop_lat") or allowed.get("shop_lng") or allowed.get("shop_pincode")):
+        _has_slat = str(allowed.get("shop_lat") or get_profile(user["sub"]).get("shop_lat") or "").strip()
+        _has_slng = str(allowed.get("shop_lng") or get_profile(user["sub"]).get("shop_lng") or "").strip()
+        if not (_has_slat and _has_slng):
+            _spin = str(allowed.get("shop_pincode") or get_profile(user["sub"]).get("shop_pincode") or "").strip()
+            if _spin and PLATFORM_UTILS_OK:
+                try:
+                    from platform_utils import geocode_pincode
+
+                    _sg = geocode_pincode(_spin)
+                    if _sg:
+                        allowed["shop_lat"] = str(_sg[0])
+                        allowed["shop_lng"] = str(_sg[1])
+                except Exception:
+                    pass
     if allowed:
         upsert_profile(user["sub"], allowed)
     prof = get_profile(user["sub"])
@@ -3103,7 +3576,9 @@ def handle_profile_update(event: dict) -> dict:
     # too. Updating it from either Profile or Home → All areas must therefore
     # update the existing shop immediately, rather than waiting for a later
     # shop-edit action to happen.
-    if any(k in allowed for k in ("address", "city", "state", "pincode", "address_lat", "address_lng")):
+    if any(k in allowed for k in ("address", "city", "state", "pincode", "address_lat", "address_lng",
+                                  "shop_address", "shop_city", "shop_state", "shop_pincode",
+                                  "shop_lat", "shop_lng")):
         shop = get_shop_by_user(user["sub"])
         if shop:
             owner_addr = _owner_address(user["sub"])
@@ -3148,18 +3623,50 @@ def _ad_placement(event: dict, body: dict | None = None) -> str:
     } else "dashboard"
 
 
+# ── District-aware ad targeting (Phase 1) ──────────────────────────────
+# An ad can be scoped to a single district, a whole state, or nationally.
+# When serving, the most specific active ad wins and we fall back outward so
+# a slot is never left empty:
+#     district  →  state  →  national  →  legacy national
+# State/district names are slugified, so the admin and the client can send
+# readable names ("Nagpur") and still match on the same key.
+
+def _ad_slug(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", (value or "").strip().lower()).strip("-")
+
+
 def _ad_key(placement: str) -> str:
+    """Legacy national key — kept so ads published before targeting still show."""
     return f"AD#ACTIVE#{placement.upper()}"
 
 
-def handle_ad_active(event: dict) -> dict:
-    placement = _ad_placement(event)
-    item = table.get_item(Key={"pk": _ad_key(placement)}).get("Item") or {}
-    if placement == "dashboard" and not item.get("image_url"):
-        item = table.get_item(Key={"pk": "AD#ACTIVE"}).get("Item") or {}
-    if not item.get("image_url"):
-        return _json_response(200, {"ad": None})
-    return _json_response(200, {"ad": {
+def _ad_serve_keys(placement: str, state: str = "", district: str = "") -> list[str]:
+    """Ordered list of pks to try when serving — most specific first."""
+    p = placement.upper()
+    d, s = _ad_slug(district), _ad_slug(state)
+    keys = []
+    if d:
+        keys.append(f"AD#SLOT#{p}#DISTRICT#{d}")
+    if s:
+        keys.append(f"AD#SLOT#{p}#STATE#{s}")
+    keys.append(f"AD#SLOT#{p}#NATIONAL")
+    keys.append(_ad_key(placement))  # legacy back-compat
+    return keys
+
+
+def _ad_store_key(placement: str, scope: str, state: str = "", district: str = "") -> str:
+    """Where an uploaded ad is stored, based on the admin-chosen scope."""
+    p = placement.upper()
+    scope = (scope or "national").lower()
+    if scope == "district" and _ad_slug(district):
+        return f"AD#SLOT#{p}#DISTRICT#{_ad_slug(district)}"
+    if scope == "state" and _ad_slug(state):
+        return f"AD#SLOT#{p}#STATE#{_ad_slug(state)}"
+    return f"AD#SLOT#{p}#NATIONAL"
+
+
+def _ad_payload(item: dict, placement: str) -> dict:
+    return {"ad": {
         "image_url": item.get("image_url", ""),
         "link_url": item.get("link_url", ""),
         "alt_text": item.get("alt_text", ""),
@@ -3167,7 +3674,31 @@ def handle_ad_active(event: dict) -> dict:
         "subtitle": item.get("subtitle", ""),
         "media_type": item.get("media_type", "image"),
         "placement": placement,
-    }})
+        "scope": item.get("scope", ""),
+        "target_state": item.get("target_state", ""),
+        "target_district": item.get("target_district", ""),
+    }}
+
+
+def handle_ad_active(event: dict) -> dict:
+    placement = _ad_placement(event)
+    params = event.get("queryStringParameters") or {}
+    state = params.get("state") or ""
+    district = params.get("district") or ""
+    # Phase 2 campaigns (scheduled/rotated/tracked) win over a Phase-1 single ad.
+    camp = _serve_campaign(placement, state, district)
+    if camp:
+        return _json_response(200, _camp_payload(camp, placement))
+    for key in _ad_serve_keys(placement, state, district):
+        item = table.get_item(Key={"pk": key}).get("Item") or {}
+        if item.get("image_url"):
+            return _json_response(200, _ad_payload(item, placement))
+    # Very old global default (pre-placement) — dashboard only.
+    if placement == "dashboard":
+        item = table.get_item(Key={"pk": "AD#ACTIVE"}).get("Item") or {}
+        if item.get("image_url"):
+            return _json_response(200, _ad_payload(item, placement))
+    return _json_response(200, {"ad": None})
 
 
 def handle_ad_upload(event: dict) -> dict:
@@ -3175,6 +3706,15 @@ def handle_ad_upload(event: dict) -> dict:
         return _json_response(403, {"error": "Unauthorized"})
     body = _event_body(event)
     placement = _ad_placement(event, body)
+    scope = (body.get("scope") or "national").lower()
+    if scope not in {"national", "state", "district"}:
+        scope = "national"
+    target_state = (body.get("state") or "")[:60]
+    target_district = (body.get("district") or "")[:60]
+    if scope == "state" and not _ad_slug(target_state):
+        return _json_response(400, {"error": "State required for a state-level ad"})
+    if scope == "district" and not _ad_slug(target_district):
+        return _json_response(400, {"error": "District required for a district-level ad"})
     media_type = body.get("media_type", "image")
     if media_type not in {"image", "gif", "video"}:
         return _json_response(400, {"error": "Invalid media type"})
@@ -3190,8 +3730,9 @@ def handle_ad_upload(event: dict) -> dict:
         url = _public_s3_url(key)
     if not url:
         return _json_response(400, {"error": "Media file required"})
+    pk = _ad_store_key(placement, scope, target_state, target_district)
     table.put_item(Item={
-        "pk": _ad_key(placement),
+        "pk": pk,
         "image_url": url,
         "link_url": link_url,
         "alt_text": alt_text,
@@ -3199,20 +3740,720 @@ def handle_ad_upload(event: dict) -> dict:
         "subtitle": subtitle,
         "media_type": media_type,
         "placement": placement,
+        "scope": scope,
+        "target_state": target_state,
+        "target_district": target_district,
         "created_at": _now(),
         "created_by": "admin",
     })
-    return _json_response(200, {"success": True, "image_url": url, "placement": placement, "media_type": media_type})
+    return _json_response(200, {
+        "success": True, "image_url": url, "placement": placement,
+        "media_type": media_type, "scope": scope,
+        "target_state": target_state, "target_district": target_district,
+    })
 
 
 def handle_ad_remove(event: dict) -> dict:
     if not _admin_authorized(event):
         return _json_response(403, {"error": "Unauthorized"})
-    placement = _ad_placement(event, _event_body(event))
+    body = _event_body(event)
+    placement = _ad_placement(event, body)
+    scope = (body.get("scope") or "national").lower()
+    pk = _ad_store_key(placement, scope, body.get("state") or "", body.get("district") or "")
     try:
-        table.delete_item(Key={"pk": _ad_key(placement)})
+        table.delete_item(Key={"pk": pk})
     except Exception:
         pass
+    return _json_response(200, {"success": True})
+
+
+# ── Ad campaigns (Phase 2): scheduling, rotation, caps, impression/click stats ─
+# A campaign is a scheduled, trackable ad. Multiple campaigns can target the same
+# placement+area and are rotated. The pk encodes the serve-bucket so listing and
+# serving both use the standard gsi1 prefix reader (see migrate_add_gsi.py) — the
+# first pk segment is "ADCAMP", so gsi1pk/gsi1sk are derived the normal way.
+#
+#     pk = ADCAMP#<PLACEMENT>#<SCOPEKEY>#<cid>
+#     SCOPEKEY = DISTRICT#<slug> | STATE#<slug> | NATIONAL
+#
+# Serving falls back district → state → national, exactly like the Phase-1 single
+# ads, and campaigns take priority over a Phase-1 single ad for the same slot.
+
+_AD_ROTATE_SECONDS = 20  # every viewer sees the same rotating pick within a window
+
+
+def _camp_scopekey(scope: str, state: str = "", district: str = "") -> str | None:
+    scope = (scope or "national").lower()
+    if scope == "district":
+        d = _ad_slug(district)
+        return f"DISTRICT#{d}" if d else None
+    if scope == "state":
+        s = _ad_slug(state)
+        return f"STATE#{s}" if s else None
+    return "NATIONAL"
+
+
+def _camp_prefix(placement: str, scopekey: str) -> str:
+    return f"ADCAMP#{placement.upper()}#{scopekey}#"
+
+
+def _camp_serve_prefixes(placement: str, state: str = "", district: str = "") -> list[str]:
+    p = placement.upper()
+    d, s = _ad_slug(district), _ad_slug(state)
+    out = []
+    if d:
+        out.append(f"ADCAMP#{p}#DISTRICT#{d}#")
+    if s:
+        out.append(f"ADCAMP#{p}#STATE#{s}#")
+    out.append(f"ADCAMP#{p}#NATIONAL#")
+    return out
+
+
+def _parse_iso(s: str):
+    """Parse an ISO datetime; assume UTC when no offset is given. None if blank/bad."""
+    if not s:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(s).replace("Z", "+00:00"))
+        return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+    except Exception:
+        return None
+
+
+def _camp_active(c: dict, now_dt) -> bool:
+    if c.get("status", "active") != "active":
+        return False
+    sa = _parse_iso(c.get("start_at"))
+    ea = _parse_iso(c.get("end_at"))
+    if sa and now_dt < sa:
+        return False
+    if ea and now_dt > ea:
+        return False
+    try:
+        cap = int(_json_num(c.get("impression_cap", 0)))
+    except (TypeError, ValueError):
+        cap = 0
+    if cap and int(_json_num(c.get("impressions", 0))) >= cap:
+        return False
+    return True
+
+
+def _camp_pick(items: list[dict]) -> dict:
+    """Highest priority wins; rotate evenly among a tie by a time window so all
+    viewers see the same pick at a given moment (fair, stateless rotation)."""
+    items.sort(key=lambda c: int(_json_num(c.get("priority", 0))), reverse=True)
+    top = int(_json_num(items[0].get("priority", 0)))
+    group = [c for c in items if int(_json_num(c.get("priority", 0))) == top]
+    idx = int(time.time() // _AD_ROTATE_SECONDS) % len(group)
+    return group[idx]
+
+
+def _camp_payload(c: dict, placement: str) -> dict:
+    return {"ad": {
+        "image_url": c.get("image_url", ""),
+        "link_url": c.get("link_url", ""),
+        "alt_text": c.get("alt_text", ""),
+        "title": c.get("title", ""),
+        "subtitle": c.get("subtitle", ""),
+        "media_type": c.get("media_type", "image"),
+        "placement": placement,
+        "scope": c.get("scope", ""),
+        "target_state": c.get("target_state", ""),
+        "target_district": c.get("target_district", ""),
+        "ad_id": c.get("pk", ""),           # opaque id for impression/click tracking
+        "campaign_id": c.get("campaign_id", ""),
+    }}
+
+
+def _serve_campaign(placement: str, state: str = "", district: str = "") -> dict | None:
+    now = datetime.now(timezone.utc)
+    for prefix in _camp_serve_prefixes(placement, state, district):
+        try:
+            items = _scan_by_pk_prefix(prefix)
+        except Exception:
+            items = []
+        active = [c for c in items if _camp_active(c, now)]
+        if active:
+            return _camp_pick(active)
+    return None
+
+
+def handle_campaign_save(event: dict) -> dict:
+    if not _admin_authorized(event):
+        return _json_response(403, {"error": "Unauthorized"})
+    body = _event_body(event)
+    placement = _ad_placement(event, body)
+    scope = (body.get("scope") or "national").lower()
+    if scope not in {"national", "state", "district"}:
+        scope = "national"
+    target_state = (body.get("state") or "")[:60]
+    target_district = (body.get("district") or "")[:60]
+    scopekey = _camp_scopekey(scope, target_state, target_district)
+    if scopekey is None:
+        return _json_response(400, {"error": "State/District required for that scope"})
+    media_type = body.get("media_type", "image")
+    if media_type not in {"image", "gif", "video"}:
+        return _json_response(400, {"error": "Invalid media type"})
+
+    old_pk = (body.get("ad_id") or "").strip()
+    prev = {}
+    if old_pk.startswith("ADCAMP#"):
+        prev = table.get_item(Key={"pk": old_pk}).get("Item") or {}
+        cid = prev.get("campaign_id") or old_pk.split("#")[-1]
+    else:
+        cid = f"CMP-{uuid.uuid4().hex[:12]}"
+    new_pk = f"ADCAMP#{placement.upper()}#{scopekey}#{cid}"
+
+    b64 = body.get("image_b64", "")
+    if b64:
+        key = _upload_b64_to_s3(b64, f"banner-media/{placement}", "campaign")
+        url = _public_s3_url(key) if key else body.get("image_url", "")
+    else:
+        url = body.get("image_url", "") or prev.get("image_url", "")
+    if not url:
+        return _json_response(400, {"error": "Media file required"})
+
+    try:
+        priority = int(body.get("priority") or 0)
+    except (TypeError, ValueError):
+        priority = 0
+    try:
+        cap = int(body.get("impression_cap") or 0)
+    except (TypeError, ValueError):
+        cap = 0
+
+    item = {
+        "pk": new_pk,
+        "campaign_id": cid,
+        "placement": placement,
+        "scope": scope,
+        "target_state": target_state,
+        "target_district": target_district,
+        "image_url": url,
+        "link_url": body.get("link_url", ""),
+        "alt_text": (body.get("alt_text") or "Aarvex Global")[:120],
+        "title": (body.get("title") or "")[:80],
+        "subtitle": (body.get("subtitle") or "")[:120],
+        "media_type": media_type,
+        "start_at": (body.get("start_at") or "")[:32],
+        "end_at": (body.get("end_at") or "")[:32],
+        "priority": priority,
+        "impression_cap": cap,
+        "status": (body.get("status") or prev.get("status") or "active"),
+        "impressions": prev.get("impressions", _decimal(0)),
+        "clicks": prev.get("clicks", _decimal(0)),
+        "created_at": prev.get("created_at") or _now(),
+        "updated_at": _now(),
+        "created_by": "admin",
+    }
+    table.put_item(Item=item)
+    # Targeting change moves the pk — remove the stale row so it isn't served twice.
+    if old_pk and old_pk != new_pk:
+        try:
+            table.delete_item(Key={"pk": old_pk})
+        except Exception:
+            pass
+    return _json_response(200, {"success": True, "ad_id": new_pk, "campaign_id": cid, "image_url": url})
+
+
+def _camp_admin_view(c: dict) -> dict:
+    imp = int(_json_num(c.get("impressions", 0)))
+    clk = int(_json_num(c.get("clicks", 0)))
+    return {
+        "ad_id": c.get("pk", ""),
+        "campaign_id": c.get("campaign_id", ""),
+        "placement": c.get("placement", ""),
+        "scope": c.get("scope", ""),
+        "target_state": c.get("target_state", ""),
+        "target_district": c.get("target_district", ""),
+        "image_url": c.get("image_url", ""),
+        "link_url": c.get("link_url", ""),
+        "title": c.get("title", ""),
+        "subtitle": c.get("subtitle", ""),
+        "media_type": c.get("media_type", "image"),
+        "start_at": c.get("start_at", ""),
+        "end_at": c.get("end_at", ""),
+        "priority": int(_json_num(c.get("priority", 0))),
+        "impression_cap": int(_json_num(c.get("impression_cap", 0))),
+        "status": c.get("status", "active"),
+        "impressions": imp,
+        "clicks": clk,
+        "ctr": round((clk / imp * 100), 2) if imp else 0.0,
+        "created_at": c.get("created_at", ""),
+    }
+
+
+def handle_campaign_list(event: dict) -> dict:
+    if not _admin_authorized(event):
+        return _json_response(403, {"error": "Unauthorized"})
+    try:
+        raw = _scan_by_pk_prefix("ADCAMP#")
+    except Exception:
+        raw = []
+    params = event.get("queryStringParameters") or {}
+    f_placement = (params.get("placement") or "").strip()
+    f_status = (params.get("status") or "").strip()
+    rows = [_camp_admin_view(c) for c in raw]
+    if f_placement:
+        rows = [r for r in rows if r["placement"] == f_placement]
+    if f_status:
+        rows = [r for r in rows if r["status"] == f_status]
+    rows.sort(key=lambda r: r.get("created_at", ""), reverse=True)
+    return _json_response(200, {"success": True, "campaigns": rows})
+
+
+def handle_campaign_delete(event: dict) -> dict:
+    if not _admin_authorized(event):
+        return _json_response(403, {"error": "Unauthorized"})
+    ad_id = (_event_body(event).get("ad_id") or "").strip()
+    if not ad_id.startswith("ADCAMP#"):
+        return _json_response(400, {"error": "Invalid campaign id"})
+    try:
+        table.delete_item(Key={"pk": ad_id})
+    except Exception:
+        pass
+    return _json_response(200, {"success": True})
+
+
+def handle_campaign_toggle(event: dict) -> dict:
+    if not _admin_authorized(event):
+        return _json_response(403, {"error": "Unauthorized"})
+    ad_id = (_event_body(event).get("ad_id") or "").strip()
+    if not ad_id.startswith("ADCAMP#"):
+        return _json_response(400, {"error": "Invalid campaign id"})
+    item = table.get_item(Key={"pk": ad_id}).get("Item") or {}
+    if not item:
+        return _json_response(404, {"error": "Not found"})
+    new_status = "paused" if item.get("status", "active") == "active" else "active"
+    try:
+        table.update_item(
+            Key={"pk": ad_id},
+            UpdateExpression="SET #s = :s, updated_at = :u",
+            ExpressionAttributeNames={"#s": "status"},
+            ExpressionAttributeValues={":s": new_status, ":u": _now()},
+        )
+    except Exception:
+        pass
+    return _json_response(200, {"success": True, "status": new_status})
+
+
+def _client_ip(event: dict) -> str:
+    rc = event.get("requestContext") or {}
+    ip = ((rc.get("http") or {}).get("sourceIp") or (rc.get("identity") or {}).get("sourceIp") or "")
+    if not ip:
+        h = {(k or "").lower(): v for k, v in (event.get("headers") or {}).items()}
+        ip = (h.get("x-forwarded-for") or "").split(",")[0].strip()
+    return ip or "unknown"
+
+
+def handle_ad_event(event: dict) -> dict:
+    """Public: count an impression or click for a campaign. Atomic ADD; the
+    ConditionExpression stops a bogus id from creating a phantom row. Rate-limited
+    per client IP so one source can't inflate a campaign's stats."""
+    body = _event_body(event)
+    ad_id = (body.get("ad_id") or "").strip()
+    etype = (body.get("type") or "").lower()
+    if not ad_id.startswith("ADCAMP#") or etype not in {"impression", "click"}:
+        return _json_response(400, {"error": "Bad event"})
+    # Silently drop once an IP is past the cap — never reveal the limit.
+    if _rate_limited(_client_ip(event), "ad_event", 120, 60):
+        return _json_response(200, {"success": True})
+    field = "impressions" if etype == "impression" else "clicks"
+    try:
+        table.update_item(
+            Key={"pk": ad_id},
+            UpdateExpression="ADD #f :one",
+            ExpressionAttributeNames={"#f": field},
+            ExpressionAttributeValues={":one": _decimal(1)},
+            ConditionExpression=Attr("pk").exists(),
+        )
+    except Exception:
+        pass
+    return _json_response(200, {"success": True})
+
+
+# ── Self-serve ad bookings (Phase 3): advertiser pays → pending-review campaign ─
+# Rate card is intentionally simple and code-configurable (admin-tunable later).
+# Price = placement base (₹/day for a district ad) × scope multiplier × days.
+_AD_PLACEMENT_RATE = {
+    "dashboard": 60, "trade": 50,
+    "trade_mid": 30, "trade_mid2": 30, "trade_mid3": 30, "trade_bottom": 25,
+}
+_AD_SCOPE_MULT = {"district": 1, "state": 5, "national": 25}
+
+
+def _ad_rate_card() -> tuple[dict, dict]:
+    """Effective rate card: admin-saved values (pk AD#RATECARD) over code defaults."""
+    rates = dict(_AD_PLACEMENT_RATE)
+    mults = dict(_AD_SCOPE_MULT)
+    try:
+        item = table.get_item(Key={"pk": "AD#RATECARD"}).get("Item") or {}
+        for k, v in (item.get("placement_rate") or {}).items():
+            if k in rates:
+                rates[k] = int(_json_num(v))
+        for k, v in (item.get("scope_mult") or {}).items():
+            if k in mults:
+                mults[k] = int(_json_num(v))
+    except Exception:
+        pass
+    return rates, mults
+
+
+def _ad_quote(placement: str, scope: str, days) -> dict:
+    try:
+        days = int(days or 1)
+    except (TypeError, ValueError):
+        days = 1
+    days = max(1, min(days, 365))
+    scope = (scope or "national").lower()
+    rates, mults = _ad_rate_card()
+    base = rates.get(placement, 40)
+    mult = mults.get(scope, 1)
+    per_day = base * mult
+    return {
+        "amount": per_day * days, "per_day": per_day, "days": days,
+        "currency": "INR", "placement": placement, "scope": scope,
+    }
+
+
+_AD_HOLD_MINUTES = 20  # a pending (unpaid) booking reserves the slot this long
+
+
+def _ranges_overlap(a1, a2, b1, b2) -> bool:
+    return a1 <= b2 and b1 <= a2
+
+
+def _slot_occupancy(placement, scope, state, district, start_dt, end_dt, exclude_bid="") -> int:
+    """How many ads already occupy this exact slot over the requested date range:
+    live/scheduled/pending-review campaigns + un-expired unpaid booking holds."""
+    from datetime import timedelta
+    scopekey = _camp_scopekey(scope, state, district) or "NATIONAL"
+    P = placement.upper()
+    now = datetime.now(timezone.utc)
+    far = now + timedelta(days=3650)
+    count = 0
+    # 1) Campaigns sold for this slot (any non-rejected, non-expired one counts).
+    try:
+        camps = _scan_by_pk_prefix(f"ADCAMP#{P}#{scopekey}#")
+    except Exception:
+        camps = []
+    for c in camps:
+        if c.get("status") in ("rejected", "expired"):
+            continue
+        if c.get("campaign_id") == exclude_bid:
+            continue
+        cs = _parse_iso(c.get("start_at")) or now
+        ce = _parse_iso(c.get("end_at")) or far
+        if ce < now:
+            continue
+        if _ranges_overlap(cs, ce, start_dt, end_dt):
+            count += 1
+    # 2) Unpaid bookings still holding the slot (within the hold window).
+    hold = timedelta(minutes=_AD_HOLD_MINUTES)
+    try:
+        books = _scan_by_pk_prefix("ADBOOKING#")
+    except Exception:
+        books = []
+    for b in books:
+        if b.get("status") != "pending_payment" or b.get("booking_id") == exclude_bid:
+            continue
+        if (b.get("placement", "") or "").upper() != P:
+            continue
+        if (_camp_scopekey(b.get("scope", "national"), b.get("target_state", ""), b.get("target_district", "")) or "NATIONAL") != scopekey:
+            continue
+        created = _parse_iso(b.get("created_at")) or now
+        if created + hold < now:
+            continue
+        bs = _parse_iso(b.get("start_at")) or now
+        be = _parse_iso(b.get("end_at")) or now
+        if _ranges_overlap(bs, be, start_dt, end_dt):
+            count += 1
+    return count
+
+
+def _slot_status(placement, scope, state, district, start_dt, end_dt, exclude_bid=""):
+    cap = _ad_capacity()
+    taken = _slot_occupancy(placement, scope, state, district, start_dt, end_dt, exclude_bid)
+    return (taken < cap), cap, taken
+
+
+def _booking_dates(days, start_at=""):
+    from datetime import timedelta
+    start_dt = _parse_iso(start_at) or datetime.now(timezone.utc)
+    return start_dt, start_dt + timedelta(days=max(1, int(days or 1)))
+
+
+def handle_ad_booking_quote(event: dict) -> dict:
+    user, err = _require_auth(event)
+    if err:
+        return err
+    params = event.get("queryStringParameters") or {}
+    placement = _ad_placement(event)
+    scope = params.get("scope") or "national"
+    q = _ad_quote(placement, scope, params.get("days") or 1)
+    # Availability for the chosen area + dates so the UI can block a full slot.
+    start_dt, end_dt = _booking_dates(q["days"], params.get("start") or "")
+    available, cap, taken = _slot_status(
+        placement, scope, params.get("state") or "", params.get("district") or "", start_dt, end_dt)
+    return _json_response(200, {
+        "success": True, **q,
+        "available": available, "capacity": cap, "taken": taken,
+        "slots_left": max(0, cap - taken),
+    })
+
+
+def handle_ad_booking_create(event: dict) -> dict:
+    user, err = _require_auth(event)
+    if err:
+        return err
+    body = _event_body(event)
+    placement = _ad_placement(event, body)
+    scope = (body.get("scope") or "national").lower()
+    if scope not in {"national", "state", "district"}:
+        scope = "national"
+    target_state = (body.get("state") or "")[:60]
+    target_district = (body.get("district") or "")[:60]
+    scopekey = _camp_scopekey(scope, target_state, target_district)
+    if scopekey is None:
+        return _json_response(400, {"error": "State/District required for that scope"})
+    media_type = body.get("media_type", "image")
+    if media_type not in {"image", "gif", "video"}:
+        return _json_response(400, {"error": "Invalid media type"})
+    quote = _ad_quote(placement, scope, body.get("days") or 1)
+    amount = quote["amount"]
+    days = quote["days"]
+
+    b64 = body.get("image_b64", "")
+    key = _upload_b64_to_s3(b64, f"banner-media/{placement}", "adbooking") if b64 else ""
+    url = _public_s3_url(key) if key else body.get("image_url", "")
+    if not url:
+        return _json_response(400, {"error": "Media file required"})
+
+    from datetime import timedelta
+    start_dt = _parse_iso(body.get("start_at")) or datetime.now(timezone.utc)
+    end_dt = start_dt + timedelta(days=days)
+    # Slot must be free for these dates before we take money for it.
+    available, cap, taken = _slot_status(placement, scope, target_state, target_district, start_dt, end_dt)
+    if not available:
+        return _json_response(409, {
+            "error": "slot_full",
+            "message": "This slot is already booked for these dates. Try different dates, another placement, or a wider reach.",
+            "capacity": cap, "taken": taken,
+        })
+    bid = f"ADB-{uuid.uuid4().hex[:12]}"
+    booking_pk = f"ADBOOKING#{user['sub']}#{bid}"
+
+    prof = get_profile(user["sub"]) or {}
+    booking = {
+        "pk": booking_pk,
+        "booking_id": bid,
+        "user_sub": user["sub"],
+        "status": "pending_payment",
+        "placement": placement,
+        "scope": scope,
+        "target_state": target_state,
+        "target_district": target_district,
+        "image_url": url,
+        "media_type": media_type,
+        "link_url": body.get("link_url", ""),
+        "alt_text": (body.get("alt_text") or "Sponsored")[:120],
+        "title": (body.get("title") or "")[:80],
+        "subtitle": (body.get("subtitle") or "")[:120],
+        "days": days,
+        "amount_inr": _decimal(amount),
+        "start_at": start_dt.isoformat(),
+        "end_at": end_dt.isoformat(),
+        "created_at": _now(),
+    }
+    table.put_item(Item=booking)
+
+    session = {}
+    try:
+        from advanced_features import create_cashfree_order
+        session = create_cashfree_order({
+            "arn": bid,
+            "ticket_id": bid,
+            "user_sub": user["sub"],
+            "kind": "ad_booking",
+            "product_name": f"Ad — {placement} ({scope})",
+            "payment_amount": amount,
+            "payment_currency": "INR",
+            "customer_name": user.get("name", "") or prof.get("name", ""),
+            "email": user.get("email", "") or prof.get("email", ""),
+            "mobile": prof.get("phone", ""),
+        }) or {}
+    except Exception as e:
+        logger.error("[AD_BOOKING] order create failed: %s", e)
+
+    if session.get("cf_order_id") or session.get("order_id"):
+        table.update_item(
+            Key={"pk": booking_pk},
+            UpdateExpression="SET cf_order_id = :o",
+            ExpressionAttributeValues={":o": session.get("order_id", "")},
+        )
+    return _json_response(200, {
+        "success": True,
+        "booking_id": bid,
+        "amount": amount,
+        "currency": "INR",
+        "days": days,
+        "payment_session_id": session.get("payment_session_id", ""),
+        "payment_mode": session.get("mode", "sandbox"),
+        "cf_order_id": session.get("order_id", ""),
+    })
+
+
+def _finalize_ad_booking(notes: dict, payment_id: str) -> dict:
+    """Webhook-side: turn a paid booking into a pending-review campaign. Keyed by
+    the booking id so a duplicate webhook is idempotent (same campaign pk)."""
+    bid = notes.get("ticket_id") or ""
+    user_sub = notes.get("user_sub") or ""
+    if not bid or not user_sub:
+        return _json_response(200, {"handled": False, "reason": "missing booking ref"})
+    booking = table.get_item(Key={"pk": f"ADBOOKING#{user_sub}#{bid}"}).get("Item") or {}
+    if not booking:
+        return _json_response(200, {"handled": False, "reason": "booking not found"})
+    if booking.get("status") == "paid":
+        return _json_response(200, {"handled": True, "already": True})
+
+    scopekey = _camp_scopekey(booking.get("scope", "national"), booking.get("target_state", ""), booking.get("target_district", ""))
+    if scopekey is None:
+        scopekey = "NATIONAL"
+    camp_pk = f"ADCAMP#{booking.get('placement', 'dashboard').upper()}#{scopekey}#{bid}"
+    table.put_item(Item={
+        "pk": camp_pk,
+        "campaign_id": bid,
+        "placement": booking.get("placement", "dashboard"),
+        "scope": booking.get("scope", "national"),
+        "target_state": booking.get("target_state", ""),
+        "target_district": booking.get("target_district", ""),
+        "image_url": booking.get("image_url", ""),
+        "link_url": booking.get("link_url", ""),
+        "alt_text": booking.get("alt_text", "Sponsored"),
+        "title": booking.get("title", ""),
+        "subtitle": booking.get("subtitle", ""),
+        "media_type": booking.get("media_type", "image"),
+        "start_at": booking.get("start_at", ""),
+        "end_at": booking.get("end_at", ""),
+        "priority": 0,
+        "impression_cap": 0,
+        "status": "pending_review",   # admin approves before it serves
+        "impressions": _decimal(0),
+        "clicks": _decimal(0),
+        "source": "self_serve",
+        "advertiser_sub": user_sub,
+        "created_at": _now(),
+        "updated_at": _now(),
+        "created_by": user_sub,
+    })
+    table.update_item(
+        Key={"pk": f"ADBOOKING#{user_sub}#{bid}"},
+        UpdateExpression="SET #s = :p, paid_at = :t, payment_id = :pid, campaign_pk = :c",
+        ExpressionAttributeNames={"#s": "status"},
+        ExpressionAttributeValues={":p": "paid", ":t": _now(), ":pid": str(payment_id), ":c": camp_pk},
+    )
+    return _json_response(200, {"success": True, "type": "ad_booking", "campaign_pk": camp_pk})
+
+
+def handle_ad_booking_mine(event: dict) -> dict:
+    user, err = _require_auth(event)
+    if err:
+        return err
+    try:
+        raw = _scan_by_pk_prefix(f"ADBOOKING#{user['sub']}#")
+    except Exception:
+        raw = []
+    rows = []
+    for b in raw:
+        # Pull live performance + review state from the linked campaign, if paid.
+        camp_status, imp, clk = "", 0, 0
+        cpk = b.get("campaign_pk", "")
+        if cpk:
+            camp = table.get_item(Key={"pk": cpk}).get("Item") or {}
+            camp_status = camp.get("status", "")
+            imp = int(_json_num(camp.get("impressions", 0)))
+            clk = int(_json_num(camp.get("clicks", 0)))
+        rows.append({
+            "booking_id": b.get("booking_id", ""),
+            "placement": b.get("placement", ""),
+            "scope": b.get("scope", ""),
+            "target_state": b.get("target_state", ""),
+            "target_district": b.get("target_district", ""),
+            "image_url": b.get("image_url", ""),
+            "days": int(_json_num(b.get("days", 0))),
+            "amount": int(_json_num(b.get("amount_inr", 0))),
+            "status": b.get("status", ""),
+            "campaign_status": camp_status,
+            "impressions": imp,
+            "clicks": clk,
+            "ctr": round((clk / imp * 100), 2) if imp else 0.0,
+            "start_at": b.get("start_at", ""),
+            "end_at": b.get("end_at", ""),
+            "created_at": b.get("created_at", ""),
+        })
+    rows.sort(key=lambda r: r.get("created_at", ""), reverse=True)
+    return _json_response(200, {"success": True, "bookings": rows})
+
+
+def handle_campaign_approve(event: dict) -> dict:
+    if not _admin_authorized(event):
+        return _json_response(403, {"error": "Unauthorized"})
+    ad_id = (_event_body(event).get("ad_id") or "").strip()
+    if not ad_id.startswith("ADCAMP#"):
+        return _json_response(400, {"error": "Invalid campaign id"})
+    try:
+        table.update_item(
+            Key={"pk": ad_id},
+            UpdateExpression="SET #s = :a, updated_at = :u",
+            ExpressionAttributeNames={"#s": "status"},
+            ExpressionAttributeValues={":a": "active", ":u": _now()},
+            ConditionExpression=Attr("pk").exists(),
+        )
+    except Exception:
+        pass
+    return _json_response(200, {"success": True, "status": "active"})
+
+
+def _ad_capacity() -> int:
+    """How many ads may run at once for one slot (placement+area+overlapping dates).
+    1 = exclusive (default). Admin-configurable via the rate card."""
+    try:
+        item = table.get_item(Key={"pk": "AD#RATECARD"}).get("Item") or {}
+        cap = int(_json_num(item.get("slot_capacity", 1)))
+        return max(1, cap)
+    except Exception:
+        return 1
+
+
+def handle_ad_rates_get(event: dict) -> dict:
+    if not _admin_authorized(event):
+        return _json_response(403, {"error": "Unauthorized"})
+    rates, mults = _ad_rate_card()
+    return _json_response(200, {"success": True, "placement_rate": rates, "scope_mult": mults, "slot_capacity": _ad_capacity()})
+
+
+def handle_ad_rates_set(event: dict) -> dict:
+    if not _admin_authorized(event):
+        return _json_response(403, {"error": "Unauthorized"})
+    body = _event_body(event)
+    pr, sm = {}, {}
+    for k, v in (body.get("placement_rate") or {}).items():
+        if k in _AD_PLACEMENT_RATE:
+            try:
+                pr[k] = max(0, int(v))
+            except (TypeError, ValueError):
+                pass
+    for k, v in (body.get("scope_mult") or {}).items():
+        if k in _AD_SCOPE_MULT:
+            try:
+                sm[k] = max(1, int(v))
+            except (TypeError, ValueError):
+                pass
+    try:
+        cap = max(1, int(body.get("slot_capacity") or 1))
+    except (TypeError, ValueError):
+        cap = 1
+    table.put_item(Item={"pk": "AD#RATECARD", "placement_rate": pr, "scope_mult": sm, "slot_capacity": cap, "updated_at": _now()})
     return _json_response(200, {"success": True})
 
 
@@ -5019,6 +6260,88 @@ def handle_chat_starred(event: dict) -> dict:
             out.append(_chat_public(msg, user["sub"]))
     out.sort(key=lambda m: m.get("ts", 0), reverse=True)
     return _json_response(200, {"messages": out[:100]})
+
+
+def handle_chat_forward(event: dict) -> dict:
+    """Forward one existing 1:1 message to up to five permitted recipients.
+
+    The client only sends message identifiers, never message content or a raw
+    attachment.  This keeps the server authoritative and prevents forwarding
+    a message from a conversation the caller does not belong to.
+    """
+    user, err = _require_auth(event)
+    if err:
+        return err
+    blocked = _require_can_post(user["sub"])
+    if blocked:
+        return blocked
+    body = _event_body(event)
+    source_sub = str(body.get("user_sub") or "").strip()
+    msg_id = str(body.get("msg_id") or "").strip()
+    recipients = body.get("to_subs") or []
+    if not source_sub or not msg_id or not isinstance(recipients, list):
+        return _json_response(400, {"error": "user_sub, msg_id and to_subs are required"})
+    if _is_group_ref(source_sub):
+        return _json_response(400, {"error": "Forwarding from group chats is not available yet."})
+    recipients = list(dict.fromkeys(str(v).strip() for v in recipients if str(v).strip()))[:5]
+    recipients = [v for v in recipients if v != user["sub"]]
+    if not recipients:
+        return _json_response(400, {"error": "Choose at least one recipient"})
+    if _rate_limited(user["sub"], "chat_forward", limit=20, window_seconds=60, fail_closed=True):
+        return _rate_limit_response()
+
+    source_conv = _conv_id(user["sub"], source_sub)
+    original = table.get_item(Key={"pk": f"MSG#{source_conv}#{msg_id}"}).get("Item")
+    if not original or original.get("deleted_for_all"):
+        return _json_response(404, {"error": "Message is no longer available to forward."})
+    if original.get("e2e"):
+        return _json_response(400, {"error": "Encrypted messages cannot be forwarded."})
+    if not original.get("text") and not original.get("attach_type"):
+        return _json_response(400, {"error": "Message is empty and cannot be forwarded."})
+
+    import time as _time
+    me = _feed_author(user)
+    sent, skipped = 0, []
+    for to_sub in recipients:
+        if to_sub == source_sub or _i_blocked(user["sub"], to_sub) or _i_blocked(to_sub, user["sub"]):
+            skipped.append(to_sub)
+            continue
+        if not _can_message(user["sub"], to_sub):
+            skipped.append(to_sub)
+            continue
+        conv = _conv_id(user["sub"], to_sub)
+        ts = int(_time.time() * 1000)
+        new_id = f"{ts}-{uuid.uuid4().hex[:6]}"
+        item = {
+            "pk": f"MSG#{conv}#{new_id}", "conv": conv, "msg_id": new_id,
+            "from_sub": user["sub"], "to_sub": to_sub,
+            "text": str(original.get("text") or "")[:2000],
+            "attach_type": str(original.get("attach_type") or ""),
+            "attach_url": str(original.get("attach_url") or ""),
+            "attach_meta": dict(original.get("attach_meta") or {}),
+            "created_at": _now(), "ts": ts, "ttl": _ttl(365),
+            "reply_to": None, "forwarded": True, "e2e": False,
+        }
+        table.put_item(Item=item)
+        if item["text"]:
+            preview = item["text"].split("\n", 1)[0][:80]
+        elif item["attach_type"] == "location":
+            preview = "📍 Location"
+        elif item["attach_type"] == "document":
+            preview = "📎 " + (item["attach_meta"].get("filename") or "Document")
+        elif item["attach_type"] == "audio":
+            preview = "🎤 Voice message"
+        else:
+            preview = "📷 Photo"
+        other_prof = get_profile(to_sub)
+        _upsert_convmeta(user["sub"], conv, to_sub, other_prof.get("user_name", "Aarvex user"),
+                         _profile_photo(other_prof), preview, ts, mode="read")
+        _upsert_convmeta(to_sub, conv, user["sub"], me["user_name"], me["user_photo"], preview, ts, mode="unread")
+        create_notification(to_sub, "chat", "Forwarded message", f"{me['user_name']}: {preview}",
+                            link_type="chat", link_id=user["sub"], from_sub=user["sub"],
+                            from_name=me["user_name"], from_photo=me["user_photo"])
+        sent += 1
+    return _json_response(200, {"success": True, "count": sent, "skipped": skipped})
 
 
 def handle_chat_broadcast(event: dict) -> dict:
@@ -6857,6 +8180,11 @@ def _serialize_shop_public(shop: dict, stats: dict | None = None, reviews: list 
     return {
         "shop_id": shop_id,
         "shop_name": shop.get("shop_name") or shop_id,
+        # Owner's chat id — lets buyers open an in-app messenger thread with the
+        # shopkeeper ("Chat with shop"). Sending still requires the buyer to be
+        # signed in (messenger + /chat/send enforce auth), and this is no more
+        # exposing than contact_number below, which is the owner's real phone.
+        "owner_sub": shop.get("user_sub", ""),
         "shop_description": shop.get("shop_description", ""),
         "shop_category": shop.get("shop_category", ""),
         # Shop display picture + cover — surfaced everywhere a shop appears
@@ -7580,6 +8908,7 @@ def handle_shop_subscribe(event: dict) -> dict:
         sub_ticket = {
             "arn": f"SUB-{sub_id[:8]}",
             "ticket_id": sub_id,
+            "user_sub": user["sub"],
             "product_name": "Agro Shop Plan — Monthly",
             "quantity_kg": 1,
             "payment_amount": amount,
@@ -7836,11 +9165,11 @@ def handle_address_list(event: dict) -> dict:
     if err:
         return err
     try:
-        resp = table.scan(
-            FilterExpression="begins_with(pk, :p)",
-            ExpressionAttributeValues={":p": f"ADDRESS#{user['sub']}#"},
-        )
-        raw = resp.get("Items", [])
+        # Indexed prefix read (gsi1) instead of a full-table scan; the helper
+        # self-detects a missing index and falls back to a raw scan, so the
+        # result set is identical. Matches how ADDRESS# rows are read in the
+        # account aggregation (_scan_by_pk_prefix(f"ADDRESS#{sub}#")).
+        raw = _scan_by_pk_prefix(f"ADDRESS#{user['sub']}#")
     except Exception as e:
         logger.error("[ADDRESS] list failed: %s", e)
         raw = []
@@ -7852,6 +9181,7 @@ def handle_address_list(event: dict) -> dict:
                 "address": it.get("address", ""),
                 "city": it.get("city", ""),
                 "state": it.get("state", ""),
+                "district": it.get("district", ""),
                 "pincode": it.get("pincode", ""),
                 "lat": _json_num(it.get("lat", 0)),
                 "lng": _json_num(it.get("lng", 0)),
@@ -7894,6 +9224,7 @@ def handle_address_save(event: dict) -> dict:
         "address": address[:300],
         "city": city[:80],
         "state": state_name[:80],
+        "district": (body.get("district") or "").strip()[:80],
         "pincode": (body.get("pincode") or "").strip()[:10],
         "lat": _decimal(lat),
         "lng": _decimal(lng),
@@ -7932,6 +9263,10 @@ def handle_portal_route(event: dict) -> dict | None:
         return _json_response(200, {})
 
     routes = {
+        ("POST", "/auth/session"): handle_auth_session,
+        ("GET", "/config/maps"): handle_config_maps,
+        ("POST", "/app-update"): handle_app_update,
+        ("GET", "/app-update"): handle_app_update,
         ("POST", "/kyc/submit"): handle_kyc_submit,
         ("GET", "/kyc/status"): handle_kyc_status,
         ("POST", "/shop/create"): handle_shop_create,
@@ -7983,6 +9318,17 @@ def handle_portal_route(event: dict) -> dict | None:
         ("GET", "/banner/active"): handle_ad_active,
         ("POST", "/banner/upload"): handle_ad_upload,
         ("POST", "/banner/remove"): handle_ad_remove,
+        ("GET", "/campaign/list"): handle_campaign_list,
+        ("POST", "/campaign/save"): handle_campaign_save,
+        ("POST", "/campaign/delete"): handle_campaign_delete,
+        ("POST", "/campaign/toggle"): handle_campaign_toggle,
+        ("POST", "/campaign/approve"): handle_campaign_approve,
+        ("POST", "/ad/event"): handle_ad_event,
+        ("GET", "/ad/booking/quote"): handle_ad_booking_quote,
+        ("POST", "/ad/booking/create"): handle_ad_booking_create,
+        ("GET", "/ad/booking/mine"): handle_ad_booking_mine,
+        ("GET", "/campaign/rates"): handle_ad_rates_get,
+        ("POST", "/campaign/rates"): handle_ad_rates_set,
         ("GET", "/category/images"): handle_category_images_list,
         ("POST", "/category/image/upload"): handle_category_image_upload,
         ("POST", "/category/image/remove"): handle_category_image_remove,
@@ -8016,6 +9362,7 @@ def handle_portal_route(event: dict) -> dict | None:
         ("POST", "/chat/conv"): handle_chat_conv_update,
         ("POST", "/chat/message"): handle_chat_message,
         ("GET", "/chat/starred"): handle_chat_starred,
+        ("POST", "/chat/forward"): handle_chat_forward,
         ("POST", "/chat/broadcast"): handle_chat_broadcast,
         ("POST", "/user/username"): handle_username_set,
         ("GET", "/user/by-username"): handle_user_by_username,
@@ -8073,6 +9420,7 @@ def handle_portal_route(event: dict) -> dict | None:
         ("GET", "/address/list"): handle_address_list,
         ("POST", "/address/save"): handle_address_save,
         ("POST", "/address/delete"): handle_address_delete,
+        ("POST", "/push/register"): register_push_token,
     }
     if _delivery_mod:
         routes.update({
@@ -8112,6 +9460,7 @@ def handle_portal_route(event: dict) -> dict | None:
         routes[("POST", "/admin/api/telemetry/ack")] = _ax_tel.handle_admin_telemetry_ack
         routes[("POST", "/admin/api/telemetry/purge")] = _ax_tel.handle_admin_telemetry_purge
         routes[("GET", "/admin/api/setup-map")] = _ax_tel.handle_admin_setup_map
+        routes[("GET", "/admin/api/app-pulse")] = _ax_tel.handle_admin_app_pulse
     except Exception as _e:
         logger.warning("[TELEMETRY] bind failed: %s", _e)
 
@@ -8133,10 +9482,16 @@ def handle_portal_route(event: dict) -> dict | None:
         routes[("GET", "/admin/api/design-audit/report")] = _da.handle_design_audit_report
         routes[("POST", "/admin/api/design-audit/finding")] = _da.handle_design_audit_finding_update
         routes[("POST", "/admin/api/design-audit/apply-safe")] = _da.handle_design_audit_apply_safe
+        routes[("GET", "/admin/api/design-audit/scorecard")] = _da.handle_design_audit_scorecard
+        routes[("POST", "/admin/api/design-audit/fix-finding")] = _da.handle_design_audit_fix_finding
+        routes[("GET", "/admin/api/design-audit/tokens")] = _da.handle_design_audit_tokens
     except Exception as _e:
         logger.warning("[DESIGN_AUDIT] bind failed: %s", _e)
 
     routes[("POST", "/admin/api/command-center/apply-patch")] = admin_cc_apply_patch
+    routes[("GET", "/admin/api/command-center/patch-history")] = admin_cc_patch_history
+    routes[("POST", "/admin/api/command-center/patch-rollback")] = admin_cc_patch_rollback
+    routes[("POST", "/admin/api/command-center/explain")] = admin_cc_explain_error
 
     handler = routes.get((method, path))
     if handler:
